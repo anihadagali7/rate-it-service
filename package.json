@@ -2,13 +2,21 @@
   "name": "rate-it-service",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "anihadagali7",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anihadagali7/rate-it-service.git"
+  },
+  "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "nodemon": "^2.0.18"
+  "bugs": {
+    "url": "https://github.com/anihadagali7/rate-it-service/issues"
+  },
+  "homepage": "https://github.com/anihadagali7/rate-it-service#readme",
+  "dependencies": {
+    "express": "^4.18.1"
   }
 }
