@@ -6,6 +6,8 @@ mongoose.connect(uri, { useUnifiedTopology: true, useNewUrlParser: true });
 
 const connection = mongoose.connection;
 
-connection.once("open", function() {
-  console.log("MongoDB database connection established successfully");
+connection.once('open', function() {
+  console.log('MongoDB database connection established successfully');
 });
+
+connection.on('error', console.error.bind(console, 'MongoDB connection error:'));
