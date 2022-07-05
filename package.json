@@ -18,7 +18,10 @@
   },
   "homepage": "https://github.com/anihadagali7/rate-it-service#readme",
   "dependencies": {
+    "bcrypt": "^5.0.1",
     "express": "^4.18.1",
+    "express-validator": "^6.14.2",
+    "jsonwebtoken": "^8.5.1",
     "mongodb": "^4.7.0",
     "mongoose": "^6.4.1"
   },
@@ -27,6 +30,6 @@
   },
   "devDependencies": {
     "dotenv": "^16.0.1",
-    "nodemon": "2.0.18"
+    "nodemon": "^2.0.18"
   }
 }
