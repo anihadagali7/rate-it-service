@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { check, validationResult } = require("express-validator");
-const JWT = require("jsonwebtoken");
+
 const authenticationService = require("../services/authenticationService");
 
 require("dotenv").config();
@@ -19,8 +19,7 @@ router.post(
     }),
   ],
   async (request, response) => {
-    console.log("inside the controller")
-    const { firstName, lastName, email, password, phoneNumber } = request.body;
+    const { firstName, lastName, email, password, phoneNumber, userName } = request.body;
 
     const errors = validationResult(request);
 
@@ -30,29 +29,15 @@ router.post(
       });
     }
 
-    const newUser = authenticationService.createNewUser(
+    return authenticationService.createNewUser(
       firstName,
       lastName,
       email,
       password,
-      phoneNumber
+      phoneNumber,
+      userName,
+      response
     );
-
-    const accessToken = await JWT.sign(
-      { email },
-      process.env.ACCESS_TOKEN_SECRET,
-      {
-        expiresIn: "10s",
-      }
-    );
-
-    response.status(201).json({
-      status: "success",
-      accessToken,
-      data: {
-        newUser,
-      },
-    });
   }
 );
 
@@ -75,28 +60,11 @@ router.get(
       });
     }
 
-    const newUser = authenticationService.createNewUser(
-      firstName,
-      lastName,
+    return authenticationService.login(
       email,
       password,
-      phoneNumber
+      response
     );
-    const accessToken = await JWT.sign(
-      { email },
-      process.env.ACCESS_TOKEN_SECRET,
-      {
-        expiresIn: "10s",
-      }
-    );
-
-    response.status(201).json({
-      status: "success",
-      token,
-      data: {
-        newUser,
-      },
-    });
   }
 );
 

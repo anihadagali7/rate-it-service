@@ -1,46 +1,114 @@
 const UsersModel = require("../repository/userModel");
 const bcrypt = require("bcrypt");
+const JWT = require("jsonwebtoken");
 
 const createNewUser = async (
   firstName,
   lastName,
   email,
   password,
-  phoneNumber
+  phoneNumber,
+  userName,
+  response
 ) => {
-  console.log("inside the service");
-  let existingUser = UsersModel.find({ email: email });
+  let existingUserEmail = await UsersModel.findOne({ email: email });
+  let existingUserName = await UsersModel.findOne({ user_name: userName });
 
-  if (existingUser) {
-    // return response.status(200).json({
-    //   errors: [
-    //     {
-    //       email: existingUser.email,
-    //       msg: "The user already exists",
-    //     },
-    //   ],
-    // });
-    console.log("user already exists");
+  if (existingUserEmail) {
+    return response.status(400).json({
+      errors: [
+        {
+          msg: "This email is already being used",
+        },
+      ],
+    });
+  } else if (existingUserName) {
+    return response.status(400).json({
+      errors: [
+        {
+          msg: "This username is already being used",
+        },
+      ],
+    });
+  } else {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = new UsersModel({
+      first_name: firstName,
+      last_name: lastName,
+      phone_number: phoneNumber,
+      email: email,
+      user_name: userName,
+      password: hashedPassword,
+      is_active: true,
+      is_admin: false,
+      date_created: Date.now(),
+      date_updated: Date.now(),
+    }).save();
+
+    const accessToken = await JWT.sign(
+      { email },
+      process.env.ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: "10s",
+      }
+    );
+
+    return response.status(201).json({
+      status: "success",
+      accessToken,
+      data: {
+        newUser,
+      },
+    });
   }
-
-  const salt = await bcrypt.genSalt(10);
-  console.log("salt:", salt);
-  const hashedPassword = await bcrypt.hash(password, salt);
-  console.log("hashed password:", hashedPassword);
-
-  const newUser = new UsersModel({
-    first_name: firstName,
-    last_name: lastName,
-    phone_number: phoneNumber,
-    email: email,
-    password: hashedPassword,
-  }).save();
 };
 
-const login = (email, password) => {
-  let existingUser = users.find((user) => {
-    return user.email === email;
+const login = async (email, password, response) => {
+  let existingUser = await UsersModel.findOne({ email: email });
+
+  if (existingUser) {
+    let isMatch = await bcrypt.compare(password, existingUser.password);
+
+    if (!isMatch) {
+      return response.status(401).json({
+        errors: [
+          {
+            msg: "Email or password is invalid",
+          },
+        ],
+      });
+    }
+
+    const accessToken = await JWT.sign(
+      { email },
+      process.env.ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: "10s",
+      }
+    );
+
+    return response.status(200).json({
+      status: "success",
+      accessToken,
+        data: {
+            firstName: existingUser.first_name,
+            lastName: existingUser.last_name,
+            email: existingUser.email,
+            userName: existingUser.user_name,
+            phoneNumber: existingUser.phone_number
+      },
+    });
+  }
+
+  return response.status(401).json({
+    errors: [
+      {
+        msg: "Invalid credentials",
+      },
+    ],
   });
 };
 
-module.exports = { createNewUser };
+module.exports = { createNewUser, login };
