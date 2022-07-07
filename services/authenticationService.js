@@ -2,6 +2,7 @@ const UsersModel = require("../repository/userModel");
 const bcrypt = require("bcrypt");
 const JWT = require("jsonwebtoken");
 const slackClient = require("../client/slackClient");
+const { RATE_IT_DEV_LOGIN } = require("../utils/utils");
 
 const createNewUser = async (
   firstName,
@@ -49,14 +50,18 @@ const createNewUser = async (
     }).save();
 
     const accessToken = await JWT.sign(
-      { email },
+      {
+        email: newUser.email,
+        userName: newUser.user_name,
+        isAdmin: newUser.is_admin,
+      },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "45m" }
     );
 
     slackClient.postMessage(
-      "rate-it-dev-login",
-      `${userName} created a new account!`
+      `${userName} created a new account!`,
+      process.env.SLACK_DEV_LOGIN_URL
     );
 
     return response.status(201).json({
@@ -86,14 +91,18 @@ const login = async (email, password, response) => {
     }
 
     const accessToken = await JWT.sign(
-      { email },
+      {
+        email: existingUser.email,
+        userName: existingUser.user_name,
+        isAdmin: existingUser.is_admin,
+      },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "45m" }
     );
 
     slackClient.postMessage(
-      "rate-it-dev-login",
-      `${email} logged in!`
+      `${email} logged in!`,
+      process.env.SLACK_DEV_LOGIN_URL
     );
 
     return response.status(200).json({
