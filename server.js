@@ -1,5 +1,6 @@
 /* Imports */
 const express = require("express");
+const bodyParser = require("body-parser");
 require("dotenv").config();
 
 /* Routes */
@@ -13,6 +14,7 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api", authenticationRoute)
 app.use("/api", ratingRoute);
 app.use("/api", mediaRoute);

@@ -1,6 +1,7 @@
 const UsersModel = require("../repository/userModel");
 const bcrypt = require("bcrypt");
 const JWT = require("jsonwebtoken");
+const slackClient = require("../client/slackClient");
 
 const createNewUser = async (
   firstName,
@@ -53,6 +54,11 @@ const createNewUser = async (
       { expiresIn: "45m" }
     );
 
+    slackClient.postMessage(
+      "rate-it-dev-login",
+      `${userName} created a new account!`
+    );
+
     return response.status(201).json({
       status: "success",
       accessToken,
@@ -83,6 +89,11 @@ const login = async (email, password, response) => {
       { email },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "45m" }
+    );
+
+    slackClient.postMessage(
+      "rate-it-dev-login",
+      `${email} logged in!`
     );
 
     return response.status(200).json({
