@@ -50,9 +50,7 @@ const createNewUser = async (
     const accessToken = await JWT.sign(
       { email },
       process.env.ACCESS_TOKEN_SECRET,
-      {
-        expiresIn: "10s",
-      }
+      { expiresIn: "45m" }
     );
 
     return response.status(201).json({
@@ -84,20 +82,18 @@ const login = async (email, password, response) => {
     const accessToken = await JWT.sign(
       { email },
       process.env.ACCESS_TOKEN_SECRET,
-      {
-        expiresIn: "10s",
-      }
+      { expiresIn: "45m" }
     );
 
     return response.status(200).json({
       status: "success",
       accessToken,
-        data: {
-            firstName: existingUser.first_name,
-            lastName: existingUser.last_name,
-            email: existingUser.email,
-            userName: existingUser.user_name,
-            phoneNumber: existingUser.phone_number
+      data: {
+        firstName: existingUser.first_name,
+        lastName: existingUser.last_name,
+        email: existingUser.email,
+        userName: existingUser.user_name,
+        phoneNumber: existingUser.phone_number,
       },
     });
   }
