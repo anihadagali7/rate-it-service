@@ -2,8 +2,7 @@ const axios = require("axios");
 
 const slackToken = process.env.SLACK_DEV_TOKEN;
 
-const postMessage = async (channel, text) => {
-  const url = process.env.SLACK_DEV_LOGIN_URL;
+const postMessage = async (channel, text, url) => {
   const result = await axios.post(
     url,
     {
