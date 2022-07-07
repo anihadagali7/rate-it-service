@@ -60,7 +60,6 @@ const createNewUser = async (
     );
 
     slackClient.postMessage(
-      RATE_IT_DEV_LOGIN,
       `${userName} created a new account!`,
       process.env.SLACK_DEV_LOGIN_URL
     );
@@ -102,7 +101,6 @@ const login = async (email, password, response) => {
     );
 
     slackClient.postMessage(
-      RATE_IT_DEV_LOGIN,
       `${email} logged in!`,
       process.env.SLACK_DEV_LOGIN_URL
     );

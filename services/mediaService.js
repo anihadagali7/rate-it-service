@@ -9,7 +9,6 @@ const createNewMedia = async (media, response) => {
   }).save();
 
   slackClient.postMessage(
-    "C03PCJQ829E",
     `${newMedia.name} - ${newMedia.media_type} has just been added!`,
     process.env.SLACK_DEV_MEDIA_URL
   );
