@@ -13,11 +13,9 @@ const authToken = async (request, response, next) => {
       ],
     });
   }
-
-  const newToken = token.split(" ")[1];
-
+  
   try {
-    const user = await jwt.verify(newToken, process.env.ACCESS_TOKEN_SECRET);
+    const user = await jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     request.user = user.email;
     next();
   } catch (error) {
