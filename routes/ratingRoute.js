@@ -7,7 +7,7 @@ const ratingService = require("../services/ratingService");
 router.post("/rating", authToken, async (request, response) => {
   const { mediaId, rating, comments, userId } = request.body;
 
-  ratingService.createNewRating(mediaId, rating, comments, userId, response);
+  return ratingService.createNewRating(mediaId, rating, comments, userId, response);
 });
 
 module.exports = router;

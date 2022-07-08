@@ -6,7 +6,8 @@ require("dotenv").config();
 /* Routes */
 const authenticationRoute = require("./routes/authenticationRoute");
 const ratingRoute = require("./routes/ratingRoute");
-const mediaRoute = require("./routes/mediaRoute")
+const mediaRoute = require("./routes/mediaRoute");
+const searchRoute = require("./routes/searchRoute");
 
 require("./configuration/mongoDbConnection");
 
@@ -18,6 +19,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api", authenticationRoute)
 app.use("/api", ratingRoute);
 app.use("/api", mediaRoute);
+app.use("/api", searchRoute);
 
 app.listen(PORT, () => {
   console.log(`Application Started on PORT ${PORT}`);
