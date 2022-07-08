@@ -11,4 +11,15 @@ const searchMovies = async (keyWord, response) => {
   });
 };
 
-module.exports = { searchMovies };
+const searchTvShows = async (keyWord, response) => {
+  const results = await TmdbClient.searchTvShow(keyWord);
+
+  return response.status(200).json({
+    status: "success",
+    data: {
+      results,
+    },
+  });
+};
+
+module.exports = { searchMovies, searchTvShows };

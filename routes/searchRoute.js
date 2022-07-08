@@ -10,4 +10,10 @@ router.get("/search/movie", authToken, async (request, response) => {
   return searchService.searchMovies(keyWord, response);
 });
 
+router.get("/search/tv", authToken, async (request, response) => {
+  const { keyWord } = request.body;
+
+  return searchService.searchTvShows(keyWord, response);
+});
+
 module.exports = router;
