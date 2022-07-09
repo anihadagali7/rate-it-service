@@ -8,6 +8,7 @@ const authenticationRoute = require("./routes/authenticationRoute");
 const ratingRoute = require("./routes/ratingRoute");
 const mediaRoute = require("./routes/mediaRoute");
 const searchRoute = require("./routes/searchRoute");
+const userRoute = require("./routes/userRoute");
 
 require("./configuration/mongoDbConnection");
 
@@ -20,6 +21,7 @@ app.use("/api", authenticationRoute)
 app.use("/api", ratingRoute);
 app.use("/api", mediaRoute);
 app.use("/api", searchRoute);
+app.use("/api", userRoute);
 
 app.listen(PORT, () => {
   console.log(`Application Started on PORT ${PORT}`);
