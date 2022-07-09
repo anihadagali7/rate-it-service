@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api", authenticationRoute)
 app.use("/api", ratingRoute);
-app.use("/api", mediaRoute);
+app.use("/api/media", mediaRoute);
 app.use("/api", searchRoute);
 app.use("/api", userRoute);
 
