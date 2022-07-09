@@ -39,35 +39,35 @@ const newMovieOrTvShow = (media) => {
   };
 };
 
-const getMovieDetails = async (tmdbId, response) => {
-  const existingMovie = await MediaModel.findOne({ tmdb_id: tmdbId });
+const getMovieDetails = async (tmdbId, mediaType, response) => {
+  const existingMedia = await MediaModel.findOne({ tmdb_id: tmdbId });
 
-  if (existingMovie) {
+  if (existingMedia) {
     return response.status(200).json({
       status: "success",
       data: {
-        existingMovie,
+        existingMovie: existingMedia,
       },
     });
   } else {
-    const movieDetails = await tmdbClient.getDetailsById(tmdbId, "movie");
-    const movieCast = await tmdbClient.getCreditsById(tmdbId, "movie");
+    const mediaDetails = await tmdbClient.getDetailsById(tmdbId, mediaType);
+    const mediaCast = await tmdbClient.getCreditsById(tmdbId, mediaType);
 
     let movieToBeAdded = {};
 
-    movieToBeAdded["name"] = movieDetails.original_title;
-    movieToBeAdded["description"] = movieDetails.overview;
-    movieToBeAdded["tagLine"] = movieDetails.tagLine;
-    movieToBeAdded["dateReleased"] = movieDetails.release_date;
-    movieToBeAdded["tmdbId"] = movieDetails.id;
-    movieToBeAdded["mediaType"] = "MOVIE";
+    movieToBeAdded["name"] = mediaDetails.original_title;
+    movieToBeAdded["description"] = mediaDetails.overview;
+    movieToBeAdded["tagLine"] = mediaDetails.tagLine;
+    movieToBeAdded["dateReleased"] = mediaDetails.release_date;
+    movieToBeAdded["tmdbId"] = mediaDetails.id;
+    movieToBeAdded["mediaType"] = mediaType.toUpperCase();
     // movieToBeAdded["picture"] = movieDetails.original_title;
 
     let castList = [];
     let directorList = [];
     let producerList = [];
 
-    movieCast.forEach((cast) => {
+    mediaCast.forEach((cast) => {
       if (cast.known_for_department === "Acting") {
         castList.push(cast.name);
       }
