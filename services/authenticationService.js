@@ -49,15 +49,7 @@ const createNewUser = async (
       date_updated: Date.now(),
     }).save();
 
-    const accessToken = await JWT.sign(
-      {
-        email: newUser.email,
-        userName: newUser.user_name,
-        isAdmin: newUser.is_admin,
-      },
-      process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "45m" }
-    );
+    const accessToken = await signJwtToken(newUser);
 
     slackClient.postMessage(
       `${userName} created a new account!`,
@@ -90,15 +82,7 @@ const login = async (email, password, response) => {
       });
     }
 
-    const accessToken = await JWT.sign(
-      {
-        email: existingUser.email,
-        userName: existingUser.user_name,
-        isAdmin: existingUser.is_admin,
-      },
-      process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "45m" }
-    );
+    const accessToken = await signJwtToken(existingUser);
 
     slackClient.postMessage(
       `${email} logged in!`,
@@ -125,6 +109,21 @@ const login = async (email, password, response) => {
       },
     ],
   });
+};
+
+const signJwtToken = async (user) => {
+  const accessToken = await JWT.sign(
+    {
+      email: user.email,
+      userName: user.user_name,
+      isAdmin: user.is_admin,
+      id: user._id,
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: "45m" }
+  );
+
+  return accessToken;
 };
 
 module.exports = { createNewUser, login };
