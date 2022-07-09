@@ -21,6 +21,7 @@ const mediaSchema = new Schema({
   },
   picture: String,
   date_released: Date,
+  tmdb_id: Number
 });
 
 const media = mongoose.model("media", mediaSchema);
