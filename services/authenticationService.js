@@ -36,7 +36,7 @@ const createNewUser = async (
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new UsersModel({
+    const newUser = await new UsersModel({
       first_name: firstName,
       last_name: lastName,
       phone_number: phoneNumber,
@@ -98,6 +98,7 @@ const login = async (email, password, response) => {
         email: existingUser.email,
         userName: existingUser.user_name,
         phoneNumber: existingUser.phone_number,
+        userId: existingUser._id
       },
     });
   }
