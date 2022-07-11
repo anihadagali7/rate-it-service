@@ -29,13 +29,17 @@ const getCreditsById = async (tmdbId, type) => {
 
   const result = await axios.get(url);
 
-  return result.cast;
+  return result.data;
 };
 
 const getDetailsById = async (tmdbId, type) => {
   const url =
     tmdbUrl +
-    `${type}/${tmdbId}?api_key=${process.env.TMDB_TOKEN}&language=en-US`;
+    `/${type}/${tmdbId}?api_key=${process.env.TMDB_TOKEN}&language=en-US`;
+
+  const result = await axios.get(url);
+
+  return result.data;
 };
 
 const getPoster = async (posterPath) => {
@@ -46,4 +50,4 @@ const getPoster = async (posterPath) => {
   return result;
 };
 
-module.exports = { searchMovie, searchTvShow };
+module.exports = { searchMovie, searchTvShow, getDetailsById, getCreditsById };

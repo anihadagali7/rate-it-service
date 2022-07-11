@@ -13,6 +13,7 @@ const mediaSchema = new Schema({
   genre: String,
   album: String,
   description: String,
+  tag_line: String,
   media_type: {
     type: String,
     enum: ["MOVIE", "BOOK", "PODCAST", "TV SHOW", "SONG", "THEATRE"],
