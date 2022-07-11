@@ -13,7 +13,7 @@ const userRoute = require("./routes/userRoute");
 require("./configuration/mongoDbConnection");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
