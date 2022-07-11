@@ -39,7 +39,7 @@ const newMovieOrTvShow = (media) => {
   };
 };
 
-const getMovieDetails = async (tmdbId, mediaType, response) => {
+const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
   const existingMedia = await MediaModel.findOne({ tmdb_id: tmdbId });
 
   if (existingMedia) {
@@ -55,21 +55,40 @@ const getMovieDetails = async (tmdbId, mediaType, response) => {
 
     let movieToBeAdded = {};
 
-    movieToBeAdded["name"] = mediaDetails.original_title;
+    if (mediaType == "movie") {
+      movieToBeAdded["name"] = mediaDetails.original_title;
+      movieToBeAdded["dateReleased"] = mediaDetails.release_date;
+    } else {
+      movieToBeAdded["name"] = mediaDetails.original_name;
+      movieToBeAdded["dateReleased"] = mediaDetails.first_air_date;
+    }
+
     movieToBeAdded["description"] = mediaDetails.overview;
     movieToBeAdded["tagLine"] = mediaDetails.tagLine;
-    movieToBeAdded["dateReleased"] = mediaDetails.release_date;
     movieToBeAdded["tmdbId"] = mediaDetails.id;
-    movieToBeAdded["mediaType"] = mediaType.toUpperCase();
+    movieToBeAdded["mediaType"] =
+      mediaType === "tv" ? "TV SHOW" : mediaType.toUpperCase();
     // movieToBeAdded["picture"] = movieDetails.original_title;
 
     let castList = [];
     let directorList = [];
     let producerList = [];
 
-    mediaCast.forEach((cast) => {
+    mediaCast.cast.forEach((cast) => {
       if (cast.known_for_department === "Acting") {
         castList.push(cast.name);
+      }
+      if (cast.known_for_department === "Directing") {
+        directorList.push(cast.name);
+      }
+      if (cast.known_for_department === "Production") {
+        producerList.push(cast.name);
+      }
+    });
+
+    mediaCast.crew.forEach((cast) => {
+      if (cast.job === "Executive Producer") {
+        producerList.push(cast.name);
       }
       if (cast.known_for_department === "Directing") {
         directorList.push(cast.name);
@@ -89,4 +108,4 @@ const getMovieDetails = async (tmdbId, mediaType, response) => {
   }
 };
 
-module.exports = { createNewMedia, getMovieDetails };
+module.exports = { createNewMedia, getMovieTvShowDetails };

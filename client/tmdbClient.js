@@ -29,7 +29,7 @@ const getCreditsById = async (tmdbId, type) => {
 
   const result = await axios.get(url);
 
-  return result.data.cast;
+  return result.data;
 };
 
 const getDetailsById = async (tmdbId, type) => {

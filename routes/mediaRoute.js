@@ -13,7 +13,13 @@ router.post("/add", authToken, async (request, response) => {
 router.get("/movie/info/:tmdbId", authToken, async (request, response) => {
   const { tmdbId } = request.params;
 
-  return mediaService.getMovieDetails(tmdbId, "movie", response);
+  return mediaService.getMovieTvShowDetails(tmdbId, "movie", response);
+});
+
+router.get("/tv/info/:tmdbId", authToken, async (request, response) => {
+  const { tmdbId } = request.params;
+
+  return mediaService.getMovieTvShowDetails(tmdbId, "tv", response);
 });
 
 module.exports = router;
