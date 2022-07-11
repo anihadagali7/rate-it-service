@@ -60,7 +60,7 @@ const createNewUser = async (
       status: "success",
       accessToken,
       data: {
-        newUser,
+        user: newUser,
       },
     });
   }
@@ -93,12 +93,14 @@ const login = async (email, password, response) => {
       status: "success",
       accessToken,
       data: {
-        firstName: existingUser.first_name,
-        lastName: existingUser.last_name,
-        email: existingUser.email,
-        userName: existingUser.user_name,
-        phoneNumber: existingUser.phone_number,
-        userId: existingUser._id
+        user: {
+          firstName: existingUser.first_name,
+          lastName: existingUser.last_name,
+          email: existingUser.email,
+          userName: existingUser.user_name,
+          phoneNumber: existingUser.phone_number,
+          userId: existingUser._id,
+        },
       },
     });
   }
