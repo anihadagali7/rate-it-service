@@ -41,7 +41,7 @@ router.post(
   }
 );
 
-router.get(
+router.post(
   "/login",
   [
     check("email", "Invalid email").isEmail(),
