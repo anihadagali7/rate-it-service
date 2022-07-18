@@ -4,13 +4,13 @@ const authToken = require("../middleware/authenticateToken");
 
 const searchService = require("../services/searchService");
 
-router.get("/search/movie", authToken, async (request, response) => {
+router.post("/search/movie", authToken, async (request, response) => {
   const { keyWord } = request.body;
 
   return searchService.searchMovies(keyWord, response);
 });
 
-router.get("/search/tv", authToken, async (request, response) => {
+router.post("/search/tv", authToken, async (request, response) => {
   const { keyWord } = request.body;
 
   return searchService.searchTvShows(keyWord, response);
