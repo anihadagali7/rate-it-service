@@ -43,11 +43,17 @@ const getDetailsById = async (tmdbId, type) => {
 };
 
 const getPoster = async (posterPath) => {
-  const url = `https://image.tmdb.org/t/p/original/${posterPath}?api_key=${process.env.TMDB_TOKEN}&language=en-US`;
+  const url = `https://image.tmdb.org/t/p/w500${posterPath}`;
 
   const result = await axios.get(url);
 
   return result;
 };
 
-module.exports = { searchMovie, searchTvShow, getDetailsById, getCreditsById };
+module.exports = {
+  searchMovie,
+  searchTvShow,
+  getDetailsById,
+  getCreditsById,
+  getPoster,
+};
