@@ -2,7 +2,7 @@ const TmdbClient = require("../client/tmdbClient");
 
 const searchMovies = async (keyWord, response) => {
   const results = await TmdbClient.searchMovie(keyWord);
-  const movieList = [];
+  const mediaList = [];
 
   results.forEach((movie) => {
     let posterUrl = "";
@@ -16,20 +16,20 @@ const searchMovies = async (keyWord, response) => {
       description: movie.overview,
       poster: posterUrl,
     };
-    movieList.push(searchMovie);
+    mediaList.push(searchMovie);
   });
 
   return response.status(200).json({
     status: "success",
     data: {
-      movieList,
+      mediaList,
     },
   });
 };
 
 const searchTvShows = async (keyWord, response) => {
   const results = await TmdbClient.searchTvShow(keyWord);
-  const tvShowList = [];
+  const mediaList = [];
 
   results.forEach((tvShow) => {
     let posterUrl = "";
@@ -43,13 +43,13 @@ const searchTvShows = async (keyWord, response) => {
       description: tvShow.overview,
       poster: posterUrl,
     };
-    tvShowList.push(searchTvShow);
+    mediaList.push(searchTvShow);
   });
 
   return response.status(200).json({
     status: "success",
     data: {
-      tvShowList,
+      mediaList,
     },
   });
 };
