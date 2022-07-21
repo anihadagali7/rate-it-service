@@ -26,6 +26,7 @@ const searchMovies = async (keyWord, response) => {
     data: {
       mediaList,
     },
+    mediaType: 'movie'
   });
 };
 
@@ -53,6 +54,7 @@ const searchTvShows = async (keyWord, response) => {
     data: {
       mediaList,
     },
+    mediaType: 'tv'
   });
 };
 
@@ -96,6 +98,7 @@ const searchMusic = async (keyWord, response) => {
     data: {
       mediaList,
     },
+    mediaType: 'music'
   });
 };
 
