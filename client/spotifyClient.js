@@ -30,14 +30,15 @@ const getToken = async () => {
 const searchByTrackArtist = async (keyWord) => {
   const access_token = await getToken();
 
-  const api_url = `https://api.spotify.com/v1/search?q=${keyWord}&type=track,artist&limit=1&offset=5`;
+  const api_url = `https://api.spotify.com/v1/search?q=${keyWord}&type=track&limit=10&offset=5`;
   try {
     const response = await axios.get(encodeURI(api_url), {
       headers: {
         Authorization: `Bearer ${access_token}`,
       },
     });
-    return response.data;
+
+    return response.data.tracks;
   } catch (error) {
     console.log(error);
   }
