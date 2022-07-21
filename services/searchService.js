@@ -1,4 +1,6 @@
+const { response } = require("express");
 const TmdbClient = require("../client/tmdbClient");
+const SpotifyClient = require("../client/spotifyClient");
 
 const searchMovies = async (keyWord, response) => {
   const results = await TmdbClient.searchMovie(keyWord);
@@ -54,4 +56,15 @@ const searchTvShows = async (keyWord, response) => {
   });
 };
 
-module.exports = { searchMovies, searchTvShows };
+const searchMusic = async (keyWord, response) => {
+  const results = await SpotifyClient.searchByTrackArtist(keyWord);
+
+  return response.status(200).json({
+    status: "success",
+    data: {
+      results,
+    },
+  });
+}
+
+module.exports = { searchMovies, searchTvShows, searchMusic };
