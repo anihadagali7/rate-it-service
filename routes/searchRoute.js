@@ -16,4 +16,10 @@ router.post("/search/tv", authToken, async (request, response) => {
   return searchService.searchTvShows(keyWord, response);
 });
 
+router.post("/search/music", authToken, async (request, response) => {
+  const { keyWord } = request.body;
+
+  return searchService.searchMusic(keyWord, response);
+});
+
 module.exports = router;
