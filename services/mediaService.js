@@ -18,12 +18,12 @@ const createNewMedia = async (media, response) => {
   return response.status(201).json({
     status: "success",
     data: {
-      newMedia,
+      media: dbMovieTvShowToUIMapper(newMedia),
     },
   });
 };
 
-// media is coming from UI
+// media is coming from UI -> send to DB
 const newMovieOrTvShow = (media) => {
   return {
     name: media.name,
@@ -39,6 +39,15 @@ const newMovieOrTvShow = (media) => {
   };
 };
 
+// media is coming from DB -> send to UI
+const dbMovieTvShowToUIMapper = (media) => {
+  const clone = JSON.parse(JSON.stringify(media));
+  clone["mediaId"] = media.tmdb_id;
+  delete clone.tmdb_id;
+
+  return clone;
+};
+
 const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
   const existingMedia = await MediaModel.findOne({ tmdb_id: tmdbId });
 
@@ -46,7 +55,7 @@ const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
     return response.status(200).json({
       status: "success",
       data: {
-        existingMovie: existingMedia,
+        media: dbMovieTvShowToUIMapper(existingMedia),
       },
     });
   } else {
