@@ -10,7 +10,6 @@ const auth_token = Buffer.from(
 
 const getToken = async () => {
   try {
-    console.log("token ", auth_token);
     const token_url = "https://accounts.spotify.com/api/token";
     const data = qs.stringify({ grant_type: "client_credentials" });
 
@@ -44,4 +43,21 @@ const searchByTrackArtist = async (keyWord) => {
   }
 };
 
-module.exports = { searchByTrackArtist };
+const searchTrackBySpotifyId = async (spotifyId) => {
+  const access_token = await getToken();
+
+  const api_url = `https://api.spotify.com/v1/tracks/${spotifyId}`;
+  try {
+    const response = await axios.get(encodeURI(api_url), {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+module.exports = { searchByTrackArtist, searchTrackBySpotifyId };
