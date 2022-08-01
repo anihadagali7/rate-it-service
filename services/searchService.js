@@ -85,7 +85,7 @@ const searchMusic = async (keyWord, response) => {
       albumType,
       albumName,
       name: song.name,
-      id: song.id,
+      mediaId: song.id,
       poster: imageUrl,
       artists: artists.join(),
     };
