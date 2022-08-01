@@ -13,7 +13,7 @@ const searchMovies = async (keyWord, response) => {
     }
 
     let searchMovie = {
-      tmdbId: movie.id,
+      mediaId: movie.id,
       name: movie.original_title,
       description: movie.overview,
       poster: posterUrl,
@@ -41,7 +41,7 @@ const searchTvShows = async (keyWord, response) => {
     }
 
     let searchTvShow = {
-      tmdbId: tvShow.id,
+      mediaId: tvShow.id,
       name: tvShow.name,
       description: tvShow.overview,
       poster: posterUrl,
