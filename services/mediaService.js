@@ -52,6 +52,7 @@ const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
   const existingMedia = await MediaModel.findOne({ tmdb_id: tmdbId });
 
   if (existingMedia) {
+    console.log("existing");
     return response.status(200).json({
       status: "success",
       data: {
@@ -77,7 +78,12 @@ const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
     movieToBeAdded["tmdbId"] = mediaDetails.id;
     movieToBeAdded["mediaType"] =
       mediaType === "tv" ? "TV SHOW" : mediaType.toUpperCase();
-    // movieToBeAdded["picture"] = movieDetails.original_title;
+
+    if (mediaDetails.poster_path) {
+      let posterUrl = `https://image.tmdb.org/t/p/w500${mediaDetails.poster_path}`;
+      movieToBeAdded["picture"] = posterUrl;
+      console.log("movie saving ", movieToBeAdded);
+    }
 
     let castList = [];
     let directorList = [];
@@ -107,9 +113,13 @@ const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
       }
     });
 
-    movieToBeAdded["cast"] = castList;
-    movieToBeAdded["director"] = directorList;
-    movieToBeAdded["producer"] = producerList;
+    castList = castList.slice(0, 4);
+    producerList = producerList.slice(0, 4);
+    directorList = directorList.slice(0, 4);
+
+    movieToBeAdded["cast"] = [...new Set(castList)];
+    movieToBeAdded["director"] = [...new Set(directorList)];
+    movieToBeAdded["producer"] = [...new Set(producerList)];
 
     const newMedia = createNewMedia(movieToBeAdded, response);
 
