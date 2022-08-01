@@ -16,13 +16,13 @@ const mediaSchema = new Schema({
   tag_line: String,
   media_type: {
     type: String,
-    enum: ["MOVIE", "BOOK", "PODCAST", "TV SHOW", "SONG", "THEATRE"],
+    enum: ["MOVIE", "BOOK", "PODCAST", "TV SHOW", "MUSIC", "THEATRE"],
     // default: "user",
     required: true,
   },
   picture: String,
   date_released: Date,
-  tmdb_id: Number
+  media_id: String,
 });
 
 const media = mongoose.model("media", mediaSchema);

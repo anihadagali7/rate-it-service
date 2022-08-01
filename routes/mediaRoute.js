@@ -22,4 +22,10 @@ router.get("/tv/info/:tmdbId", authToken, async (request, response) => {
   return mediaService.getMovieTvShowDetails(tmdbId, "tv", response);
 });
 
+router.get("/music/info/:spotifyId", authToken, async (request, response) => {
+  const { spotifyId } = request.params;
+
+  return mediaService.getMusicDetails(spotifyId, response);
+});
+
 module.exports = router;

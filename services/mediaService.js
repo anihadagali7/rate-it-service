@@ -1,11 +1,14 @@
 const MediaModel = require("../repository/mediaModel");
 const slackClient = require("../client/slackClient");
 const tmdbClient = require("../client/tmdbClient");
+const spotifyClient = require("../client/spotifyClient");
 
 const createNewMedia = async (media, response) => {
   let mediaToBeSaved = {};
   if (media.mediaType === "MOVIE" || media.mediaType === "TV SHOW") {
     mediaToBeSaved = newMovieOrTvShow(media);
+  } else if (media.mediaType === "MUSIC") {
+    mediaToBeSaved = newMusic(media);
   }
 
   const newMedia = await new MediaModel(mediaToBeSaved).save();
@@ -15,10 +18,18 @@ const createNewMedia = async (media, response) => {
     process.env.SLACK_DEV_MEDIA_URL
   );
 
+  let mediaMapper = {};
+
+  if (media.mediaType === "MOVIE" || media.mediaType === "TV SHOW") {
+    mediaMapper = dbMovieTvShowToUIMapper(newMedia);
+  } else if (media.mediaType === "MUSIC") {
+    mediaMapper = dbMusicToUIMapper(newMedia);
+  }
+
   return response.status(201).json({
     status: "success",
     data: {
-      media: dbMovieTvShowToUIMapper(newMedia),
+      media: mediaMapper,
     },
   });
 };
@@ -31,7 +42,7 @@ const newMovieOrTvShow = (media) => {
     date_released: media.dateReleased,
     picture: media.picture,
     media_type: media.mediaType,
-    tmdb_id: media.tmdbId,
+    media_id: media.mediaId,
     cast: media.cast,
     director: media.director,
     producer: media.producer,
@@ -39,20 +50,39 @@ const newMovieOrTvShow = (media) => {
   };
 };
 
+// media is coming from UI -> send to DB
+const newMusic = (media) => {
+  return {
+    name: media.name,
+    date_released: media.dateReleased,
+    picture: media.picture,
+    media_type: media.mediaType,
+    media_id: media.mediaId,
+    artist: media.artist,
+    album: media.album,
+  };
+};
+
 // media is coming from DB -> send to UI
 const dbMovieTvShowToUIMapper = (media) => {
   const clone = JSON.parse(JSON.stringify(media));
-  clone["mediaId"] = media.tmdb_id;
-  delete clone.tmdb_id;
+  clone["mediaId"] = media.media_id;
+  clone["mediaType"] = media.media_type;
+  clone["dateReleased"] = media.date_released;
+  delete clone.media_id;
+  delete clone.media_type;
+  delete clone.date_released;
+  delete clone.artist;
+  delete clone.author;
+  delete clone.host;
 
   return clone;
 };
 
 const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
-  const existingMedia = await MediaModel.findOne({ tmdb_id: tmdbId });
+  const existingMedia = await MediaModel.findOne({ media_id: tmdbId });
 
   if (existingMedia) {
-    console.log("existing");
     return response.status(200).json({
       status: "success",
       data: {
@@ -75,14 +105,13 @@ const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
 
     movieToBeAdded["description"] = mediaDetails.overview;
     movieToBeAdded["tagLine"] = mediaDetails.tagLine;
-    movieToBeAdded["tmdbId"] = mediaDetails.id;
+    movieToBeAdded["mediaId"] = mediaDetails.id;
     movieToBeAdded["mediaType"] =
       mediaType === "tv" ? "TV SHOW" : mediaType.toUpperCase();
 
     if (mediaDetails.poster_path) {
       let posterUrl = `https://image.tmdb.org/t/p/w500${mediaDetails.poster_path}`;
       movieToBeAdded["picture"] = posterUrl;
-      console.log("movie saving ", movieToBeAdded);
     }
 
     let castList = [];
@@ -127,4 +156,66 @@ const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
   }
 };
 
-module.exports = { createNewMedia, getMovieTvShowDetails };
+// media is coming from DB -> send to UI
+const dbMusicToUIMapper = (media) => {
+  const clone = JSON.parse(JSON.stringify(media));
+  clone["mediaId"] = media.media_id;
+  clone["mediaType"] = media.media_type;
+  clone["dateReleased"] = media.date_released;
+  delete clone.media_id;
+  delete clone.media_type;
+  delete clone.author;
+  delete clone.producer;
+  delete clone.director;
+  delete clone.host;
+  delete clone.cast;
+
+  return clone;
+};
+
+const getMusicDetails = async (spotifyId, response) => {
+  const existingMedia = await MediaModel.findOne({ media_id: spotifyId });
+  if (existingMedia) {
+    return response.status(200).json({
+      status: "success",
+      data: {
+        media: dbMusicToUIMapper(existingMedia),
+      },
+    });
+  } else {
+    const mediaDetails = await spotifyClient.searchTrackBySpotifyId(spotifyId);
+
+    let musicToBeAdded = {};
+
+    musicToBeAdded["name"] = mediaDetails.name;
+    musicToBeAdded["dateReleased"] = mediaDetails.first_air_date;
+    musicToBeAdded["album"] = mediaDetails.album.name;
+
+    let artists = [];
+    let imageUrl;
+
+    let imageList = mediaDetails.album.images;
+    let artistsList = mediaDetails.artists;
+
+    artistsList.forEach((artist) => {
+      artists.push(artist.name);
+    });
+
+    imageList.forEach((image) => {
+      if (image.height == 640) {
+        imageUrl = image.url;
+      }
+    });
+
+    musicToBeAdded["mediaId"] = mediaDetails.id;
+    musicToBeAdded["mediaType"] = "MUSIC";
+    musicToBeAdded["picture"] = imageUrl;
+    musicToBeAdded["artist"] = artists;
+
+    const newMedia = createNewMedia(musicToBeAdded, response);
+
+    return newMedia;
+  }
+};
+
+module.exports = { createNewMedia, getMovieTvShowDetails, getMusicDetails };
