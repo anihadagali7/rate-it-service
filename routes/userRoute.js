@@ -23,4 +23,16 @@ router.post("/friends/unfollow", authToken, async (request, response) => {
   return userService.unFollowUser(currentUser, userToUnfollow, response);
 });
 
+router.get("/:userName/following", authToken, async (request, response) => {
+  const { userName } = request.params;
+
+  return userService.getAllFollowing(userName, response);
+});
+
+router.get("/:userName/followers", authToken, async (request, response) => {
+  const { userName } = request.params;
+
+  return userService.getAllFollowers(userName, response);
+});
+
 module.exports = router;

@@ -72,4 +72,36 @@ const unFollowUser = async (userRequest, userToFollow, response) => {
     }
 };
 
-module.exports = { getAccountDetails, followUser, unFollowUser };
+const getAllFollowing = async (user, response) => {
+    let followingList = [];
+    const currentUser = await UserModel.findOne({user_name: user});
+    let currentUserFollowingList = currentUser.following;
+
+    for (const following of currentUserFollowingList) {
+        const friend = await UserModel.findOne({user_name: following});
+        followingList.push(friend);
+    }
+
+    return response.status(200).json({
+        status: "success",
+        data: followingList
+    });
+};
+
+const getAllFollowers = async (user, response) => {
+    let followersList = [];
+    const currentUser = await UserModel.findOne({user_name: user});
+    let currentUserFollowersList = currentUser.followers;
+
+    for (const follower of currentUserFollowersList) {
+        const friend = await UserModel.findOne({user_name: follower});
+        followersList.push(friend);
+    }
+
+    return response.status(200).json({
+        status: "success",
+        data: followersList
+    });
+};
+
+module.exports = { getAccountDetails, followUser, unFollowUser, getAllFollowing, getAllFollowers };
