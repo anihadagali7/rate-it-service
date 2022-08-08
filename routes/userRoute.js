@@ -12,9 +12,15 @@ router.get("/account/:userName", authToken, async (request, response) => {
 });
 
 router.post("/friends/follow", authToken, async (request, response) => {
-  const { userRequest, userAccept } = request.body;
+  const { currentUser, userToFollow } = request.body;
 
-  return userService.followUser(userRequest, userAccept, response);
-})
+  return userService.followUser(currentUser, userToFollow, response);
+});
+
+router.post("/friends/unfollow", authToken, async (request, response) => {
+  const { currentUser, userToUnfollow } = request.body;
+
+  return userService.unFollowUser(currentUser, userToUnfollow, response);
+});
 
 module.exports = router;

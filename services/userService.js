@@ -12,12 +12,11 @@ const getAccountDetails = async (userName, response) => {
   });
 };
 
-const followUser = async (userRequest, userAccept, response) => {
+const followUser = async (userRequest, userToFollow, response) => {
   const currentUser = await UserModel.findOne({user_name: userRequest});
-  const userToBeFollowed = await UserModel.findOne({user_name: userAccept});
+  const userToBeFollowed = await UserModel.findOne({user_name: userToFollow});
 
   if(currentUser.following.includes(userToBeFollowed.user_name)){
-      console.log("already includes")
       return response.status(400).json({
           errors: [
               {
@@ -43,4 +42,34 @@ const followUser = async (userRequest, userAccept, response) => {
   }
 };
 
-module.exports = { getAccountDetails, followUser };
+const unFollowUser = async (userRequest, userToFollow, response) => {
+    const currentUser = await UserModel.findOne({user_name: userRequest});
+    const userToBeUnfollowed = await UserModel.findOne({user_name: userToFollow});
+
+    if(!currentUser.following.includes(userToBeUnfollowed.user_name)){
+        return response.status(400).json({
+            errors: [
+                {
+                    msg: "You do not currently follow this user",
+                },
+            ],
+        });
+    }
+    else {
+        let currentUserFollowingList = currentUser.following;
+        const followingIndex = currentUserFollowingList.indexOf(userToBeUnfollowed.user_name);
+        currentUserFollowingList.splice(followingIndex, 1);
+        await currentUser.save();
+
+        let userToBeUnfollowedFollowersList = userToBeUnfollowed.followers;
+        const followersIndex = userToBeUnfollowedFollowersList.indexOf(currentUser.user_name);
+        userToBeUnfollowedFollowersList.splice(followersIndex, 1);
+        await userToBeUnfollowed.save();
+
+        return response.status(200).json({
+            status: "success",
+        });
+    }
+};
+
+module.exports = { getAccountDetails, followUser, unFollowUser };
