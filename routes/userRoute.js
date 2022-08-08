@@ -11,6 +11,10 @@ router.get("/account/:userName", authToken, async (request, response) => {
   return userService.getAccountDetails(userName, response);
 });
 
+router.get("/allUsers", authToken, async (request, response) => {
+  return userService.getAllUsers(response);
+});
+
 router.post("/friends/follow", authToken, async (request, response) => {
   const { currentUser, userToFollow } = request.body;
 

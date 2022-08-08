@@ -104,4 +104,13 @@ const getAllFollowers = async (user, response) => {
     });
 };
 
-module.exports = { getAccountDetails, followUser, unFollowUser, getAllFollowing, getAllFollowers };
+const getAllUsers = async (response) => {
+    let allUsers = await UserModel.find();
+    console.log("-> allUsers", allUsers);
+    return response.status(200).json({
+        status: "success",
+        data: allUsers
+    });
+};
+
+module.exports = { getAccountDetails, followUser, unFollowUser, getAllFollowing, getAllFollowers, getAllUsers };
