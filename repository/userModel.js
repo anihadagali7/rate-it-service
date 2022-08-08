@@ -10,6 +10,8 @@ const userSchema = new Schema({
   password: { type: String, required: true },
   phone_number: String,
   picture: String,
+  followers: [{ type: String }],
+  following: [{ type: String }],
   is_admin: Boolean,
   is_active: Boolean,
   date_created: Date,

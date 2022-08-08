@@ -1,4 +1,5 @@
 const UserModel = require("../repository/userModel");
+const {response} = require("express");
 
 const getAccountDetails = async (userName, response) => {
   const user = await UserModel.findOne({ user_name: userName });
@@ -11,4 +12,35 @@ const getAccountDetails = async (userName, response) => {
   });
 };
 
-module.exports = { getAccountDetails };
+const followUser = async (userRequest, userAccept, response) => {
+  const currentUser = await UserModel.findOne({user_name: userRequest});
+  const userToBeFollowed = await UserModel.findOne({user_name: userAccept});
+
+  if(currentUser.following.includes(userToBeFollowed.user_name)){
+      console.log("already includes")
+      return response.status(400).json({
+          errors: [
+              {
+                  msg: "You already follow this user",
+              },
+          ],
+      });
+  }
+  else {
+      let currentUserFollowingList = currentUser.following;
+      currentUserFollowingList.push(userToBeFollowed.user_name);
+      currentUser.following = currentUserFollowingList;
+      await currentUser.save();
+
+      let userToBeFollowedFollowersList = userToBeFollowed.followers;
+      userToBeFollowedFollowersList.push(currentUser.user_name);
+      userToBeFollowed.followers = userToBeFollowedFollowersList;
+      await userToBeFollowed.save();
+
+      return response.status(200).json({
+          status: "success",
+      });
+  }
+};
+
+module.exports = { getAccountDetails, followUser };
