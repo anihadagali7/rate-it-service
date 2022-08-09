@@ -2,7 +2,7 @@ const UsersModel = require("../repository/userModel");
 const bcrypt = require("bcrypt");
 const JWT = require("jsonwebtoken");
 const slackClient = require("../client/slackClient");
-const { RATE_IT_DEV_LOGIN } = require("../utils/utils");
+const { RATE_IT_DEV_LOGIN, dbToUIMapperUserModel} = require("../utils/utils");
 
 const createNewUser = async (
   firstName,
@@ -60,7 +60,7 @@ const createNewUser = async (
       status: "success",
       accessToken,
       data: {
-        user: newUser,
+        user: dbToUIMapperUserModel(newUser),
       },
     });
   }
@@ -93,14 +93,7 @@ const login = async (email, password, response) => {
       status: "success",
       accessToken,
       data: {
-        user: {
-          firstName: existingUser.first_name,
-          lastName: existingUser.last_name,
-          email: existingUser.email,
-          userName: existingUser.user_name,
-          phoneNumber: existingUser.phone_number,
-          userId: existingUser._id,
-        },
+        user: dbToUIMapperUserModel(existingUser)
       },
     });
   }
