@@ -1,5 +1,6 @@
 const UserModel = require("../repository/userModel");
 const {response} = require("express");
+const {dbToUIMapperUserModel} = require("../utils/utils");
 
 const getAccountDetails = async (userName, response) => {
   const user = await UserModel.findOne({ user_name: userName });
@@ -7,7 +8,7 @@ const getAccountDetails = async (userName, response) => {
   return response.status(200).json({
     status: "success",
     data: {
-      user: dbToUIMapper(user),
+      user: dbToUIMapperUserModel(user),
     },
   });
 };
@@ -79,7 +80,7 @@ const getAllFollowing = async (user, response) => {
 
     for (const following of currentUserFollowingList) {
         const friend = await UserModel.findOne({user_name: following});
-        followingList.push(dbToUIMapper(friend));
+        followingList.push(dbToUIMapperUserModel(friend));
     }
 
     return response.status(200).json({
@@ -95,7 +96,7 @@ const getAllFollowers = async (user, response) => {
 
     for (const follower of currentUserFollowersList) {
         const friend = await UserModel.findOne({user_name: follower});
-        followersList.push(dbToUIMapper(friend));
+        followersList.push(dbToUIMapperUserModel(friend));
     }
 
     return response.status(200).json({
@@ -106,24 +107,16 @@ const getAllFollowers = async (user, response) => {
 
 const getAllUsers = async (response) => {
     let allUsers = await UserModel.find();
+    let finalList = [];
+
+    allUsers.forEach(user => {
+        let mappedUser = dbToUIMapperUserModel(user);
+        finalList.push(mappedUser);
+    })
     return response.status(200).json({
         status: "success",
-        data: allUsers
+        data: finalList
     });
 };
-
-const dbToUIMapper = (user) => {
-    const clone = JSON.parse(JSON.stringify(user));
-    clone["firstName"] = user.first_name;
-    clone["lastName"] = user.last_name;
-    clone["userName"] = user.user_name;
-    clone["phoneNumber"] = user.phone_number;
-    delete clone.first_name;
-    delete clone.last_name;
-    delete clone.user_name;
-    delete clone.phone_number;
-
-    return clone;
-}
 
 module.exports = { getAccountDetails, followUser, unFollowUser, getAllFollowing, getAllFollowers, getAllUsers };
