@@ -9,12 +9,12 @@ const createNewRating = async (mediaId, rating, comments, userId, response) => {
 
   const newRating = await new RatingModel({
     media: existingMedia,
-    rated_by: existingUser,
+    ratedBy: existingUser,
     rating: rating,
     comments: comments,
-    is_active: true,
-    date_created: Date.now(),
-    date_updated: Date.now(),
+    isActive: true,
+    dateCreated: Date.now(),
+    dateUpdated: Date.now(),
   }).save();
 
   slackClient.postMessage(
