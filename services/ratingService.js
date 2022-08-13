@@ -2,10 +2,9 @@ const RatingModel = require("../repository/ratingModel");
 const slackClient = require("../client/slackClient");
 const MediaModel = require("../repository/mediaModel");
 const UserModel = require("../repository/userModel");
-const {response} = require("express");
 
-const createNewRating = async (mediaId, rating, comments, userId, response) => {
-  const existingUser = await UserModel.findById(userId);
+const createNewRating = async (mediaId, rating, comments, userName, response) => {
+  const existingUser = await UserModel.findOne({userName: userName});
   const existingMedia = await MediaModel.findOne({ mediaId: mediaId });
 
   const newRating = await new RatingModel({
@@ -32,15 +31,16 @@ const createNewRating = async (mediaId, rating, comments, userId, response) => {
 };
 
 const getRatingsForUser = async (userName, response) => {
-  const existingUser = await UserModel.findOne({user_name: userName});
-  const ratingsList = await RatingModel.find({rated_by: existingUser});
+  let ratingsList = [];
+  const existingUser = await UserModel.findOne({userName: userName});
+  const list = await RatingModel.find({ratedBy: existingUser});
 
-  ratingsList.sort((a,b)=>b.date_created - a.date_created);
+  list.sort((a,b)=>b.date_created - a.date_created);
 
   return response.status(201).json({
     status: "success",
     data: {
-      ratingsList,
+      list,
     },
   });
 }

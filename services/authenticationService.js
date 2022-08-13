@@ -40,7 +40,7 @@ const createNewUser = async (
       lastName: lastName,
       phoneNumber: phoneNumber,
       email: email,
-      user_name: userName,
+      userName: userName,
       password: hashedPassword,
       isActive: true,
       isAdmin: false,
