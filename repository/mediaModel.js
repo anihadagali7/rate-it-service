@@ -14,15 +14,15 @@ const mediaSchema = new Schema({
   album: String,
   description: String,
   tag_line: String,
-  media_type: {
+  mediaType: {
     type: String,
     enum: ["MOVIE", "BOOK", "PODCAST", "TV SHOW", "MUSIC", "THEATRE"],
     // default: "user",
     required: true,
   },
   picture: String,
-  date_released: Date,
-  media_id: String,
+  dateReleased: Date,
+  mediaId: String,
 });
 
 const media = mongoose.model("media", mediaSchema);
