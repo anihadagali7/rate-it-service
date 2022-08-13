@@ -5,7 +5,7 @@ const UserModel = require("../repository/userModel");
 
 const createNewRating = async (mediaId, rating, comments, userId, response) => {
   const existingUser = await UserModel.findById(userId);
-  const existingMedia = await MediaModel.findOne({ media_id: mediaId });
+  const existingMedia = await MediaModel.findOne({ mediaId: mediaId });
 
   const newRating = await new RatingModel({
     media: existingMedia,
