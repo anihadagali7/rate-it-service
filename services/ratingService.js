@@ -52,4 +52,26 @@ const getRatingsForUser = async (userName, response) => {
   });
 }
 
-module.exports = { createNewRating, getRatingsForUser };
+const getRatingsForMedia = async (mediaId, response) => {
+  let ratingsList = [];
+  const existingMedia = await MediaModel.findOne({mediaId: mediaId});
+  const list = await RatingModel.find({media: existingMedia});
+
+  for(let rating of list) {
+    let ratingObject = JSON.parse(JSON.stringify(rating));
+    ratingObject.media = await MediaModel.findById(rating.media);
+    ratingObject.ratedBy = await UserModel.findById(rating.ratedBy);
+    ratingsList.push(ratingObject);
+  }
+
+  ratingsList.sort((a,b)=>b.dateCreated - a.dateCreated);
+
+  return response.status(201).json({
+    status: "success",
+    data: {
+      ratingsList,
+    },
+  });
+}
+
+module.exports = { createNewRating, getRatingsForUser, getRatingsForMedia };

@@ -10,10 +10,16 @@ router.post("/rating", authToken, async (request, response) => {
   return ratingService.createNewRating(mediaId, rating, comments, userName, response);
 });
 
-router.get("/ratings/:userName", authToken, async (request, response) => {
+router.get("/ratings/user/:userName", authToken, async (request, response) => {
   const { userName } = request.params;
 
   return ratingService.getRatingsForUser(userName, response);
+});
+
+router.get("/ratings/media/:mediaId", authToken, async (request, response) => {
+  const { mediaId } = request.params;
+
+  return ratingService.getRatingsForMedia(mediaId, response);
 });
 
 module.exports = router;
