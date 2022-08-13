@@ -1,23 +1,21 @@
 const UserModel = require("../repository/userModel");
-const {response} = require("express");
-const {dbToUIMapperUserModel} = require("../utils/utils");
 
 const getAccountDetails = async (userName, response) => {
-  const user = await UserModel.findOne({ user_name: userName });
+  const user = await UserModel.findOne({ userName: userName });
 
   return response.status(200).json({
     status: "success",
     data: {
-      user: dbToUIMapperUserModel(user),
+      user: user,
     },
   });
 };
 
 const followUser = async (userRequest, userToFollow, response) => {
-  const currentUser = await UserModel.findOne({user_name: userRequest});
-  const userToBeFollowed = await UserModel.findOne({user_name: userToFollow});
+  const currentUser = await UserModel.findOne({userName: userRequest});
+  const userToBeFollowed = await UserModel.findOne({userName: userToFollow});
 
-  if(currentUser.following.includes(userToBeFollowed.user_name)){
+  if(currentUser.following.includes(userToBeFollowed.userName)){
       return response.status(400).json({
           errors: [
               {
@@ -28,12 +26,12 @@ const followUser = async (userRequest, userToFollow, response) => {
   }
   else {
       let currentUserFollowingList = currentUser.following;
-      currentUserFollowingList.push(userToBeFollowed.user_name);
+      currentUserFollowingList.push(userToBeFollowed.userName);
       currentUser.following = currentUserFollowingList;
       await currentUser.save();
 
       let userToBeFollowedFollowersList = userToBeFollowed.followers;
-      userToBeFollowedFollowersList.push(currentUser.user_name);
+      userToBeFollowedFollowersList.push(currentUser.userName);
       userToBeFollowed.followers = userToBeFollowedFollowersList;
       await userToBeFollowed.save();
 
@@ -44,10 +42,10 @@ const followUser = async (userRequest, userToFollow, response) => {
 };
 
 const unFollowUser = async (userRequest, userToFollow, response) => {
-    const currentUser = await UserModel.findOne({user_name: userRequest});
-    const userToBeUnfollowed = await UserModel.findOne({user_name: userToFollow});
+    const currentUser = await UserModel.findOne({userName: userRequest});
+    const userToBeUnfollowed = await UserModel.findOne({userName: userToFollow});
 
-    if(!currentUser.following.includes(userToBeUnfollowed.user_name)){
+    if(!currentUser.following.includes(userToBeUnfollowed.userName)){
         return response.status(400).json({
             errors: [
                 {
@@ -58,12 +56,12 @@ const unFollowUser = async (userRequest, userToFollow, response) => {
     }
     else {
         let currentUserFollowingList = currentUser.following;
-        const followingIndex = currentUserFollowingList.indexOf(userToBeUnfollowed.user_name);
+        const followingIndex = currentUserFollowingList.indexOf(userToBeUnfollowed.userName);
         currentUserFollowingList.splice(followingIndex, 1);
         await currentUser.save();
 
         let userToBeUnfollowedFollowersList = userToBeUnfollowed.followers;
-        const followersIndex = userToBeUnfollowedFollowersList.indexOf(currentUser.user_name);
+        const followersIndex = userToBeUnfollowedFollowersList.indexOf(currentUser.userName);
         userToBeUnfollowedFollowersList.splice(followersIndex, 1);
         await userToBeUnfollowed.save();
 
@@ -75,12 +73,12 @@ const unFollowUser = async (userRequest, userToFollow, response) => {
 
 const getAllFollowing = async (user, response) => {
     let followingList = [];
-    const currentUser = await UserModel.findOne({user_name: user});
+    const currentUser = await UserModel.findOne({userName: user});
     let currentUserFollowingList = currentUser.following;
 
     for (const following of currentUserFollowingList) {
-        const friend = await UserModel.findOne({user_name: following});
-        followingList.push(dbToUIMapperUserModel(friend));
+        const friend = await UserModel.findOne({userName: following});
+        followingList.push(friend);
     }
 
     return response.status(200).json({
@@ -91,12 +89,12 @@ const getAllFollowing = async (user, response) => {
 
 const getAllFollowers = async (user, response) => {
     let followersList = [];
-    const currentUser = await UserModel.findOne({user_name: user});
+    const currentUser = await UserModel.findOne({userName: user});
     let currentUserFollowersList = currentUser.followers;
 
     for (const follower of currentUserFollowersList) {
-        const friend = await UserModel.findOne({user_name: follower});
-        followersList.push(dbToUIMapperUserModel(friend));
+        const friend = await UserModel.findOne({userName: follower});
+        followersList.push(friend);
     }
 
     return response.status(200).json({
@@ -107,15 +105,10 @@ const getAllFollowers = async (user, response) => {
 
 const getAllUsers = async (response) => {
     let allUsers = await UserModel.find();
-    let finalList = [];
 
-    allUsers.forEach(user => {
-        let mappedUser = dbToUIMapperUserModel(user);
-        finalList.push(mappedUser);
-    })
     return response.status(200).json({
         status: "success",
-        data: finalList
+        data: allUsers
     });
 };
 
