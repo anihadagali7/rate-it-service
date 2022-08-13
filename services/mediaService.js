@@ -4,89 +4,29 @@ const tmdbClient = require("../client/tmdbClient");
 const spotifyClient = require("../client/spotifyClient");
 
 const createNewMedia = async (media, response) => {
-  let mediaToBeSaved = {};
-  if (media.mediaType === "MOVIE" || media.mediaType === "TV SHOW") {
-    mediaToBeSaved = newMovieOrTvShow(media);
-  } else if (media.mediaType === "MUSIC") {
-    mediaToBeSaved = newMusic(media);
-  }
-
-  const newMedia = await new MediaModel(mediaToBeSaved).save();
+  const newMedia = await new MediaModel(media).save();
 
   slackClient.postMessage(
-    `${newMedia.name} - ${newMedia.media_type} has just been added!`,
+    `${newMedia.name} - ${newMedia.mediaType} has just been added!`,
     process.env.SLACK_DEV_MEDIA_URL
   );
-
-  let mediaMapper = {};
-
-  if (media.mediaType === "MOVIE" || media.mediaType === "TV SHOW") {
-    mediaMapper = dbMovieTvShowToUIMapper(newMedia);
-  } else if (media.mediaType === "MUSIC") {
-    mediaMapper = dbMusicToUIMapper(newMedia);
-  }
 
   return response.status(201).json({
     status: "success",
     data: {
-      media: mediaMapper,
+      media: newMedia,
     },
   });
 };
 
-// media is coming from UI -> send to DB
-const newMovieOrTvShow = (media) => {
-  return {
-    name: media.name,
-    description: media.description,
-    date_released: media.dateReleased,
-    picture: media.picture,
-    media_type: media.mediaType,
-    media_id: media.mediaId,
-    cast: media.cast,
-    director: media.director,
-    producer: media.producer,
-    tag_line: media.tagLine,
-  };
-};
-
-// media is coming from UI -> send to DB
-const newMusic = (media) => {
-  return {
-    name: media.name,
-    date_released: media.dateReleased,
-    picture: media.picture,
-    media_type: media.mediaType,
-    media_id: media.mediaId,
-    artist: media.artist,
-    album: media.album,
-  };
-};
-
-// media is coming from DB -> send to UI
-const dbMovieTvShowToUIMapper = (media) => {
-  const clone = JSON.parse(JSON.stringify(media));
-  clone["mediaId"] = media.media_id;
-  clone["mediaType"] = media.media_type;
-  clone["dateReleased"] = media.date_released;
-  delete clone.media_id;
-  delete clone.media_type;
-  delete clone.date_released;
-  delete clone.artist;
-  delete clone.author;
-  delete clone.host;
-
-  return clone;
-};
-
 const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
-  const existingMedia = await MediaModel.findOne({ media_id: tmdbId });
+  const existingMedia = await MediaModel.findOne({ mediaId: tmdbId });
 
   if (existingMedia) {
     return response.status(200).json({
       status: "success",
       data: {
-        media: dbMovieTvShowToUIMapper(existingMedia),
+        media: existingMedia,
       },
     });
   } else {
@@ -95,7 +35,7 @@ const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
 
     let movieToBeAdded = {};
 
-    if (mediaType == "movie") {
+    if (mediaType === "movie") {
       movieToBeAdded["name"] = mediaDetails.original_title;
       movieToBeAdded["dateReleased"] = mediaDetails.release_date;
     } else {
@@ -156,30 +96,13 @@ const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
   }
 };
 
-// media is coming from DB -> send to UI
-const dbMusicToUIMapper = (media) => {
-  const clone = JSON.parse(JSON.stringify(media));
-  clone["mediaId"] = media.media_id;
-  clone["mediaType"] = media.media_type;
-  clone["dateReleased"] = media.date_released;
-  delete clone.media_id;
-  delete clone.media_type;
-  delete clone.author;
-  delete clone.producer;
-  delete clone.director;
-  delete clone.host;
-  delete clone.cast;
-
-  return clone;
-};
-
 const getMusicDetails = async (spotifyId, response) => {
-  const existingMedia = await MediaModel.findOne({ media_id: spotifyId });
+  const existingMedia = await MediaModel.findOne({ mediaId: spotifyId });
   if (existingMedia) {
     return response.status(200).json({
       status: "success",
       data: {
-        media: dbMusicToUIMapper(existingMedia),
+        media: existingMedia,
       },
     });
   } else {
