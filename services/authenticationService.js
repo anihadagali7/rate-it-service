@@ -40,7 +40,7 @@ const createNewUser = async (
       lastName: lastName,
       phoneNumber: phoneNumber,
       email: email,
-      user_name: userName,
+      userName: userName,
       password: hashedPassword,
       isActive: true,
       isAdmin: false,
@@ -67,7 +67,6 @@ const createNewUser = async (
 
 const login = async (email, password, response) => {
   let existingUser = await UsersModel.findOne({ email: email });
-  console.log("-> existingUser", existingUser);
 
   if (existingUser) {
     let isMatch = await bcrypt.compare(password, existingUser.password);
