@@ -46,8 +46,7 @@ const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
     movieToBeAdded["description"] = mediaDetails.overview;
     movieToBeAdded["tagLine"] = mediaDetails.tagLine;
     movieToBeAdded["mediaId"] = mediaDetails.id;
-    movieToBeAdded["mediaType"] =
-      mediaType === "tv" ? "TV SHOW" : mediaType.toUpperCase();
+    movieToBeAdded["mediaType"] = mediaType.toUpperCase();
 
     if (mediaDetails.poster_path) {
       let posterUrl = `https://image.tmdb.org/t/p/w500${mediaDetails.poster_path}`;
