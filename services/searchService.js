@@ -1,6 +1,7 @@
 const { response } = require("express");
 const TmdbClient = require("../client/tmdbClient");
 const SpotifyClient = require("../client/spotifyClient");
+const UserModel = require("../repository/userModel");
 
 const searchMovies = async (keyWord, response) => {
   const results = await TmdbClient.searchMovie(keyWord);
@@ -102,4 +103,21 @@ const searchMusic = async (keyWord, response) => {
   });
 };
 
-module.exports = { searchMovies, searchTvShows, searchMusic };
+const searchUsers = async (keyWord, response) => {
+  let getAllUsers = await UserModel.find();
+
+  const updatedList = getAllUsers.filter(user => {
+    return (
+        user.userName.toLowerCase().search(keyWord.toLowerCase()) !== -1 ||
+        user.firstName.toLowerCase().search(keyWord.toLowerCase()) !== -1
+    );
+  });
+
+  return response.status(200).json({
+    status: "success",
+    data: updatedList,
+    mediaType: 'user'
+  });
+}
+
+module.exports = { searchMovies, searchTvShows, searchMusic, searchUsers };

@@ -22,4 +22,10 @@ router.post("/search/music", authToken, async (request, response) => {
   return searchService.searchMusic(keyWord, response);
 });
 
+router.post("/search/user", authToken, async (request, response) => {
+  const { keyWord } = request.body;
+
+  return searchService.searchUsers(keyWord, response);
+});
+
 module.exports = router;
