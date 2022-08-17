@@ -115,7 +115,9 @@ const searchUsers = async (keyWord, response) => {
 
   return response.status(200).json({
     status: "success",
-    data: updatedList,
+    data: {
+      mediaList: updatedList,
+    },
     mediaType: 'user'
   });
 }
