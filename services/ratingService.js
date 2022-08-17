@@ -44,7 +44,7 @@ const getRatingsForUser = async (userName, response) => {
 
   ratingsList.sort((a,b)=>b.dateCreated - a.dateCreated);
 
-  return response.status(201).json({
+  return response.status(200).json({
     status: "success",
     data: {
       ratingsList,
@@ -66,7 +66,7 @@ const getRatingsForMedia = async (mediaId, response) => {
 
   ratingsList.sort((a,b)=>b.dateCreated - a.dateCreated);
 
-  return response.status(201).json({
+  return response.status(200).json({
     status: "success",
     data: {
       ratingsList,
