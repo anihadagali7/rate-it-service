@@ -12,12 +12,6 @@ router.get("/", async (request, response) => {
 
 router.post(
   "/create-user",
-  [
-    check("email", "Invalid email").isEmail(),
-    check("password", "Password must be at least 6 characters long").isLength({
-      min: 6,
-    }),
-  ],
   async (request, response) => {
     const { firstName, lastName, email, password, phoneNumber, userName } = request.body;
 
@@ -43,12 +37,6 @@ router.post(
 
 router.post(
   "/login",
-  [
-    check("email", "Invalid email").isEmail(),
-    check("password", "Password must be at least 6 characters long").isLength({
-      min: 6,
-    }),
-  ],
   async (request, response) => {
     const { email, password } = request.body;
 
