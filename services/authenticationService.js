@@ -17,19 +17,15 @@ const createNewUser = async (
 
   if (existingUserEmail) {
     return response.status(400).json({
-      errors: [
-        {
-          msg: "This email is already being used",
-        },
-      ],
+      errors: {
+        msg: "This email is already being used",
+      }
     });
   } else if (existingUserName) {
     return response.status(400).json({
-      errors: [
-        {
-          msg: "This username is already being used",
-        },
-      ],
+      errors: {
+        msg: "This username is already being used",
+      }
     });
   } else {
     const salt = await bcrypt.genSalt(10);
@@ -73,11 +69,9 @@ const login = async (email, password, response) => {
 
     if (!isMatch) {
       return response.status(401).json({
-        errors: [
-          {
-            msg: "Email or password is invalid",
-          },
-        ],
+        errors:{
+          msg: "Email or password is invalid",
+        }
       });
     }
 
@@ -98,11 +92,9 @@ const login = async (email, password, response) => {
   }
 
   return response.status(401).json({
-    errors: [
-      {
-        msg: "Invalid credentials",
-      },
-    ],
+    errors: {
+      msg: "Invalid email",
+    },
   });
 };
 
