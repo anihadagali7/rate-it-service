@@ -107,7 +107,7 @@ const signJwtToken = async (user) => {
       id: user._id,
     },
     process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: "45m" }
+    { expiresIn: "365d" }
   );
 
   return accessToken;
