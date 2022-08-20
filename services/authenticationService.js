@@ -1,6 +1,7 @@
 const UsersModel = require("../repository/userModel");
 const JWT = require("jsonwebtoken");
 const slackClient = require("../client/slackClient");
+const bcrypt = require("bcrypt");
 
 const createNewUser = async (
   firstName,
@@ -27,13 +28,16 @@ const createNewUser = async (
       }
     });
   } else {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     const newUser = await new UsersModel({
       firstName: firstName,
       lastName: lastName,
       phoneNumber: phoneNumber,
       email: email,
       userName: userName,
-      password: password,
+      password: hashedPassword,
       isActive: true,
       isAdmin: false,
       dateCreated: Date.now(),
@@ -61,7 +65,7 @@ const login = async (email, password, response) => {
   let existingUser = await UsersModel.findOne({ email: email });
 
   if (existingUser) {
-    let isMatch = password === existingUser.password;
+    let isMatch = await bcrypt.compare(password, existingUser.password);
 
     if (!isMatch) {
       return response.status(401).json({
