@@ -26,4 +26,9 @@ router.get("/ratings/explore", authToken, async (request, response) => {
   return ratingService.getExploreRatings(response);
 });
 
+router.get("/ratings/following/:userName", authToken, async (request, response) => {
+  const { userName } = request.params;
+  return ratingService.getRatingsByFollowing(userName, response);
+});
+
 module.exports = router;

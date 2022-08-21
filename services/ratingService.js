@@ -70,7 +70,28 @@ const getExploreRatings = async (response) => {
       ratingsList,
     },
   });
-}
+};
+
+const getRatingsByFollowing = async (userName, response) => {
+  const existingUser = await UserModel.findOne({userName: userName});
+  const listOfRatingsByFollowers = [];
+  let followingList = existingUser.following;
+
+  for(let user of followingList){
+    const userModel = await UserModel.findOne({userName: user});
+    const list = await RatingModel.find({ratedBy: userModel});
+    listOfRatingsByFollowers.push(...list);
+  }
+
+  const ratingsList = await prepareRatingsList(listOfRatingsByFollowers);
+
+  return response.status(200).json({
+    status: "success",
+    data: {
+      ratingsList,
+    },
+  });
+};
 
 const prepareRatingsList = async (ratings) => {
   let ratingsList = [];
@@ -81,8 +102,8 @@ const prepareRatingsList = async (ratings) => {
     ratingsList.push(ratingObject);
   }
 
-  ratingsList.sort((a,b)=>b.dateCreated - a.dateCreated);
+  ratingsList.sort((a,b)=>a.dateCreated - b.dateCreated);
   return ratingsList;
 }
 
-module.exports = { createNewRating, getRatingsForUser, getRatingsForMedia, getExploreRatings };
+module.exports = { createNewRating, getRatingsForUser, getRatingsForMedia, getExploreRatings, getRatingsByFollowing };
