@@ -16,7 +16,7 @@ const mediaSchema = new Schema({
   tag_line: String,
   mediaType: {
     type: String,
-    enum: ["MOVIE", "BOOK", "PODCAST", "TV SHOW", "MUSIC", "THEATRE"],
+    enum: ["MOVIE", "BOOK", "PODCAST", "TV", "MUSIC", "THEATRE"],
     // default: "user",
     required: true,
   },
