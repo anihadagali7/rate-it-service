@@ -22,7 +22,7 @@ router.get("/ratings/media/:mediaId", authToken, async (request, response) => {
   return ratingService.getRatingsForMedia(mediaId, response);
 });
 
-router.get("/ratings/explore", authToken, async (request, response) => {
+router.get("/ratings/explore", async (request, response) => {
   return ratingService.getExploreRatings(response);
 });
 
