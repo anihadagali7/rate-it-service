@@ -20,7 +20,7 @@ const createNewRating = async (mediaId, rating, comments, userName, response) =>
 
   slackClient.postMessage(
     `Rating has been added for ${existingMedia.name} - ${existingMedia.mediaType} by ${existingUser.userName}!`,
-    process.env.SLACK_DEV_RATING_URL
+    process.env.SLACK_RATING_URL
   );
 
   return response.status(201).json({
