@@ -48,7 +48,7 @@ const createNewUser = async (
 
     slackClient.postMessage(
       `${userName} created a new account!`,
-      process.env.SLACK_DEV_LOGIN_URL
+      process.env.SLACK_LOGIN_URL
     );
 
     return response.status(201).json({
@@ -79,7 +79,7 @@ const login = async (email, password, response) => {
 
     slackClient.postMessage(
       `${email} logged in!`,
-      process.env.SLACK_DEV_LOGIN_URL
+      process.env.SLACK_LOGIN_URL
     );
 
     return response.status(200).json({
