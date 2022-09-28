@@ -24,6 +24,7 @@ app.use("/api", ratingRoute);
 app.use("/api/media", mediaRoute);
 app.use("/api", searchRoute);
 app.use("/api", userRoute);
+app.set("view engine", "ejs");
 
 app.listen(PORT, () => {
   console.log(`Application Started on PORT ${PORT}`);

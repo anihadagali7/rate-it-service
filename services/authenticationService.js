@@ -10,6 +10,7 @@ const createNewUser = async (
   password,
   phoneNumber,
   userName,
+  profilePicture,
   response
 ) => {
   let existingUserEmail = await UsersModel.findOne({ email: email });
@@ -37,6 +38,7 @@ const createNewUser = async (
       phoneNumber: phoneNumber,
       email: email,
       userName: userName,
+      picture: profilePicture,
       password: hashedPassword,
       isActive: true,
       isAdmin: false,

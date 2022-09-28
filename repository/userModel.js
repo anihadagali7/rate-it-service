@@ -9,7 +9,7 @@ const userSchema = new Schema({
   email: { type: String, unique: true },
   password: { type: String, required: true },
   phoneNumber: String,
-  picture: String,
+  picture: { type: String, required: true },
   followers: [{ type: String }],
   following: [{ type: String }],
   isAdmin: Boolean,
