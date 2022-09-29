@@ -3,12 +3,13 @@ const router = express.Router();
 const { check, validationResult } = require("express-validator");
 const multer = require("multer");
 const authenticationService = require("../services/authenticationService");
+const path = require('node:path');
 
 require("dotenv").config();
 
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
-        cb(null, './uploads/');
+        cb(null, path.join(__dirname, '/uploads/'));
     },
     filename: function(req, file, cb) {
         cb(null, new Date().toISOString() + file.originalname);
