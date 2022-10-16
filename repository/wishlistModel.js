@@ -1,0 +1,13 @@
+const mongoose = require("mongoose");
+
+const Schema = mongoose.Schema;
+
+const wishlistSchema = new Schema({
+  media: { type: Schema.Types.ObjectId, ref: "media", required: true },
+  addedBy: { type: Schema.Types.ObjectId, ref: "user", required: true },
+  isActive: Boolean,
+  dateCreated: Date,
+});
+
+const wishlists = mongoose.model("wishlist", wishlistSchema);
+module.exports = wishlists;
