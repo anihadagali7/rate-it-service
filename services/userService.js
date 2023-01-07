@@ -15,7 +15,16 @@ const followUser = async (userRequest, userToFollow, response) => {
   const currentUser = await UserModel.findOne({userName: userRequest});
   const userToBeFollowed = await UserModel.findOne({userName: userToFollow});
 
-  if(currentUser.following.includes(userToBeFollowed.userName)){
+  if (userRequest === userToFollow){
+      return response.status(400).json({
+          errors: [
+              {
+                  msg: "You cannot follow yourself",
+              },
+          ],
+      });
+  }
+  else if(currentUser.following.includes(userToBeFollowed.userName)){
       return response.status(400).json({
           errors: [
               {
@@ -45,7 +54,16 @@ const unFollowUser = async (userRequest, userToFollow, response) => {
     const currentUser = await UserModel.findOne({userName: userRequest});
     const userToBeUnfollowed = await UserModel.findOne({userName: userToFollow});
 
-    if(!currentUser.following.includes(userToBeUnfollowed.userName)){
+    if (userRequest === userToFollow){
+        return response.status(400).json({
+            errors: [
+                {
+                    msg: "You cannot unfollow yourself",
+                },
+            ],
+        });
+    }
+    else if(!currentUser.following.includes(userToBeUnfollowed.userName)){
         return response.status(400).json({
             errors: [
                 {
