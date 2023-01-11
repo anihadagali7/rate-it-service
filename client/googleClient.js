@@ -15,5 +15,17 @@ const searchForBooks = async (keyword) => {
     }
 }
 
-module.exports = {searchForBooks};
+const searchForBooksById = async (keyword) => {
+    const url = `https://www.googleapis.com/books/v1/volumes/${keyword}?key=${api_key}`;
+
+    try {
+        const response = await axios.get(encodeURI(url));
+        return response.data;
+
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+module.exports = {searchForBooks, searchForBooksById};
 

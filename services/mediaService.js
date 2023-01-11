@@ -2,6 +2,7 @@ const MediaModel = require("../repository/mediaModel");
 const slackClient = require("../client/slackClient");
 const tmdbClient = require("../client/tmdbClient");
 const spotifyClient = require("../client/spotifyClient");
+const googleClient = require("../client/googleClient");
 
 const createNewMedia = async (media, response) => {
   const newMedia = await new MediaModel(media).save();
@@ -140,4 +141,33 @@ const getMusicDetails = async (spotifyId, response) => {
   }
 };
 
-module.exports = { createNewMedia, getMovieTvShowDetails, getMusicDetails };
+const getBookDetails = async (googleBookId, response) => {
+  const existingMedia = await MediaModel.findOne({ mediaId: googleBookId });
+  if (existingMedia) {
+    return response.status(200).json({
+      status: "success",
+      data: {
+        media: existingMedia,
+      },
+    });
+  } else {
+    const mediaDetails = await googleClient.searchForBooksById(googleBookId);
+
+    let bookToBeAdded = {};
+
+    bookToBeAdded["name"] = mediaDetails.volumeInfo.title;
+    bookToBeAdded["dateReleased"] = mediaDetails.volumeInfo.publishedDate;
+    bookToBeAdded["description"] = mediaDetails.overview;
+    bookToBeAdded["mediaId"] = mediaDetails.id;
+    bookToBeAdded["mediaType"] = "BOOK";
+    bookToBeAdded["genre"] = mediaDetails.volumeInfo.categories.join();
+    bookToBeAdded["picture"] = mediaDetails.volumeInfo.imageLinks.thumbnail;
+    bookToBeAdded["author"] = mediaDetails.volumeInfo.authors;
+
+    const newMedia = createNewMedia(bookToBeAdded, response);
+
+    return newMedia;
+  }
+};
+
+module.exports = { createNewMedia, getMovieTvShowDetails, getMusicDetails, getBookDetails };

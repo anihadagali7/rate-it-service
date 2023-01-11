@@ -28,4 +28,10 @@ router.get("/music/info/:spotifyId", authToken, async (request, response) => {
   return mediaService.getMusicDetails(spotifyId, response);
 });
 
+router.get("/book/info/:googleBookId", authToken, async (request, response) => {
+  const { googleBookId } = request.params;
+
+  return mediaService.getBookDetails(googleBookId, response);
+});
+
 module.exports = router;
