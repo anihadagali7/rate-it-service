@@ -157,7 +157,7 @@ const getBookDetails = async (googleBookId, response) => {
 
     bookToBeAdded["name"] = mediaDetails.volumeInfo.title;
     bookToBeAdded["dateReleased"] = mediaDetails.volumeInfo.publishedDate;
-    bookToBeAdded["description"] = mediaDetails.overview;
+    bookToBeAdded["description"] = mediaDetails.volumeInfo.description;
     bookToBeAdded["mediaId"] = mediaDetails.id;
     bookToBeAdded["mediaType"] = "BOOK";
     bookToBeAdded["genre"] = mediaDetails.volumeInfo.categories.join();
