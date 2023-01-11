@@ -2,6 +2,7 @@ const { response } = require("express");
 const TmdbClient = require("../client/tmdbClient");
 const SpotifyClient = require("../client/spotifyClient");
 const UserModel = require("../repository/userModel");
+const GoogleClient = require("../client/googleClient");
 
 const searchMovies = async (keyWord, response) => {
   const results = await TmdbClient.searchMovie(keyWord);
@@ -120,6 +121,30 @@ const searchUsers = async (keyWord, response) => {
     },
     mediaType: 'user'
   });
-}
+};
 
-module.exports = { searchMovies, searchTvShows, searchMusic, searchUsers };
+const searchBooks = async (keyWord, response) => {
+  const results = await GoogleClient.searchForBooks(keyWord);
+  const mediaList = [];
+
+  results.forEach((book) => {
+    let searchBook = {
+      mediaId: book.id,
+      name: book.volumeInfo.title,
+      author: book.volumeInfo.authors.join(),
+      description: book.volumeInfo.description,
+      poster: book.volumeInfo.imageLinks.thumbnail,
+    };
+    mediaList.push(searchBook);
+  });
+
+  return response.status(200).json({
+    status: "success",
+    data: {
+      mediaList,
+    },
+    mediaType: 'book'
+  });
+};
+
+module.exports = { searchMovies, searchTvShows, searchMusic, searchUsers, searchBooks };

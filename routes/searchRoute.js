@@ -28,4 +28,10 @@ router.post("/search/user", authToken, async (request, response) => {
   return searchService.searchUsers(keyWord, response);
 });
 
+router.post("/search/book", authToken, async (request, response) => {
+  const { keyWord } = request.body;
+
+  return searchService.searchBooks(keyWord, response);
+});
+
 module.exports = router;
