@@ -21,7 +21,7 @@ const createNewMedia = async (media, response) => {
 };
 
 const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
-  const existingMedia = await MediaModel.findOne({ mediaId: tmdbId });
+  const existingMedia = await MediaModel.findOne({ mediaId: tmdbId, mediaType: mediaType === "movie" ? "MOVIE" : "TV" });
 
   if (existingMedia) {
     return response.status(200).json({
@@ -90,14 +90,12 @@ const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
     movieToBeAdded["director"] = [...new Set(directorList)];
     movieToBeAdded["producer"] = [...new Set(producerList)];
 
-    const newMedia = createNewMedia(movieToBeAdded, response);
-
-    return newMedia;
+    return createNewMedia(movieToBeAdded, response);
   }
 };
 
 const getMusicDetails = async (spotifyId, response) => {
-  const existingMedia = await MediaModel.findOne({ mediaId: spotifyId });
+  const existingMedia = await MediaModel.findOne({ mediaId: spotifyId, mediaType: "MUSIC" });
   if (existingMedia) {
     return response.status(200).json({
       status: "success",
@@ -135,14 +133,12 @@ const getMusicDetails = async (spotifyId, response) => {
     musicToBeAdded["picture"] = imageUrl;
     musicToBeAdded["artist"] = artists;
 
-    const newMedia = createNewMedia(musicToBeAdded, response);
-
-    return newMedia;
+    return createNewMedia(musicToBeAdded, response);
   }
 };
 
 const getBookDetails = async (googleBookId, response) => {
-  const existingMedia = await MediaModel.findOne({ mediaId: googleBookId });
+  const existingMedia = await MediaModel.findOne({ mediaId: googleBookId, mediaType: "BOOK" });
   if (existingMedia) {
     return response.status(200).json({
       status: "success",
@@ -164,9 +160,7 @@ const getBookDetails = async (googleBookId, response) => {
     bookToBeAdded["picture"] = mediaDetails.volumeInfo.imageLinks.thumbnail;
     bookToBeAdded["author"] = mediaDetails.volumeInfo.authors;
 
-    const newMedia = createNewMedia(bookToBeAdded, response);
-
-    return newMedia;
+    return createNewMedia(bookToBeAdded, response);
   }
 };
 
