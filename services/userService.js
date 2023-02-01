@@ -1,4 +1,5 @@
 const UserModel = require("../repository/userModel");
+const UsersModel = require("../repository/userModel");
 
 const getAccountDetails = async (userName, response) => {
   const user = await UserModel.findOne({ userName: userName });
@@ -130,4 +131,36 @@ const getAllUsers = async (response) => {
     });
 };
 
-module.exports = { getAccountDetails, followUser, unFollowUser, getAllFollowing, getAllFollowers, getAllUsers };
+const updateUser = async (firstName, lastName, email, phoneNumber, userName, response) => {
+    let existingUser = await UsersModel.exists({ email: email, userName: userName });
+
+    if (existingUser) {
+        const updateExistingUser = await UsersModel.findOneAndUpdate({
+            email: email,
+            userName: userName
+        }, {
+            firstName: firstName,
+            lastName: lastName,
+            phoneNumber: phoneNumber,
+            dateUpdated: Date.now(),
+        }, {
+            new: true
+        });
+
+        return response.status(200).json({
+            status: "success",
+            data: {
+                user: updateExistingUser,
+            },
+        });
+    }
+    else {
+        return response.status(400).json({
+            errors: {
+                msg: "This user does not exist",
+            }
+        });
+    }
+}
+
+module.exports = { getAccountDetails, followUser, unFollowUser, getAllFollowing, getAllFollowers, getAllUsers, updateUser };
