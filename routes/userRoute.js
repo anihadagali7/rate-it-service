@@ -39,4 +39,10 @@ router.get("/:userName/followers", authToken, async (request, response) => {
   return userService.getAllFollowers(userName, response);
 });
 
+router.put("/account/update", authToken, async (request, response) => {
+  const { firstName, lastName, email, phoneNumber, userName } = request.body;
+
+  return userService.updateUser(firstName, lastName, email, phoneNumber, userName, response);
+});
+
 module.exports = router;
