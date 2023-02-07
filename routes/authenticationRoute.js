@@ -3,6 +3,8 @@ const router = express.Router();
 const { check, validationResult } = require("express-validator");
 
 const authenticationService = require("../services/authenticationService");
+const authToken = require("../middleware/authenticateToken");
+const userService = require("../services/userService");
 
 require("dotenv").config();
 
@@ -55,5 +57,11 @@ router.post(
     );
   }
 );
+
+router.post("/account/resetPassword", authToken, async (request, response) => {
+    const { userName, currentPassword, newPassword } = request.body;
+
+    return authenticationService.resetPassword(userName, currentPassword, newPassword, response);
+});
 
 module.exports = router;

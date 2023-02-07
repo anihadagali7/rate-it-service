@@ -113,4 +113,39 @@ const signJwtToken = async (user) => {
   return accessToken;
 };
 
-module.exports = { createNewUser, login };
+const resetPassword = async (userName, currentPassword, newPassword, response) => {
+  let existingUser = await UsersModel.findOne({ userName: userName });
+
+  if (existingUser) {
+    let isMatch = await bcrypt.compare(currentPassword, existingUser.password);
+
+    if (!isMatch) {
+      return response.status(400).json({
+        errors:{
+          msg: "Current password is not valid",
+        }
+      });
+    } else {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+      const updateExistingUser = await UsersModel.findOneAndUpdate({
+        userName: userName
+      }, {
+        password: hashedPassword,
+        dateUpdated: Date.now(),
+      }, {
+        new: true
+      });
+
+      return response.status(200).json({
+        status: "success",
+        data: {
+          user: updateExistingUser
+        },
+      });
+    }
+  }
+}
+
+module.exports = { createNewUser, login, resetPassword };
