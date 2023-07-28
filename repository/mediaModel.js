@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const mediaSchema = new Schema({
+  _id: { type: Schema.Types.ObjectId, auto: true },
   name: { type: String, required: true },
   artist: [{ type: String }],
   author: [{ type: String }],
