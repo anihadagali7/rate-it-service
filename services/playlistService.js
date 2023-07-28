@@ -85,36 +85,89 @@ const getPlaylistForUser = async (userName, response) => {
 
     const list = await PlaylistModel.find({addedBy: existingUser});
 
+    if (list === undefined || list.length === 0) {
+        return response.status(200).json({
+            data: {
+                playlistList: []
+            }
+        });
+    }
+
+    const playlistList = await preparePlaylistList(list);
+
     return response.status(200).json({
         status: "success",
         data: {
-            list
+            playlistList
         }
     });
 }
 
 const getAllMediaInPlaylist = async (playlist, response) => {
+    const existingPlaylist = await PlaylistModel.findById(playlist);
+
+    if (existingPlaylist == null) {
+        return response.status(400).json({
+            errors: [
+                {
+                    msg: "That playlist does not exist"
+                }
+            ]
+        });
+    }
+
     const allMediaByPlaylist = await PlaylistMediaModel.find({playlist: playlist});
+
+    if (allMediaByPlaylist === undefined || allMediaByPlaylist.length === 0) {
+        return response.status(400).json({
+            errors: [
+                {
+                    msg: "That playlist does not exist"
+                }
+            ]
+        });
+    }
+
+    let mediaByPlaylist = {};
+    mediaByPlaylist.playlist = existingPlaylist;
+    mediaByPlaylist.mediaList = [];
+
+    for (let mediaList of allMediaByPlaylist) {
+        mediaByPlaylist.mediaList.push(mediaList.media)
+    }
+
+    mediaByPlaylist = await prepareMediaPlaylistList(mediaByPlaylist);
 
     return response.status(200).json({
         status: "success",
         data: {
-            allMediaByPlaylist
+            mediaByPlaylist
         }
     });
 }
 
-// const preparePlaylistList = async (playlist) => {
-//   let list = [];
-//   for(let media of playlist) {
-//     let playlistObject = JSON.parse(JSON.stringify(media));
-//     playlistObject.media = await MediaModel.findById(media.media);
-//     playlistObject.addedBy = await UserModel.findById(media.addedBy);
-//     list.push(playlistObject);
-//   }
-//
-//   list.sort((a,b)=>a.dateCreated - b.dateCreated);
-//   return list;
-// }
+const preparePlaylistList = async (playlistList) => {
+  let list = [];
+  for(let playlist of playlistList) {
+    let playlistObject = JSON.parse(JSON.stringify(playlist));
+    playlistObject.addedBy = await UserModel.findById(playlist.addedBy);
+    list.push(playlistObject);
+  }
+
+  list.sort((a,b)=>a.dateCreated - b.dateCreated);
+  return list;
+}
+
+const prepareMediaPlaylistList = async (mediaByPlaylist) => {
+  let list = [];
+  for(let media of mediaByPlaylist.mediaList) {
+    let existingMedia = await MediaModel.findById(media);
+    list.push(existingMedia);
+  }
+
+  mediaByPlaylist.mediaList = list;
+
+  return mediaByPlaylist;
+}
 
 module.exports = {createNewPlaylist, addMediaToPlaylist, getPlaylistForUser, getAllMediaInPlaylist};
