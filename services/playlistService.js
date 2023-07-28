@@ -8,6 +8,16 @@ const mongoose = require("mongoose");
 const createNewPlaylist = async (playlistName, userName, response) => {
     const existingUser = await UserModel.findOne({userName: userName});
 
+    if (existingUser == null) {
+        return response.status(400).json({
+            errors: [
+                {
+                    msg: "That user does not exist"
+                }
+            ]
+        });
+    }
+
     const newPlaylist = await new PlaylistModel({
         name: playlistName,
         addedBy: existingUser,
@@ -62,12 +72,34 @@ const addMediaToPlaylist = async (playlist, media, response) => {
 
 const getPlaylistForUser = async (userName, response) => {
     const existingUser = await UserModel.findOne({userName: userName});
+
+    if (existingUser == null) {
+        return response.status(400).json({
+            errors: [
+                {
+                    msg: "That user does not exist"
+                }
+            ]
+        });
+    }
+
     const list = await PlaylistModel.find({addedBy: existingUser});
 
     return response.status(200).json({
         status: "success",
         data: {
             list
+        }
+    });
+}
+
+const getAllMediaInPlaylist = async (playlist, response) => {
+    const allMediaByPlaylist = await PlaylistMediaModel.find({playlist: playlist});
+
+    return response.status(200).json({
+        status: "success",
+        data: {
+            allMediaByPlaylist
         }
     });
 }
@@ -85,4 +117,4 @@ const getPlaylistForUser = async (userName, response) => {
 //   return list;
 // }
 
-module.exports = {createNewPlaylist, addMediaToPlaylist, getPlaylistForUser};
+module.exports = {createNewPlaylist, addMediaToPlaylist, getPlaylistForUser, getAllMediaInPlaylist};
