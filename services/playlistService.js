@@ -118,7 +118,7 @@ const getAllMediaInPlaylist = async (playlist, response) => {
 
     const allMediaByPlaylist = await PlaylistMediaModel.find({playlist: playlist});
 
-    if (allMediaByPlaylist === undefined || allMediaByPlaylist.length === 0) {
+    if (allMediaByPlaylist === null) {
         return response.status(400).json({
             errors: [
                 {
