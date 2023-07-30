@@ -34,4 +34,10 @@ router.post("/search/book", authToken, async (request, response) => {
   return searchService.searchBooks(keyWord, response);
 });
 
+router.post("/search/all", authToken, async (request, response) => {
+  const { keyWord } = request.body;
+
+  return searchService.searchAllMedia(keyWord, response);
+});
+
 module.exports = router;
