@@ -16,7 +16,7 @@ const playlistRoute = require("./routes/playlistRoute");
 require("./configuration/mongoDbConnection");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(express.json());

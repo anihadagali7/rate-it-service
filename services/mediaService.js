@@ -108,9 +108,9 @@ const getMusicDetails = async (spotifyId, response) => {
 
     let musicToBeAdded = {};
 
-    musicToBeAdded["name"] = mediaDetails.name;
-    musicToBeAdded["dateReleased"] = mediaDetails.first_air_date;
-    musicToBeAdded["album"] = mediaDetails.album.name;
+    musicToBeAdded["name"] = mediaDetails?.name;
+    musicToBeAdded["dateReleased"] = mediaDetails?.first_air_date;
+    musicToBeAdded["album"] = mediaDetails?.album.name;
 
     let artists = [];
     let imageUrl;

@@ -113,7 +113,7 @@ const prepareMovieTvShowResults = async (results, fullSearchList, mediaType) => 
 
     let searchMovie = {
       mediaId: media.id,
-      name: media.original_title,
+      name: mediaType === 'movie' ? media.original_title : media.name,
       description: media.overview,
       poster: posterUrl,
       mediaType: mediaType
@@ -159,11 +159,11 @@ const prepareMusicResults = async (results, fullSearchList) => {
 const prepareBookResults = async (results, fullSearchList) => {
   results.forEach((book) => {
     let searchBook = {
-      mediaId: book.id,
-      name: book.volumeInfo.title,
-      author: book.volumeInfo.authors.join(),
-      description: book.volumeInfo.description,
-      poster: book.volumeInfo.imageLinks.thumbnail,
+      mediaId: book?.id,
+      name: book?.volumeInfo?.title,
+      author: book?.volumeInfo?.authors?.join(),
+      description: book?.volumeInfo?.description,
+      poster: book?.volumeInfo?.imageLinks?.thumbnail,
       mediaType: 'book'
     };
     fullSearchList.push(searchBook);
