@@ -115,20 +115,20 @@ const getMusicDetails = async (spotifyId, response) => {
     let artists = [];
     let imageUrl;
 
-    let imageList = mediaDetails.album.images;
-    let artistsList = mediaDetails.artists;
+    let imageList = mediaDetails?.album.images;
+    let artistsList = mediaDetails?.artists;
 
-    artistsList.forEach((artist) => {
+    artistsList && artistsList.length > 0 && artistsList.forEach((artist) => {
       artists.push(artist.name);
     });
 
-    imageList.forEach((image) => {
+    imageList && imageList.length > 0 && imageList.forEach((image) => {
       if (image.height == 640) {
         imageUrl = image.url;
       }
     });
 
-    musicToBeAdded["mediaId"] = mediaDetails.id;
+    musicToBeAdded["mediaId"] = mediaDetails?.id;
     musicToBeAdded["mediaType"] = "MUSIC";
     musicToBeAdded["picture"] = imageUrl;
     musicToBeAdded["artist"] = artists;
