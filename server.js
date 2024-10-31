@@ -22,12 +22,12 @@ app.use(cors());
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api", authenticationRoute);
-app.use("/api", ratingRoute);
+app.use("/api/ratings", ratingRoute);
 app.use("/api/media", mediaRoute);
-app.use("/api", searchRoute);
+app.use("/api/search", searchRoute);
 app.use("/api", userRoute);
-app.use("/api", wishlistRoute);
-app.use("/api", playlistRoute);
+app.use("/api/wishlist", wishlistRoute);
+app.use("/api/playlist", playlistRoute);
 
 app.listen(PORT, () => {
   console.log(`Application Started on PORT ${PORT}`);
