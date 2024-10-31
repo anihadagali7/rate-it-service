@@ -19,13 +19,13 @@ const createNewUser = async (
     return response.status(400).json({
       errors: {
         msg: "This email is already being used",
-      }
+      },
     });
   } else if (existingUserName) {
     return response.status(400).json({
       errors: {
         msg: "This username is already being used",
-      }
+      },
     });
   } else {
     const salt = await bcrypt.genSalt(10);
@@ -69,24 +69,21 @@ const login = async (email, password, response) => {
 
     if (!isMatch) {
       return response.status(401).json({
-        errors:{
+        errors: {
           msg: "Email or password is invalid",
-        }
+        },
       });
     }
 
     const accessToken = await signJwtToken(existingUser);
 
-    slackClient.postMessage(
-      `${email} logged in!`,
-      process.env.SLACK_LOGIN_URL
-    );
+    slackClient.postMessage(`${email} logged in!`, process.env.SLACK_LOGIN_URL);
 
     return response.status(200).json({
       status: "success",
       accessToken,
       data: {
-        user: existingUser
+        user: existingUser,
       },
     });
   }
@@ -113,39 +110,50 @@ const signJwtToken = async (user) => {
   return accessToken;
 };
 
-const resetPassword = async (userName, currentPassword, newPassword, response) => {
+const resetPassword = async (
+  userName,
+  currentPassword,
+  newPassword,
+  response
+) => {
   let existingUser = await UsersModel.findOne({ userName: userName });
 
   if (existingUser) {
     let isMatch = await bcrypt.compare(currentPassword, existingUser.password);
 
+    console.log("passwords match", isMatch);
+
     if (!isMatch) {
       return response.status(400).json({
-        errors:{
+        errors: {
           msg: "Current password is not valid",
-        }
+        },
       });
     } else {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-      const updateExistingUser = await UsersModel.findOneAndUpdate({
-        userName: userName
-      }, {
-        password: hashedPassword,
-        dateUpdated: Date.now(),
-      }, {
-        new: true
-      });
+      const updateExistingUser = await UsersModel.findOneAndUpdate(
+        {
+          userName: userName,
+        },
+        {
+          password: hashedPassword,
+          dateUpdated: Date.now(),
+        },
+        {
+          new: true,
+        }
+      );
 
       return response.status(200).json({
         status: "success",
         data: {
-          user: updateExistingUser
+          user: updateExistingUser,
         },
       });
     }
   }
-}
+};
 
 module.exports = { createNewUser, login, resetPassword };

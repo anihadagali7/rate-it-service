@@ -39,6 +39,12 @@ router.get("/:userName/followers", authToken, async (request, response) => {
   return userService.getAllFollowers(userName, response);
 });
 
+router.get("/:userName/friendsList", authToken, async (request, response) => {
+  const { userName } = request.params;
+
+  return userService.getAllFriends(userName, response);
+});
+
 router.put("/account/update", authToken, async (request, response) => {
   const { firstName, lastName, email, phoneNumber, userName } = request.body;
 
