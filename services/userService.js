@@ -162,7 +162,7 @@ const getAllFriends = async (user, response) => {
 
   return response.status(200).json({
     status: "success",
-    data: [{ followersList: followersList, followingList: followingList }],
+    data: { followersList: followersList, followingList: followingList },
   });
 };
 
