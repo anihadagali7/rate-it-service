@@ -15,7 +15,7 @@ const searchMovies = async (keyWord, response) => {
     data: {
       mediaList,
     },
-    mediaType: 'movie'
+    mediaType: "movie",
   });
 };
 
@@ -30,7 +30,7 @@ const searchTvShows = async (keyWord, response) => {
     data: {
       mediaList,
     },
-    mediaType: 'tv'
+    mediaType: "tv",
   });
 };
 
@@ -45,17 +45,17 @@ const searchMusic = async (keyWord, response) => {
     data: {
       mediaList,
     },
-    mediaType: 'music'
+    mediaType: "music",
   });
 };
 
 const searchUsers = async (keyWord, response) => {
   let getAllUsers = await UserModel.find();
 
-  const updatedList = getAllUsers.filter(user => {
+  const updatedList = getAllUsers.filter((user) => {
     return (
-        user.userName.toLowerCase().search(keyWord.toLowerCase()) !== -1 ||
-        user.firstName.toLowerCase().search(keyWord.toLowerCase()) !== -1
+      user.userName.toLowerCase().search(keyWord.toLowerCase()) !== -1 ||
+      user.firstName.toLowerCase().search(keyWord.toLowerCase()) !== -1
     );
   });
 
@@ -64,7 +64,7 @@ const searchUsers = async (keyWord, response) => {
     data: {
       mediaList: updatedList,
     },
-    mediaType: 'user'
+    mediaType: "user",
   });
 };
 
@@ -79,95 +79,151 @@ const searchBooks = async (keyWord, response) => {
     data: {
       mediaList,
     },
-    mediaType: 'book'
+    mediaType: "book",
   });
 };
 
 const searchAllMedia = async (keyWord, response) => {
-  const movieResults = await TmdbClient.searchMovie(keyWord);
-  const tvShowResults = await TmdbClient.searchTvShow(keyWord);
-  const musicResults = await SpotifyClient.searchByTrackArtist(keyWord);
-  const bookResults = await GoogleClient.searchForBooks(keyWord);
+  const movieList = await TmdbClient.searchMovie(keyWord);
+  const tvShowList = await TmdbClient.searchTvShow(keyWord);
+  const musicList = await SpotifyClient.searchByTrackArtist(keyWord);
+  const bookList = await GoogleClient.searchForBooks(keyWord);
 
-  let fullSearchList = [];
+  let fullSearchList = {};
 
-  await prepareMovieTvShowResults(movieResults, fullSearchList, "movie");
-  await prepareMovieTvShowResults(tvShowResults, fullSearchList, "tv");
-  await prepareMusicResults(musicResults, fullSearchList);
-  await prepareBookResults(bookResults, fullSearchList);
+  let movieResults = [];
+  let tvResults = [];
+  let musicResults = [];
+  let bookResults = [];
+
+  movieList &&
+    movieList.forEach((movie) => {
+      let result = buildMovieTvResult(movie, "movie");
+      movieResults.push(result);
+    });
+
+  tvShowList &&
+    tvShowList.forEach((tv) => {
+      let result = buildMovieTvResult(tv, "tv");
+      tvResults.push(result);
+    });
+
+  musicList &&
+    musicList.items &&
+    musicList.items.length > 0 &&
+    musicList.items.forEach((music) => {
+      let result = buildMusicResult(music);
+      musicResults.push(result);
+    });
+
+  bookList &&
+    bookList.forEach((book) => {
+      let result = buildBookResult(book);
+      bookResults.push(result);
+    });
+
+  fullSearchList["movie"] = movieResults;
+  fullSearchList["tv"] = tvResults;
+  fullSearchList["music"] = musicResults;
+  fullSearchList["book"] = bookResults;
 
   return response.status(200).json({
     status: "success",
     data: {
       fullSearchList,
-    }
+    },
   });
 };
 
-const prepareMovieTvShowResults = async (results, fullSearchList, mediaType) => {
+const prepareMovieTvShowResults = async (
+  results,
+  fullSearchList,
+  mediaType
+) => {
   results.forEach((media) => {
-    let posterUrl = "";
-    if (media.poster_path) {
-      posterUrl = `https://image.tmdb.org/t/p/w500${media.poster_path}`;
-    }
-
-    let searchMovie = {
-      mediaId: media.id,
-      name: mediaType === 'movie' ? media.original_title : media.name,
-      description: media.overview,
-      poster: posterUrl,
-      mediaType: mediaType
-    };
+    let searchMovie = buildMovieTvResult(media, mediaType);
     fullSearchList.push(searchMovie);
   });
-}
+};
 
 const prepareMusicResults = async (results, fullSearchList) => {
   results.items.forEach((song) => {
-    let albumType = song.album.albumType;
-    let albumName = song.album.name;
-    let imageList = song.album.images;
-    let artistsList = song.artists;
+    let searchMusic = buildMusicResult(song);
 
-    let artists = [];
-    let imageUrl;
-
-    artistsList.forEach((artist) => {
-      artists.push(artist.name);
-    });
-
-    imageList.forEach((image) => {
-      if (image.height == 640) {
-        imageUrl = image.url;
-      }
-    });
-
-    let musicTitle = {
-      albumType,
-      albumName,
-      name: song.name,
-      mediaId: song.id,
-      poster: imageUrl,
-      artists: artists.join(),
-      mediaType: 'music'
-    };
-
-    fullSearchList.push(musicTitle);
+    fullSearchList.push(searchMusic);
   });
-}
+};
 
 const prepareBookResults = async (results, fullSearchList) => {
   results.forEach((book) => {
-    let searchBook = {
-      mediaId: book?.id,
-      name: book?.volumeInfo?.title,
-      author: book?.volumeInfo?.authors?.join(),
-      description: book?.volumeInfo?.description,
-      poster: book?.volumeInfo?.imageLinks?.thumbnail,
-      mediaType: 'book'
-    };
+    let searchBook = buildBookResult(book);
     fullSearchList.push(searchBook);
   });
+};
+
+module.exports = {
+  searchMovies,
+  searchTvShows,
+  searchMusic,
+  searchUsers,
+  searchBooks,
+  searchAllMedia,
+};
+
+function buildBookResult(book) {
+  return {
+    mediaId: book?.id,
+    name: book?.volumeInfo?.title,
+    author: book?.volumeInfo?.authors?.join(),
+    description: book?.volumeInfo?.description,
+    poster: book?.volumeInfo?.imageLinks?.thumbnail,
+    mediaType: "book",
+  };
 }
 
-module.exports = { searchMovies, searchTvShows, searchMusic, searchUsers, searchBooks, searchAllMedia };
+function buildMusicResult(song) {
+  let albumType = song.album.albumType;
+  let albumName = song.album.name;
+  let imageList = song.album.images;
+  let artistsList = song.artists;
+
+  let artists = [];
+  let imageUrl;
+
+  artistsList.forEach((artist) => {
+    artists.push(artist.name);
+  });
+
+  imageList.forEach((image) => {
+    if (image.height == 640) {
+      imageUrl = image.url;
+    }
+  });
+
+  let musicTitle = {
+    albumType,
+    albumName,
+    name: song.name,
+    mediaId: song.id,
+    poster: imageUrl,
+    artists: artists.join(),
+    mediaType: "music",
+  };
+  return musicTitle;
+}
+
+function buildMovieTvResult(media, mediaType) {
+  let posterUrl = "";
+  if (media.poster_path) {
+    posterUrl = `https://image.tmdb.org/t/p/w500${media.poster_path}`;
+  }
+
+  let searchMovie = {
+    mediaId: media.id,
+    name: mediaType === "movie" ? media.original_title : media.name,
+    description: media.overview,
+    poster: posterUrl,
+    mediaType: mediaType,
+  };
+  return searchMovie;
+}
