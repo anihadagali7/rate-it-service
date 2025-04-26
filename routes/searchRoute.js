@@ -17,9 +17,9 @@ router.post("/tv", authToken, async (request, response) => {
 });
 
 router.post("/music", authToken, async (request, response) => {
-  const { keyWord } = request.body;
+  const { keyWord, page } = request.body;
 
-  return searchService.searchMusic(keyWord, response);
+  return searchService.searchMusic(keyWord, page, response);
 });
 
 router.post("/user", authToken, async (request, response) => {

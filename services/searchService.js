@@ -35,16 +35,17 @@ const searchTvShows = async (keyWord, page, response) => {
   });
 };
 
-const searchMusic = async (keyWord, response) => {
-  const results = await SpotifyClient.searchByTrackArtist(keyWord);
+const searchMusic = async (keyWord, page, response) => {
+  const results = await SpotifyClient.searchByTrackArtist(keyWord, page);
   let mediaList = [];
 
-  await prepareMusicResults(results, mediaList);
+  await prepareMusicResults(results?.items, mediaList);
 
   return response.status(200).json({
     status: "success",
     data: {
-      mediaList,
+      mediaList: mediaList,
+      totalPages: Math.ceil(results.total / 20),
     },
     mediaType: "music",
   });
@@ -97,13 +98,15 @@ const searchAllMedia = async (keyWord, response) => {
   let musicResults = [];
   let bookResults = [];
 
-  movieList && movieList.data &&
+  movieList &&
+    movieList.data &&
     movieList.data.forEach((movie) => {
       let result = buildMovieTvResult(movie, "movie");
       movieResults.push(result);
     });
 
-  tvShowList && tvShowList.data &&
+  tvShowList &&
+    tvShowList.data &&
     tvShowList.data.forEach((tv) => {
       let result = buildMovieTvResult(tv, "tv");
       tvResults.push(result);
@@ -148,7 +151,7 @@ const prepareMovieTvShowResults = async (
 };
 
 const prepareMusicResults = async (results, fullSearchList) => {
-  results.items.forEach((song) => {
+  results?.forEach((song) => {
     let searchMusic = buildMusicResult(song);
 
     fullSearchList.push(searchMusic);
