@@ -1,34 +1,35 @@
-const { response } = require("express");
 const TmdbClient = require("../client/tmdbClient");
 const SpotifyClient = require("../client/spotifyClient");
 const UserModel = require("../repository/userModel");
 const GoogleClient = require("../client/googleClient");
 
-const searchMovies = async (keyWord, response) => {
-  const results = await TmdbClient.searchMovie(keyWord);
+const searchMovies = async (keyWord, page, response) => {
+  const results = await TmdbClient.searchMovie(keyWord, page);
   const mediaList = [];
 
-  await prepareMovieTvShowResults(results, mediaList, "movie");
+  await prepareMovieTvShowResults(results.data, mediaList, "movie");
 
   return response.status(200).json({
     status: "success",
     data: {
-      mediaList,
+      mediaList: mediaList,
+      totalPages: results.totalPages,
     },
     mediaType: "movie",
   });
 };
 
-const searchTvShows = async (keyWord, response) => {
-  const results = await TmdbClient.searchTvShow(keyWord);
+const searchTvShows = async (keyWord, page, response) => {
+  const results = await TmdbClient.searchTvShow(keyWord, page);
   const mediaList = [];
 
-  await prepareMovieTvShowResults(results, mediaList, "tv");
+  await prepareMovieTvShowResults(results.data, mediaList, "tv");
 
   return response.status(200).json({
     status: "success",
     data: {
-      mediaList,
+      mediaList: mediaList,
+      totalPages: results.totalPages,
     },
     mediaType: "tv",
   });
@@ -96,14 +97,14 @@ const searchAllMedia = async (keyWord, response) => {
   let musicResults = [];
   let bookResults = [];
 
-  movieList &&
-    movieList.forEach((movie) => {
+  movieList && movieList.data &&
+    movieList.data.forEach((movie) => {
       let result = buildMovieTvResult(movie, "movie");
       movieResults.push(result);
     });
 
-  tvShowList &&
-    tvShowList.forEach((tv) => {
+  tvShowList && tvShowList.data &&
+    tvShowList.data.forEach((tv) => {
       let result = buildMovieTvResult(tv, "tv");
       tvResults.push(result);
     });

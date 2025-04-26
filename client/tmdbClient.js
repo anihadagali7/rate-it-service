@@ -1,25 +1,31 @@
 const { tmdbUrl } = require("../utils/utils");
 const axios = require("axios");
 
-const searchMovie = async (keyword) => {
+const searchMovie = async (keyword, page = 1) => {
   const url =
     tmdbUrl +
     `/search/movie?api_key=${process.env.TMDB_TOKEN}&language=en-US` +
-    `&query=${keyword}`;
+    `&query=${keyword}&page=${page}`;
 
   const result = await axios.get(url);
 
-  return result.data.results;
+  const data = result.data.results;
+  const totalPages = result.data.total_pages;
+
+  return { data, totalPages };
 };
 
-const searchTvShow = async (keyword) => {
+const searchTvShow = async (keyword, page = 1) => {
   const url =
     tmdbUrl +
-    `/search/tv?api_key=${process.env.TMDB_TOKEN}&query=${keyword}&language=en-US`;
+    `/search/tv?api_key=${process.env.TMDB_TOKEN}&query=${keyword}&language=en-US&page=${page}`;
 
   const result = await axios.get(url);
 
-  return result.data.results;
+  const data = result.data.results;
+  const totalPages = result.data.total_pages;
+
+  return { data, totalPages };
 };
 
 const getCreditsById = async (tmdbId, type) => {

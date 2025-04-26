@@ -5,15 +5,15 @@ const authToken = require("../middleware/authenticateToken");
 const searchService = require("../services/searchService");
 
 router.post("/movie", authToken, async (request, response) => {
-  const { keyWord } = request.body;
+  const { keyWord, page } = request.body;
 
-  return searchService.searchMovies(keyWord, response);
+  return searchService.searchMovies(keyWord, page, response);
 });
 
 router.post("/tv", authToken, async (request, response) => {
-  const { keyWord } = request.body;
+  const { keyWord, page } = request.body;
 
-  return searchService.searchTvShows(keyWord, response);
+  return searchService.searchTvShows(keyWord, page, response);
 });
 
 router.post("/music", authToken, async (request, response) => {
