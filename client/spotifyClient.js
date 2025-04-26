@@ -26,10 +26,13 @@ const getToken = async () => {
   }
 };
 
-const searchByTrackArtist = async (keyWord) => {
+const searchByTrackArtist = async (keyWord, page = 1) => {
   const access_token = await getToken();
+  const limit = 20;
+  const offset = (page - 1) * limit;
 
-  const api_url = `https://api.spotify.com/v1/search?q=${keyWord}&type=track&limit=50&offset=0`;
+  const api_url = `https://api.spotify.com/v1/search?q=${keyWord}&type=track&limit=${limit}&offset=${offset}`;
+
   try {
     const response = await axios.get(encodeURI(api_url), {
       headers: {

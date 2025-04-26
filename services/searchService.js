@@ -1,49 +1,51 @@
-const { response } = require("express");
 const TmdbClient = require("../client/tmdbClient");
 const SpotifyClient = require("../client/spotifyClient");
 const UserModel = require("../repository/userModel");
 const GoogleClient = require("../client/googleClient");
 
-const searchMovies = async (keyWord, response) => {
-  const results = await TmdbClient.searchMovie(keyWord);
+const searchMovies = async (keyWord, page, response) => {
+  const results = await TmdbClient.searchMovie(keyWord, page);
   const mediaList = [];
 
-  await prepareMovieTvShowResults(results, mediaList, "movie");
+  await prepareMovieTvShowResults(results.data, mediaList, "movie");
 
   return response.status(200).json({
     status: "success",
     data: {
-      mediaList,
+      mediaList: mediaList,
+      totalPages: results.totalPages,
     },
     mediaType: "movie",
   });
 };
 
-const searchTvShows = async (keyWord, response) => {
-  const results = await TmdbClient.searchTvShow(keyWord);
+const searchTvShows = async (keyWord, page, response) => {
+  const results = await TmdbClient.searchTvShow(keyWord, page);
   const mediaList = [];
 
-  await prepareMovieTvShowResults(results, mediaList, "tv");
+  await prepareMovieTvShowResults(results.data, mediaList, "tv");
 
   return response.status(200).json({
     status: "success",
     data: {
-      mediaList,
+      mediaList: mediaList,
+      totalPages: results.totalPages,
     },
     mediaType: "tv",
   });
 };
 
-const searchMusic = async (keyWord, response) => {
-  const results = await SpotifyClient.searchByTrackArtist(keyWord);
+const searchMusic = async (keyWord, page, response) => {
+  const results = await SpotifyClient.searchByTrackArtist(keyWord, page);
   let mediaList = [];
 
-  await prepareMusicResults(results, mediaList);
+  await prepareMusicResults(results?.items, mediaList);
 
   return response.status(200).json({
     status: "success",
     data: {
-      mediaList,
+      mediaList: mediaList,
+      totalPages: Math.ceil(results.total / 20),
     },
     mediaType: "music",
   });
@@ -68,16 +70,17 @@ const searchUsers = async (keyWord, response) => {
   });
 };
 
-const searchBooks = async (keyWord, response) => {
-  const results = await GoogleClient.searchForBooks(keyWord);
+const searchBooks = async (keyWord, page, response) => {
+  const results = await GoogleClient.searchForBooks(keyWord, page);
   const mediaList = [];
 
-  await prepareBookResults(results, mediaList);
+  await prepareBookResults(results.items, mediaList);
 
   return response.status(200).json({
     status: "success",
     data: {
-      mediaList,
+      mediaList: mediaList,
+      totalPages: Math.ceil(results.totalItems / 20),
     },
     mediaType: "book",
   });
@@ -97,13 +100,15 @@ const searchAllMedia = async (keyWord, response) => {
   let bookResults = [];
 
   movieList &&
-    movieList.forEach((movie) => {
+    movieList.data &&
+    movieList.data.forEach((movie) => {
       let result = buildMovieTvResult(movie, "movie");
       movieResults.push(result);
     });
 
   tvShowList &&
-    tvShowList.forEach((tv) => {
+    tvShowList.data &&
+    tvShowList.data.forEach((tv) => {
       let result = buildMovieTvResult(tv, "tv");
       tvResults.push(result);
     });
@@ -117,7 +122,8 @@ const searchAllMedia = async (keyWord, response) => {
     });
 
   bookList &&
-    bookList.forEach((book) => {
+    bookList.items &&
+    bookList.items.forEach((book) => {
       let result = buildBookResult(book);
       bookResults.push(result);
     });
@@ -147,7 +153,7 @@ const prepareMovieTvShowResults = async (
 };
 
 const prepareMusicResults = async (results, fullSearchList) => {
-  results.items.forEach((song) => {
+  results?.forEach((song) => {
     let searchMusic = buildMusicResult(song);
 
     fullSearchList.push(searchMusic);
