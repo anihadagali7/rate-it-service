@@ -70,16 +70,17 @@ const searchUsers = async (keyWord, response) => {
   });
 };
 
-const searchBooks = async (keyWord, response) => {
-  const results = await GoogleClient.searchForBooks(keyWord);
+const searchBooks = async (keyWord, page, response) => {
+  const results = await GoogleClient.searchForBooks(keyWord, page);
   const mediaList = [];
 
-  await prepareBookResults(results, mediaList);
+  await prepareBookResults(results.items, mediaList);
 
   return response.status(200).json({
     status: "success",
     data: {
-      mediaList,
+      mediaList: mediaList,
+      totalPages: Math.ceil(results.totalItems / 20),
     },
     mediaType: "book",
   });
@@ -121,7 +122,8 @@ const searchAllMedia = async (keyWord, response) => {
     });
 
   bookList &&
-    bookList.forEach((book) => {
+    bookList.items &&
+    bookList.items.forEach((book) => {
       let result = buildBookResult(book);
       bookResults.push(result);
     });

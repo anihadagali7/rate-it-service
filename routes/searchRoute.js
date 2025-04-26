@@ -29,9 +29,9 @@ router.post("/user", authToken, async (request, response) => {
 });
 
 router.post("/book", authToken, async (request, response) => {
-  const { keyWord } = request.body;
+  const { keyWord, page } = request.body;
 
-  return searchService.searchBooks(keyWord, response);
+  return searchService.searchBooks(keyWord, page, response);
 });
 
 router.post("/all", authToken, async (request, response) => {
