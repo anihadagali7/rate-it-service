@@ -183,9 +183,43 @@ const prepareMediaPlaylistList = async (mediaByPlaylist) => {
   return mediaByPlaylist;
 };
 
+const addPostersForPlaylist = async () => {
+  console.log("calling this method");
+  const allPlaylists = await PlaylistModel.find({});
+
+  for (let playlist of allPlaylists) {
+    const allMediaByPlaylist = await PlaylistMediaModel.find({
+      playlist: playlist._id,
+    });
+
+    const mediaList = [];
+
+    for (let mediaPlaylist of allMediaByPlaylist) {
+      mediaList.push(mediaPlaylist.media);
+    }
+
+    let posterList = [];
+
+    for (let media of mediaList) {
+      const mediaEntity = await MediaModel.findById(media);
+      let url = mediaEntity.picture;
+      //   console.log("media: ", mediaEntity);
+
+      posterList.push(url);
+    }
+
+    console.log("posters: ", posterList);
+
+    playlist["posters"] = posterList;
+
+    playlist.save();
+  }
+};
+
 module.exports = {
   createNewPlaylist,
   addMediaToPlaylist,
   getPlaylistForUser,
   getAllMediaInPlaylist,
+  addPostersForPlaylist
 };

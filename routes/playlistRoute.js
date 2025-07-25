@@ -28,4 +28,8 @@ router.get("/:playlist", authToken, async (request, response) => {
   return playlistService.getAllMediaInPlaylist(playlist, response);
 });
 
+router.get("/createPoster", authToken, async () => {
+  playlistService.addPostersForPlaylist();
+});
+
 module.exports = router;
