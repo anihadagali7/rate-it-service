@@ -216,10 +216,61 @@ const addPostersForPlaylist = async () => {
   }
 };
 
+const getPlalistsWithThisMedia = async (userName, mediaId, response) => {
+  const existingUser = await UserModel.findOne({ userName: userName });
+  const existingMedia = await MediaModel.findById(mediaId);
+
+  if (existingMedia == null) {
+    return response.status(400).json({
+      errors: [
+        {
+          msg: "That media does not exist",
+        },
+      ],
+    });
+  }
+
+  const allPlaylistByMedia = await PlaylistMediaModel.find({
+    media: existingMedia._id,
+  });
+
+  if (allPlaylistByMedia == null || allPlaylistByMedia.length == 0) {
+    return response.status(200).json({
+      status: "That media has not been added to any playlists",
+      data: []
+    });
+  }
+
+  const playlistIds = [];
+
+  for (let mediaPlaylist of allPlaylistByMedia) {
+    playlistIds.push(mediaPlaylist.playlist);
+  }
+
+  let selectedPlaylists = [];
+
+  for (let playlist of playlistIds) {
+    const existingPlaylist = await PlaylistModel.findOne({
+      _id: playlist._id,
+      addedBy: existingUser,
+    });
+
+    selectedPlaylists.push(existingPlaylist);
+  }
+
+  return response.status(200).json({
+    status: "success",
+    data: {
+      selectedPlaylists,
+    },
+  });
+};
+
 module.exports = {
   createNewPlaylist,
   addMediaToPlaylist,
   getPlaylistForUser,
   getAllMediaInPlaylist,
-  addPostersForPlaylist
+  addPostersForPlaylist,
+  getPlalistsWithThisMedia,
 };

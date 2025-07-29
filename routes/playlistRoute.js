@@ -32,4 +32,18 @@ router.get("/createPoster", authToken, async () => {
   playlistService.addPostersForPlaylist();
 });
 
+router.post(
+  "/getPlalistsWithThisMedia",
+  authToken,
+  async (request, response) => {
+    const { mediaId, userName } = request.body;
+
+    return playlistService.getPlalistsWithThisMedia(
+      userName,
+      mediaId,
+      response
+    );
+  }
+);
+
 module.exports = router;
