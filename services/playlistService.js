@@ -3,7 +3,6 @@ const UserModel = require("../repository/userModel");
 const { response } = require("express");
 const MediaModel = require("../repository/mediaModel");
 const PlaylistMediaModel = require("../repository/playlist_mediaModel");
-const mongoose = require("mongoose");
 
 const createNewPlaylist = async (playlistName, userName, response) => {
   const existingUser = await UserModel.findOne({ userName: userName });
@@ -31,6 +30,91 @@ const createNewPlaylist = async (playlistName, userName, response) => {
     data: {
       newPlaylist,
     },
+  });
+};
+
+const addMediaToMultiplePlaylist = async (
+  playlistsToAdd,
+  playlistsToRemove,
+  media,
+  response
+) => {
+  const existingMedia = await MediaModel.findById(media);
+
+  if (existingMedia == null) {
+    return response.status(400).json({
+      errors: [
+        {
+          msg: "That media does not exist",
+        },
+      ],
+    });
+  }
+
+  if (playlistsToAdd && playlistsToAdd.length > 0) {
+    for (let playlist of playlistsToAdd) {
+      const existingPlaylist = await PlaylistModel.findById(playlist);
+
+      if (existingPlaylist == null) {
+        return response.status(400).json({
+          errors: [
+            {
+              msg: "That playlist does not exist",
+            },
+          ],
+        });
+      }
+
+      const newPoster = existingMedia.picture;
+
+      if (Array.isArray(existingPlaylist.posters)) {
+        existingPlaylist.posters.push(newPoster);
+      } else {
+        existingPlaylist.posters = [newPoster];
+      }
+
+      const updatedPlaylist = await existingPlaylist.save();
+
+      const newPlaylist = await new PlaylistMediaModel({
+        media: existingMedia,
+        playlist: updatedPlaylist,
+      }).save();
+    }
+  }
+
+  if (playlistsToRemove && playlistsToRemove.length > 0) {
+    for (let playlist of playlistsToRemove) {
+      const existingPlaylist = await PlaylistModel.findById(playlist);
+
+      if (existingPlaylist == null) {
+        return response.status(400).json({
+          errors: [
+            {
+              msg: "That playlist does not exist",
+            },
+          ],
+        });
+      }
+
+      const removePoster = existingMedia.picture;
+
+      if (Array.isArray(existingPlaylist.posters)) {
+        existingPlaylist.posters = existingPlaylist.posters.filter(
+          (poster) => poster !== removePoster
+        );
+      }
+
+      const updatedPlaylist = await existingPlaylist.save();
+
+      await PlaylistMediaModel.deleteOne({
+        playlistList: playlist,
+        media: media,
+      });
+    }
+  }
+
+  return response.status(200).json({
+    status: "success",
   });
 };
 
@@ -237,7 +321,7 @@ const getPlalistsWithThisMedia = async (userName, mediaId, response) => {
   if (allPlaylistByMedia == null || allPlaylistByMedia.length == 0) {
     return response.status(200).json({
       status: "That media has not been added to any playlists",
-      data: []
+      data: [],
     });
   }
 
@@ -273,4 +357,5 @@ module.exports = {
   getAllMediaInPlaylist,
   addPostersForPlaylist,
   getPlalistsWithThisMedia,
+  addMediaToMultiplePlaylist,
 };

@@ -10,6 +10,17 @@ router.post("/create", authToken, async (request, response) => {
   return playlistService.createNewPlaylist(playlistName, userName, response);
 });
 
+router.post("/addMediaToMultiplePlaylists", authToken, async (request, response) => {
+  const { playlistsToAdd, playlistsToRemove, mediaId } = request.body;
+
+  return playlistService.addMediaToMultiplePlaylist(
+    playlistsToAdd,
+    playlistsToRemove,
+    mediaId,
+    response
+  );
+});
+
 router.post("/addMedia", authToken, async (request, response) => {
   const { playlistId, mediaId } = request.body;
 
