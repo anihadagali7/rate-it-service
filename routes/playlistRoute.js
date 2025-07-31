@@ -10,6 +10,17 @@ router.post("/create", authToken, async (request, response) => {
   return playlistService.createNewPlaylist(playlistName, userName, response);
 });
 
+router.post("/addMediaToMultiplePlaylists", authToken, async (request, response) => {
+  const { playlistsToAdd, playlistsToRemove, mediaId } = request.body;
+
+  return playlistService.addMediaToMultiplePlaylist(
+    playlistsToAdd,
+    playlistsToRemove,
+    mediaId,
+    response
+  );
+});
+
 router.post("/addMedia", authToken, async (request, response) => {
   const { playlistId, mediaId } = request.body;
 
@@ -21,6 +32,24 @@ router.get("/user/:userName", authToken, async (request, response) => {
 
   return playlistService.getPlaylistForUser(userName, response);
 });
+
+router.get("/createPoster", authToken, async () => {
+  playlistService.addPostersForPlaylist();
+});
+
+router.get(
+  "/getPlaylistsWithThisMedia",
+  authToken,
+  async (request, response) => {
+    const { mediaId, userName } = request.query;
+
+    return playlistService.getPlaylistsWithThisMedia(
+      userName,
+      mediaId,
+      response
+    );
+  }
+);
 
 router.get("/:playlist", authToken, async (request, response) => {
   const { playlist } = request.params;
