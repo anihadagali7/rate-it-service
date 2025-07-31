@@ -33,28 +33,28 @@ router.get("/user/:userName", authToken, async (request, response) => {
   return playlistService.getPlaylistForUser(userName, response);
 });
 
-router.get("/:playlist", authToken, async (request, response) => {
-  const { playlist } = request.params;
-
-  return playlistService.getAllMediaInPlaylist(playlist, response);
-});
-
 router.get("/createPoster", authToken, async () => {
   playlistService.addPostersForPlaylist();
 });
 
-router.post(
-  "/getPlalistsWithThisMedia",
+router.get(
+  "/getPlaylistsWithThisMedia",
   authToken,
   async (request, response) => {
-    const { mediaId, userName } = request.body;
+    const { mediaId, userName } = request.query;
 
-    return playlistService.getPlalistsWithThisMedia(
+    return playlistService.getPlaylistsWithThisMedia(
       userName,
       mediaId,
       response
     );
   }
 );
+
+router.get("/:playlist", authToken, async (request, response) => {
+  const { playlist } = request.params;
+
+  return playlistService.getAllMediaInPlaylist(playlist, response);
+});
 
 module.exports = router;

@@ -300,7 +300,7 @@ const addPostersForPlaylist = async () => {
   }
 };
 
-const getPlalistsWithThisMedia = async (userName, mediaId, response) => {
+const getPlaylistsWithThisMedia = async (userName, mediaId, response) => {
   const existingUser = await UserModel.findOne({ userName: userName });
   const existingMedia = await MediaModel.findById(mediaId);
 
@@ -356,6 +356,6 @@ module.exports = {
   getPlaylistForUser,
   getAllMediaInPlaylist,
   addPostersForPlaylist,
-  getPlalistsWithThisMedia,
+  getPlaylistsWithThisMedia,
   addMediaToMultiplePlaylist,
 };
