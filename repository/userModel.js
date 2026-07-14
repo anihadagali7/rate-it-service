@@ -19,5 +19,13 @@ const userSchema = new Schema({
   dateUpdated: Date,
 });
 
+const stripPassword = (_doc, ret) => {
+  delete ret.password;
+  return ret;
+};
+
+userSchema.set("toJSON", { transform: stripPassword });
+userSchema.set("toObject", { transform: stripPassword });
+
 const users = mongoose.model("user", userSchema);
 module.exports = users;
