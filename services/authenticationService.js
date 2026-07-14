@@ -3,6 +3,7 @@ const JWT = require("jsonwebtoken");
 const slackClient = require("../client/slackClient");
 const bcrypt = require("bcrypt");
 const { toPublicUser } = require("../utils/userSerializer");
+const { sendNotFound, sendError } = require("../utils/httpErrors");
 
 const createNewUser = async (
   firstName,
@@ -17,17 +18,9 @@ const createNewUser = async (
   let existingUserName = await UsersModel.findOne({ userName: userName });
 
   if (existingUserEmail) {
-    return response.status(400).json({
-      errors: {
-        msg: "This email is already being used",
-      },
-    });
+    return sendError(response, 400, "This email is already being used");
   } else if (existingUserName) {
-    return response.status(400).json({
-      errors: {
-        msg: "This username is already being used",
-      },
-    });
+    return sendError(response, 400, "This username is already being used");
   } else {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -71,11 +64,7 @@ const login = async (email, password, response) => {
     let isMatch = await bcrypt.compare(password, existingUser.password);
 
     if (!isMatch) {
-      return response.status(401).json({
-        errors: {
-          msg: "Email or password is invalid",
-        },
-      });
+      return sendError(response, 401, "Email or password is invalid");
     }
 
     const accessToken = await signJwtToken(existingUser);
@@ -91,11 +80,7 @@ const login = async (email, password, response) => {
     });
   }
 
-  return response.status(401).json({
-    errors: {
-      msg: "Invalid email",
-    },
-  });
+  return sendError(response, 401, "Invalid email");
 };
 
 const signJwtToken = async (user) => {
@@ -124,21 +109,13 @@ const resetPassword = async (
   );
 
   if (!existingUser) {
-    return response.status(404).json({
-      errors: {
-        msg: "User not found",
-      },
-    });
+    return sendNotFound(response, "User not found");
   }
 
   let isMatch = await bcrypt.compare(currentPassword, existingUser.password);
 
   if (!isMatch) {
-    return response.status(400).json({
-      errors: {
-        msg: "Current password is not valid",
-      },
-    });
+    return sendError(response, 400, "Current password is not valid");
   }
 
   const salt = await bcrypt.genSalt(10);

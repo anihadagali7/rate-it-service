@@ -2,24 +2,17 @@ const MediaModel = require("../repository/mediaModel");
 const WishlistModel = require("../repository/wishlistModel");
 const UserModel = require("../repository/userModel");
 const { toPublicUser } = require("../utils/userSerializer");
+const { sendNotFound } = require("../utils/httpErrors");
 
 const createNewWishlist = async (mediaId, userName, response) => {
   const existingUser = await UserModel.findOne({ userName: userName });
   if (!existingUser) {
-    return response.status(404).json({
-      errors: {
-        msg: "User not found",
-      },
-    });
+    return sendNotFound(response, "User not found");
   }
 
   const existingMedia = await MediaModel.findOne({ mediaId: mediaId });
   if (!existingMedia) {
-    return response.status(404).json({
-      errors: {
-        msg: "Media not found",
-      },
-    });
+    return sendNotFound(response, "Media not found");
   }
 
   const newWishlist = await new WishlistModel({
@@ -40,11 +33,7 @@ const createNewWishlist = async (mediaId, userName, response) => {
 const getWishlistForUser = async (userName, response) => {
   const existingUser = await UserModel.findOne({ userName: userName });
   if (!existingUser) {
-    return response.status(404).json({
-      errors: {
-        msg: "User not found",
-      },
-    });
+    return sendNotFound(response, "User not found");
   }
 
   const list = await WishlistModel.find({ addedBy: existingUser });

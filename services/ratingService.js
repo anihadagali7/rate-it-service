@@ -3,24 +3,17 @@ const slackClient = require("../client/slackClient");
 const MediaModel = require("../repository/mediaModel");
 const UserModel = require("../repository/userModel");
 const { toPublicUser } = require("../utils/userSerializer");
+const { sendNotFound } = require("../utils/httpErrors");
 
 const createNewRating = async (mediaId, rating, comments, userName, response) => {
   const existingUser = await UserModel.findOne({ userName: userName });
   if (!existingUser) {
-    return response.status(404).json({
-      errors: {
-        msg: "User not found",
-      },
-    });
+    return sendNotFound(response, "User not found");
   }
 
   const existingMedia = await MediaModel.findOne({ mediaId: mediaId });
   if (!existingMedia) {
-    return response.status(404).json({
-      errors: {
-        msg: "Media not found",
-      },
-    });
+    return sendNotFound(response, "Media not found");
   }
 
   const newRating = await new RatingModel({
@@ -49,11 +42,7 @@ const createNewRating = async (mediaId, rating, comments, userName, response) =>
 const getRatingsForUser = async (userName, response) => {
   const existingUser = await UserModel.findOne({ userName: userName });
   if (!existingUser) {
-    return response.status(404).json({
-      errors: {
-        msg: "User not found",
-      },
-    });
+    return sendNotFound(response, "User not found");
   }
 
   const list = await RatingModel.find({ ratedBy: existingUser });
@@ -70,11 +59,7 @@ const getRatingsForUser = async (userName, response) => {
 const getRatingsForMedia = async (mediaId, response) => {
   const existingMedia = await MediaModel.findOne({ mediaId: mediaId });
   if (!existingMedia) {
-    return response.status(404).json({
-      errors: {
-        msg: "Media not found",
-      },
-    });
+    return sendNotFound(response, "Media not found");
   }
 
   const list = await RatingModel.find({ media: existingMedia });
@@ -103,11 +88,7 @@ const getExploreRatings = async (response) => {
 const getRatingsByFollowing = async (userName, response) => {
   const existingUser = await UserModel.findOne({ userName: userName });
   if (!existingUser) {
-    return response.status(404).json({
-      errors: {
-        msg: "User not found",
-      },
-    });
+    return sendNotFound(response, "User not found");
   }
 
   const listOfRatingsByFollowers = [];

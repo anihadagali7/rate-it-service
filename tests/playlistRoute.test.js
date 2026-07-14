@@ -101,7 +101,7 @@ describe("playlistRoute", () => {
         });
 
       expect(response.status).toBe(403);
-      expect(response.body.errors[0].msg).toBe("You do not own this playlist");
+      expect(response.body.errors.msg).toBe("You do not own this playlist");
     });
 
     it("adds media to the authenticated user's playlist", async () => {

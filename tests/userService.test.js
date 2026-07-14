@@ -90,7 +90,7 @@ describe("userService", () => {
 
       expect(response.status).toHaveBeenCalledWith(400);
       expect(response.json).toHaveBeenCalledWith({
-        errors: [{ msg: "You cannot follow yourself" }],
+        errors: { msg: "You cannot follow yourself" },
       });
     });
 
@@ -101,7 +101,7 @@ describe("userService", () => {
 
       expect(response.status).toHaveBeenCalledWith(404);
       expect(response.json).toHaveBeenCalledWith({
-        errors: [{ msg: "User not found." }],
+        errors: { msg: "User not found" },
       });
     });
 
@@ -114,7 +114,7 @@ describe("userService", () => {
 
       expect(response.status).toHaveBeenCalledWith(400);
       expect(response.json).toHaveBeenCalledWith({
-        errors: [{ msg: "You already follow this user" }],
+        errors: { msg: "You already follow this user" },
       });
     });
   });
@@ -154,7 +154,7 @@ describe("userService", () => {
 
       expect(response.status).toHaveBeenCalledWith(400);
       expect(response.json).toHaveBeenCalledWith({
-        errors: [{ msg: "You cannot unfollow yourself" }],
+        errors: { msg: "You cannot unfollow yourself" },
       });
     });
 
@@ -171,7 +171,7 @@ describe("userService", () => {
 
       expect(response.status).toHaveBeenCalledWith(400);
       expect(response.json).toHaveBeenCalledWith({
-        errors: [{ msg: "You do not currently follow this user" }],
+        errors: { msg: "You do not currently follow this user" },
       });
     });
   });

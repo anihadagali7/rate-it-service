@@ -1,15 +1,12 @@
 const UserModel = require("../repository/userModel");
 const UsersModel = require("../repository/userModel");
 const { toPublicUser, toPublicUsers } = require("../utils/userSerializer");
+const { sendNotFound, sendError } = require("../utils/httpErrors");
 
 const getAccountDetails = async (userName, response) => {
   const user = await UserModel.findOne({ userName: userName });
   if (!user) {
-    return response.status(404).json({
-      errors: {
-        msg: "User not found",
-      },
-    });
+    return sendNotFound(response, "User not found");
   }
 
   return response.status(200).json({
@@ -23,41 +20,17 @@ const getAccountDetails = async (userName, response) => {
 const followUser = async (userRequest, userToFollow, response) => {
   const currentUser = await UserModel.findOne({ userName: userRequest });
   if (!currentUser) {
-    return response.status(404).json({
-      errors: [
-        {
-          msg: "User not found.",
-        },
-      ],
-    });
+    return sendNotFound(response, "User not found");
   }
 
   const userToBeFollowed = await UserModel.findOne({ userName: userToFollow });
 
   if (userRequest === userToFollow) {
-    return response.status(400).json({
-      errors: [
-        {
-          msg: "You cannot follow yourself",
-        },
-      ],
-    });
+    return sendError(response, 400, "You cannot follow yourself");
   } else if (!userToBeFollowed) {
-    return response.status(404).json({
-      errors: [
-        {
-          msg: "User not found.",
-        },
-      ],
-    });
+    return sendNotFound(response, "User not found");
   } else if (currentUser.following.includes(userToBeFollowed.userName)) {
-    return response.status(400).json({
-      errors: [
-        {
-          msg: "You already follow this user",
-        },
-      ],
-    });
+    return sendError(response, 400, "You already follow this user");
   } else {
     let currentUserFollowingList = currentUser.following;
     currentUserFollowingList.push(userToBeFollowed.userName);
@@ -78,13 +51,7 @@ const followUser = async (userRequest, userToFollow, response) => {
 const unFollowUser = async (userRequest, userToFollow, response) => {
   const currentUser = await UserModel.findOne({ userName: userRequest });
   if (!currentUser) {
-    return response.status(404).json({
-      errors: [
-        {
-          msg: "User not found.",
-        },
-      ],
-    });
+    return sendNotFound(response, "User not found");
   }
 
   const userToBeUnfollowed = await UserModel.findOne({
@@ -92,29 +59,11 @@ const unFollowUser = async (userRequest, userToFollow, response) => {
   });
 
   if (userRequest === userToFollow) {
-    return response.status(400).json({
-      errors: [
-        {
-          msg: "You cannot unfollow yourself",
-        },
-      ],
-    });
+    return sendError(response, 400, "You cannot unfollow yourself");
   } else if (!userToBeUnfollowed) {
-    return response.status(404).json({
-      errors: [
-        {
-          msg: "User not found.",
-        },
-      ],
-    });
+    return sendNotFound(response, "User not found");
   } else if (!currentUser.following.includes(userToBeUnfollowed.userName)) {
-    return response.status(400).json({
-      errors: [
-        {
-          msg: "You do not currently follow this user",
-        },
-      ],
-    });
+    return sendError(response, 400, "You do not currently follow this user");
   } else {
     let currentUserFollowingList = currentUser.following;
     const followingIndex = currentUserFollowingList.indexOf(
@@ -139,11 +88,7 @@ const unFollowUser = async (userRequest, userToFollow, response) => {
 const getAllFollowing = async (user, response) => {
   const currentUser = await UserModel.findOne({ userName: user });
   if (!currentUser) {
-    return response.status(404).json({
-      errors: {
-        msg: "User not found",
-      },
-    });
+    return sendNotFound(response, "User not found");
   }
 
   const followingList = [];
@@ -165,11 +110,7 @@ const getAllFollowing = async (user, response) => {
 const getAllFollowers = async (user, response) => {
   const currentUser = await UserModel.findOne({ userName: user });
   if (!currentUser) {
-    return response.status(404).json({
-      errors: {
-        msg: "User not found",
-      },
-    });
+    return sendNotFound(response, "User not found");
   }
 
   const followersList = [];
@@ -191,11 +132,7 @@ const getAllFollowers = async (user, response) => {
 const getAllFriends = async (user, response) => {
   const currentUser = await UserModel.findOne({ userName: user });
   if (!currentUser) {
-    return response.status(404).json({
-      errors: {
-        msg: "User not found",
-      },
-    });
+    return sendNotFound(response, "User not found");
   }
 
   const followersList = [];
@@ -258,11 +195,7 @@ const updateUser = async (
   );
 
   if (!updateExistingUser) {
-    return response.status(404).json({
-      errors: {
-        msg: "User not found",
-      },
-    });
+    return sendNotFound(response, "User not found");
   }
 
   return response.status(200).json({

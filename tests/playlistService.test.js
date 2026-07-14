@@ -64,7 +64,7 @@ describe("playlistService", () => {
       expect(storedPlaylist.addedBy.toString()).toBe(user._id.toString());
     });
 
-    it("returns 400 when the user does not exist", async () => {
+    it("returns 404 when the user does not exist", async () => {
       const response = createMockResponse();
 
       await playlistService.createNewPlaylist(
@@ -73,9 +73,9 @@ describe("playlistService", () => {
         response
       );
 
-      expect(response.status).toHaveBeenCalledWith(400);
+      expect(response.status).toHaveBeenCalledWith(404);
       expect(response.json).toHaveBeenCalledWith({
-        errors: [{ msg: "That user does not exist" }],
+        errors: { msg: "User not found" },
       });
     });
   });
@@ -98,8 +98,8 @@ describe("playlistService", () => {
         status: "success",
         data: {
           newPlaylist: expect.objectContaining({
-            media: media._id,
-            playlist: playlist._id,
+            media: expect.objectContaining({ _id: media._id }),
+            playlist: expect.objectContaining({ _id: playlist._id }),
           }),
         },
       });
@@ -114,7 +114,7 @@ describe("playlistService", () => {
       expect(playlistMedia).toBeTruthy();
     });
 
-    it("returns 400 when media does not exist", async () => {
+    it("returns 404 when media does not exist", async () => {
       const playlist = await createTestPlaylist(user);
       const response = createMockResponse();
 
@@ -125,13 +125,13 @@ describe("playlistService", () => {
         response
       );
 
-      expect(response.status).toHaveBeenCalledWith(400);
+      expect(response.status).toHaveBeenCalledWith(404);
       expect(response.json).toHaveBeenCalledWith({
-        errors: [{ msg: "That media does not exist" }],
+        errors: { msg: "Media not found" },
       });
     });
 
-    it("returns 400 when playlist does not exist", async () => {
+    it("returns 404 when playlist does not exist", async () => {
       const media = await createTestMedia();
       const response = createMockResponse();
 
@@ -142,9 +142,9 @@ describe("playlistService", () => {
         response
       );
 
-      expect(response.status).toHaveBeenCalledWith(400);
+      expect(response.status).toHaveBeenCalledWith(404);
       expect(response.json).toHaveBeenCalledWith({
-        errors: [{ msg: "That playlist does not exist" }],
+        errors: { msg: "Playlist not found" },
       });
     });
 
@@ -162,7 +162,7 @@ describe("playlistService", () => {
 
       expect(response.status).toHaveBeenCalledWith(403);
       expect(response.json).toHaveBeenCalledWith({
-        errors: [{ msg: "You do not own this playlist" }],
+        errors: { msg: "You do not own this playlist" },
       });
     });
   });
@@ -189,6 +189,42 @@ describe("playlistService", () => {
       expect(links).toHaveLength(2);
     });
 
+    it("removes media from owned playlists", async () => {
+      const media = await createTestMedia({
+        picture: "https://example.com/remove-me.jpg",
+      });
+      const playlist = await createTestPlaylist(user, {
+        name: "Removable",
+        posters: ["https://example.com/remove-me.jpg"],
+      });
+      await PlaylistMediaModel.create({
+        playlist: playlist._id,
+        media: media._id,
+      });
+      const response = createMockResponse();
+
+      await playlistService.addMediaToMultiplePlaylist(
+        [],
+        [playlist._id],
+        media._id,
+        user._id,
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(200);
+
+      const remainingLinks = await PlaylistMediaModel.find({
+        playlist: playlist._id,
+        media: media._id,
+      });
+      expect(remainingLinks).toHaveLength(0);
+
+      const updatedPlaylist = await PlaylistModel.findById(playlist._id);
+      expect(updatedPlaylist.posters).not.toContain(
+        "https://example.com/remove-me.jpg"
+      );
+    });
+
     it("returns 403 when adding media to a playlist owned by another user", async () => {
       const media = await createTestMedia();
       const ownedPlaylist = await createTestPlaylist(user, { name: "Owned" });
@@ -207,7 +243,7 @@ describe("playlistService", () => {
 
       expect(response.status).toHaveBeenCalledWith(403);
       expect(response.json).toHaveBeenCalledWith({
-        errors: [{ msg: "You do not own this playlist" }],
+        errors: { msg: "You do not own this playlist" },
       });
     });
   });
@@ -239,18 +275,19 @@ describe("playlistService", () => {
 
       expect(response.status).toHaveBeenCalledWith(200);
       expect(response.json).toHaveBeenCalledWith({
+        status: "success",
         data: { playlistList: [] },
       });
     });
 
-    it("returns 400 when the user does not exist", async () => {
+    it("returns 404 when the user does not exist", async () => {
       const response = createMockResponse();
 
       await playlistService.getPlaylistForUser("ghostuser", response);
 
-      expect(response.status).toHaveBeenCalledWith(400);
+      expect(response.status).toHaveBeenCalledWith(404);
       expect(response.json).toHaveBeenCalledWith({
-        errors: [{ msg: "That user does not exist" }],
+        errors: { msg: "User not found" },
       });
     });
   });
@@ -284,7 +321,7 @@ describe("playlistService", () => {
       });
     });
 
-    it("returns 400 when playlist does not exist", async () => {
+    it("returns 404 when playlist does not exist", async () => {
       const response = createMockResponse();
 
       await playlistService.getAllMediaInPlaylist(
@@ -292,9 +329,9 @@ describe("playlistService", () => {
         response
       );
 
-      expect(response.status).toHaveBeenCalledWith(400);
+      expect(response.status).toHaveBeenCalledWith(404);
       expect(response.json).toHaveBeenCalledWith({
-        errors: [{ msg: "That playlist does not exist" }],
+        errors: { msg: "Playlist not found" },
       });
     });
   });
@@ -303,9 +340,15 @@ describe("playlistService", () => {
     it("returns playlists owned by the user that contain the media", async () => {
       const media = await createTestMedia();
       const playlist = await createTestPlaylist(user, { name: "With Media" });
-      await createTestPlaylist(otherUser, { name: "Other User Playlist" });
+      const otherPlaylist = await createTestPlaylist(otherUser, {
+        name: "Other User Playlist",
+      });
       await PlaylistMediaModel.create({
         playlist: playlist._id,
+        media: media._id,
+      });
+      await PlaylistMediaModel.create({
+        playlist: otherPlaylist._id,
         media: media._id,
       });
       const response = createMockResponse();
@@ -327,6 +370,9 @@ describe("playlistService", () => {
           ],
         },
       });
+      expect(
+        response.json.mock.calls[0][0].data.selectedPlaylists
+      ).toHaveLength(1);
     });
 
     it("returns an empty list when media is not in any playlists", async () => {
@@ -346,7 +392,23 @@ describe("playlistService", () => {
       });
     });
 
-    it("returns 400 when media does not exist", async () => {
+    it("returns 404 when the user does not exist", async () => {
+      const media = await createTestMedia();
+      const response = createMockResponse();
+
+      await playlistService.getPlaylistsWithThisMedia(
+        "ghostuser",
+        media._id,
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "User not found" },
+      });
+    });
+
+    it("returns 404 when media does not exist", async () => {
       const response = createMockResponse();
 
       await playlistService.getPlaylistsWithThisMedia(
@@ -355,9 +417,9 @@ describe("playlistService", () => {
         response
       );
 
-      expect(response.status).toHaveBeenCalledWith(400);
+      expect(response.status).toHaveBeenCalledWith(404);
       expect(response.json).toHaveBeenCalledWith({
-        errors: [{ msg: "That media does not exist" }],
+        errors: { msg: "Media not found" },
       });
     });
   });

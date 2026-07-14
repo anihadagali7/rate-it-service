@@ -1,9 +1,9 @@
 const PlaylistModel = require("../repository/playlistModel");
 const UserModel = require("../repository/userModel");
-const { response } = require("express");
 const MediaModel = require("../repository/mediaModel");
 const PlaylistMediaModel = require("../repository/playlist_mediaModel");
 const { toPublicUser } = require("../utils/userSerializer");
+const { sendNotFound, sendError } = require("../utils/httpErrors");
 
 const isPlaylistOwnedBy = (playlist, authenticatedUserId) => {
   const ownerId = playlist.addedBy?._id || playlist.addedBy;
@@ -14,13 +14,7 @@ const createNewPlaylist = async (playlistName, userName, response) => {
   const existingUser = await UserModel.findOne({ userName: userName });
 
   if (existingUser == null) {
-    return response.status(400).json({
-      errors: [
-        {
-          msg: "That user does not exist",
-        },
-      ],
-    });
+    return sendNotFound(response, "User not found");
   }
 
   const newPlaylist = await new PlaylistModel({
@@ -49,13 +43,7 @@ const addMediaToMultiplePlaylist = async (
   const existingMedia = await MediaModel.findById(media);
 
   if (existingMedia == null) {
-    return response.status(400).json({
-      errors: [
-        {
-          msg: "That media does not exist",
-        },
-      ],
-    });
+    return sendNotFound(response, "Media not found");
   }
 
   if (playlistsToAdd && playlistsToAdd.length > 0) {
@@ -63,23 +51,11 @@ const addMediaToMultiplePlaylist = async (
       const existingPlaylist = await PlaylistModel.findById(playlist);
 
       if (existingPlaylist == null) {
-        return response.status(400).json({
-          errors: [
-            {
-              msg: "That playlist does not exist",
-            },
-          ],
-        });
+        return sendNotFound(response, "Playlist not found");
       }
 
       if (!isPlaylistOwnedBy(existingPlaylist, authenticatedUserId)) {
-        return response.status(403).json({
-          errors: [
-            {
-              msg: "You do not own this playlist",
-            },
-          ],
-        });
+        return sendError(response, 403, "You do not own this playlist");
       }
 
       const newPoster = existingMedia.picture;
@@ -104,23 +80,11 @@ const addMediaToMultiplePlaylist = async (
       const existingPlaylist = await PlaylistModel.findById(playlist);
 
       if (existingPlaylist == null) {
-        return response.status(400).json({
-          errors: [
-            {
-              msg: "That playlist does not exist",
-            },
-          ],
-        });
+        return sendNotFound(response, "Playlist not found");
       }
 
       if (!isPlaylistOwnedBy(existingPlaylist, authenticatedUserId)) {
-        return response.status(403).json({
-          errors: [
-            {
-              msg: "You do not own this playlist",
-            },
-          ],
-        });
+        return sendError(response, 403, "You do not own this playlist");
       }
 
       const removePoster = existingMedia.picture;
@@ -155,33 +119,15 @@ const addMediaToPlaylist = async (
   const existingMedia = await MediaModel.findById(media);
 
   if (existingMedia == null) {
-    return response.status(400).json({
-      errors: [
-        {
-          msg: "That media does not exist",
-        },
-      ],
-    });
+    return sendNotFound(response, "Media not found");
   }
 
   if (existingPlaylist == null) {
-    return response.status(400).json({
-      errors: [
-        {
-          msg: "That playlist does not exist",
-        },
-      ],
-    });
+    return sendNotFound(response, "Playlist not found");
   }
 
   if (!isPlaylistOwnedBy(existingPlaylist, authenticatedUserId)) {
-    return response.status(403).json({
-      errors: [
-        {
-          msg: "You do not own this playlist",
-        },
-      ],
-    });
+    return sendError(response, 403, "You do not own this playlist");
   }
 
   const newPoster = existingMedia.picture;
@@ -211,19 +157,14 @@ const getPlaylistForUser = async (userName, response) => {
   const existingUser = await UserModel.findOne({ userName: userName });
 
   if (existingUser == null) {
-    return response.status(400).json({
-      errors: [
-        {
-          msg: "That user does not exist",
-        },
-      ],
-    });
+    return sendNotFound(response, "User not found");
   }
 
   const list = await PlaylistModel.find({ addedBy: existingUser });
 
   if (list === undefined || list.length === 0) {
     return response.status(200).json({
+      status: "success",
       data: {
         playlistList: [],
       },
@@ -244,13 +185,7 @@ const getAllMediaInPlaylist = async (playlist, response) => {
   const existingPlaylist = await PlaylistModel.findById(playlist);
 
   if (existingPlaylist == null) {
-    return response.status(400).json({
-      errors: [
-        {
-          msg: "That playlist does not exist",
-        },
-      ],
-    });
+    return sendNotFound(response, "Playlist not found");
   }
 
   const allMediaByPlaylist = await PlaylistMediaModel.find({
@@ -258,13 +193,7 @@ const getAllMediaInPlaylist = async (playlist, response) => {
   });
 
   if (allMediaByPlaylist === null) {
-    return response.status(400).json({
-      errors: [
-        {
-          msg: "That playlist does not exist",
-        },
-      ],
-    });
+    return sendNotFound(response, "Playlist not found");
   }
 
   let mediaByPlaylist = {};
@@ -347,24 +276,12 @@ const addPostersForPlaylist = async () => {
 const getPlaylistsWithThisMedia = async (userName, mediaId, response) => {
   const existingUser = await UserModel.findOne({ userName: userName });
   if (existingUser == null) {
-    return response.status(404).json({
-      errors: [
-        {
-          msg: "User not found",
-        },
-      ],
-    });
+    return sendNotFound(response, "User not found");
   }
 
   const existingMedia = await MediaModel.findById(mediaId);
   if (existingMedia == null) {
-    return response.status(400).json({
-      errors: [
-        {
-          msg: "That media does not exist",
-        },
-      ],
-    });
+    return sendNotFound(response, "Media not found");
   }
 
   const allPlaylistByMedia = await PlaylistMediaModel.find({

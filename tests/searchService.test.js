@@ -120,6 +120,18 @@ describe("searchService", () => {
         mediaType: "movie",
       });
     });
+
+    it("returns 502 when TMDB search fails", async () => {
+      tmdbClient.searchMovie.mockRejectedValue(new Error("TMDB down"));
+      const response = createMockResponse();
+
+      await searchService.searchMovies("matrix", 1, response);
+
+      expect(response.status).toHaveBeenCalledWith(502);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "Unable to search movies" },
+      });
+    });
   });
 
   describe("searchTvShows", () => {
@@ -295,6 +307,35 @@ describe("searchService", () => {
                 name: "Search Book",
                 mediaType: "book",
               }),
+            ],
+          },
+        },
+      });
+    });
+
+    it("returns empty arrays for providers that fail", async () => {
+      tmdbClient.searchMovie.mockResolvedValue(movieSearchResult);
+      tmdbClient.searchTvShow.mockRejectedValue(new Error("TV down"));
+      spotifyClient.searchByTrackArtist.mockRejectedValue(
+        new Error("Spotify down")
+      );
+      googleClient.searchForBooks.mockResolvedValue(bookSearchResult);
+      const response = createMockResponse();
+
+      await searchService.searchAllMedia("search", response);
+
+      expect(response.status).toHaveBeenCalledWith(200);
+      expect(response.json).toHaveBeenCalledWith({
+        status: "success",
+        data: {
+          fullSearchList: {
+            movie: [
+              expect.objectContaining({ name: "Search Movie" }),
+            ],
+            tv: [],
+            music: [],
+            book: [
+              expect.objectContaining({ name: "Search Book" }),
             ],
           },
         },

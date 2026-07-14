@@ -22,18 +22,17 @@ const getToken = async () => {
 
     return response.data.access_token;
   } catch (error) {
-    console.log(error);
+    throw new Error(`Spotify auth failed: ${error.message}`);
   }
 };
 
 const searchByTrackArtist = async (keyWord, page = 1) => {
-  const access_token = await getToken();
-  const limit = 20;
-  const offset = (page - 1) * limit;
-
-  const api_url = `https://api.spotify.com/v1/search?q=${keyWord}&type=track&limit=${limit}&offset=${offset}`;
-
   try {
+    const access_token = await getToken();
+    const limit = 20;
+    const offset = (page - 1) * limit;
+    const api_url = `https://api.spotify.com/v1/search?q=${keyWord}&type=track&limit=${limit}&offset=${offset}`;
+
     const response = await axios.get(encodeURI(api_url), {
       headers: {
         Authorization: `Bearer ${access_token}`,
@@ -42,15 +41,15 @@ const searchByTrackArtist = async (keyWord, page = 1) => {
 
     return response.data.tracks;
   } catch (error) {
-    console.log(error);
+    throw new Error(`Spotify search failed: ${error.message}`);
   }
 };
 
 const searchTrackBySpotifyId = async (spotifyId) => {
-  const access_token = await getToken();
-
-  const api_url = `https://api.spotify.com/v1/tracks/${spotifyId}`;
   try {
+    const access_token = await getToken();
+    const api_url = `https://api.spotify.com/v1/tracks/${spotifyId}`;
+
     const response = await axios.get(encodeURI(api_url), {
       headers: {
         Authorization: `Bearer ${access_token}`,
@@ -59,7 +58,7 @@ const searchTrackBySpotifyId = async (spotifyId) => {
 
     return response.data;
   } catch (error) {
-    console.log(error);
+    throw new Error(`Spotify track lookup failed: ${error.message}`);
   }
 };
 

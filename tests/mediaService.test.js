@@ -206,6 +206,18 @@ describe("mediaService", () => {
         },
       });
     });
+
+    it("returns 502 when TMDB request fails", async () => {
+      tmdbClient.getDetailsById.mockRejectedValue(new Error("TMDB down"));
+      const response = createMockResponse();
+
+      await mediaService.getMovieTvShowDetails("movie-123", "movie", response);
+
+      expect(response.status).toHaveBeenCalledWith(502);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "Unable to fetch media details from TMDB" },
+      });
+    });
   });
 
   describe("getMusicDetails", () => {
@@ -252,6 +264,20 @@ describe("mediaService", () => {
       });
       expect(slackClient.postMessage).toHaveBeenCalled();
     });
+
+    it("returns 502 when Spotify request fails", async () => {
+      spotifyClient.searchTrackBySpotifyId.mockRejectedValue(
+        new Error("Spotify down")
+      );
+      const response = createMockResponse();
+
+      await mediaService.getMusicDetails("track-789", response);
+
+      expect(response.status).toHaveBeenCalledWith(502);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "Unable to fetch media details from Spotify" },
+      });
+    });
   });
 
   describe("getBookDetails", () => {
@@ -296,6 +322,20 @@ describe("mediaService", () => {
         },
       });
       expect(slackClient.postMessage).toHaveBeenCalled();
+    });
+
+    it("returns 502 when Google Books request fails", async () => {
+      googleClient.searchForBooksById.mockRejectedValue(
+        new Error("Google Books down")
+      );
+      const response = createMockResponse();
+
+      await mediaService.getBookDetails("book-321", response);
+
+      expect(response.status).toHaveBeenCalledWith(502);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "Unable to fetch media details from Google Books" },
+      });
     });
   });
 });

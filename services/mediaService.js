@@ -3,6 +3,7 @@ const slackClient = require("../client/slackClient");
 const tmdbClient = require("../client/tmdbClient");
 const spotifyClient = require("../client/spotifyClient");
 const googleClient = require("../client/googleClient");
+const { sendNotFound, sendBadGateway } = require("../utils/httpErrors");
 
 const createNewMedia = async (media, response) => {
   const newMedia = await new MediaModel(media).save();
@@ -21,7 +22,10 @@ const createNewMedia = async (media, response) => {
 };
 
 const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
-  const existingMedia = await MediaModel.findOne({ mediaId: tmdbId, mediaType: mediaType === "movie" ? "MOVIE" : "TV" });
+  const existingMedia = await MediaModel.findOne({
+    mediaId: tmdbId,
+    mediaType: mediaType === "movie" ? "MOVIE" : "TV",
+  });
 
   if (existingMedia) {
     return response.status(200).json({
@@ -30,35 +34,40 @@ const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
         media: existingMedia,
       },
     });
-  } else {
+  }
+
+  try {
     const mediaDetails = await tmdbClient.getDetailsById(tmdbId, mediaType);
     const mediaCast = await tmdbClient.getCreditsById(tmdbId, mediaType);
 
-    let movieToBeAdded = {};
-
-    if (mediaType === "movie") {
-      movieToBeAdded["name"] = mediaDetails.original_title;
-      movieToBeAdded["dateReleased"] = mediaDetails.release_date;
-    } else {
-      movieToBeAdded["name"] = mediaDetails.original_name;
-      movieToBeAdded["dateReleased"] = mediaDetails.first_air_date;
+    if (!mediaDetails || !mediaDetails.id) {
+      return sendNotFound(response, "Media not found");
     }
 
-    movieToBeAdded["description"] = mediaDetails.overview;
-    movieToBeAdded["tagLine"] = mediaDetails.tagLine;
-    movieToBeAdded["mediaId"] = mediaDetails.id;
-    movieToBeAdded["mediaType"] = mediaType.toUpperCase();
+    const movieToBeAdded = {};
+
+    if (mediaType === "movie") {
+      movieToBeAdded.name = mediaDetails.original_title;
+      movieToBeAdded.dateReleased = mediaDetails.release_date;
+    } else {
+      movieToBeAdded.name = mediaDetails.original_name;
+      movieToBeAdded.dateReleased = mediaDetails.first_air_date;
+    }
+
+    movieToBeAdded.description = mediaDetails.overview;
+    movieToBeAdded.tagLine = mediaDetails.tagline;
+    movieToBeAdded.mediaId = mediaDetails.id;
+    movieToBeAdded.mediaType = mediaType.toUpperCase();
 
     if (mediaDetails.poster_path) {
-      let posterUrl = `https://image.tmdb.org/t/p/w500${mediaDetails.poster_path}`;
-      movieToBeAdded["picture"] = posterUrl;
+      movieToBeAdded.picture = `https://image.tmdb.org/t/p/w500${mediaDetails.poster_path}`;
     }
 
     let castList = [];
     let directorList = [];
     let producerList = [];
 
-    mediaCast.cast.forEach((cast) => {
+    (mediaCast?.cast || []).forEach((cast) => {
       if (cast.known_for_department === "Acting") {
         castList.push(cast.name);
       }
@@ -70,7 +79,7 @@ const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
       }
     });
 
-    mediaCast.crew.forEach((cast) => {
+    (mediaCast?.crew || []).forEach((cast) => {
       if (cast.job === "Executive Producer") {
         producerList.push(cast.name);
       }
@@ -86,16 +95,22 @@ const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {
     producerList = producerList.slice(0, 4);
     directorList = directorList.slice(0, 4);
 
-    movieToBeAdded["cast"] = [...new Set(castList)];
-    movieToBeAdded["director"] = [...new Set(directorList)];
-    movieToBeAdded["producer"] = [...new Set(producerList)];
+    movieToBeAdded.cast = [...new Set(castList)];
+    movieToBeAdded.director = [...new Set(directorList)];
+    movieToBeAdded.producer = [...new Set(producerList)];
 
     return createNewMedia(movieToBeAdded, response);
+  } catch (error) {
+    return sendBadGateway(response, "Unable to fetch media details from TMDB");
   }
 };
 
 const getMusicDetails = async (spotifyId, response) => {
-  const existingMedia = await MediaModel.findOne({ mediaId: spotifyId, mediaType: "MUSIC" });
+  const existingMedia = await MediaModel.findOne({
+    mediaId: spotifyId,
+    mediaType: "MUSIC",
+  });
+
   if (existingMedia) {
     return response.status(200).json({
       status: "success",
@@ -103,42 +118,52 @@ const getMusicDetails = async (spotifyId, response) => {
         media: existingMedia,
       },
     });
-  } else {
+  }
+
+  try {
     const mediaDetails = await spotifyClient.searchTrackBySpotifyId(spotifyId);
 
-    let musicToBeAdded = {};
+    if (!mediaDetails || !mediaDetails.id) {
+      return sendNotFound(response, "Media not found");
+    }
 
-    musicToBeAdded["name"] = mediaDetails?.name;
-    musicToBeAdded["dateReleased"] = mediaDetails?.first_air_date;
-    musicToBeAdded["album"] = mediaDetails?.album.name;
-
-    let artists = [];
+    const artists = [];
     let imageUrl;
 
-    let imageList = mediaDetails?.album.images;
-    let artistsList = mediaDetails?.artists;
-
-    artistsList && artistsList.length > 0 && artistsList.forEach((artist) => {
+    (mediaDetails.artists || []).forEach((artist) => {
       artists.push(artist.name);
     });
 
-    imageList && imageList.length > 0 && imageList.forEach((image) => {
+    (mediaDetails.album?.images || []).forEach((image) => {
       if (image.height == 640) {
         imageUrl = image.url;
       }
     });
 
-    musicToBeAdded["mediaId"] = mediaDetails?.id;
-    musicToBeAdded["mediaType"] = "MUSIC";
-    musicToBeAdded["picture"] = imageUrl;
-    musicToBeAdded["artist"] = artists;
+    const musicToBeAdded = {
+      name: mediaDetails.name,
+      album: mediaDetails.album?.name,
+      mediaId: mediaDetails.id,
+      mediaType: "MUSIC",
+      picture: imageUrl,
+      artist: artists,
+    };
 
     return createNewMedia(musicToBeAdded, response);
+  } catch (error) {
+    return sendBadGateway(
+      response,
+      "Unable to fetch media details from Spotify"
+    );
   }
 };
 
 const getBookDetails = async (googleBookId, response) => {
-  const existingMedia = await MediaModel.findOne({ mediaId: googleBookId, mediaType: "BOOK" });
+  const existingMedia = await MediaModel.findOne({
+    mediaId: googleBookId,
+    mediaType: "BOOK",
+  });
+
   if (existingMedia) {
     return response.status(200).json({
       status: "success",
@@ -146,22 +171,38 @@ const getBookDetails = async (googleBookId, response) => {
         media: existingMedia,
       },
     });
-  } else {
+  }
+
+  try {
     const mediaDetails = await googleClient.searchForBooksById(googleBookId);
 
-    let bookToBeAdded = {};
+    if (!mediaDetails || !mediaDetails.id || !mediaDetails.volumeInfo) {
+      return sendNotFound(response, "Media not found");
+    }
 
-    bookToBeAdded["name"] = mediaDetails.volumeInfo.title;
-    bookToBeAdded["dateReleased"] = mediaDetails.volumeInfo.publishedDate;
-    bookToBeAdded["description"] = mediaDetails.volumeInfo.description;
-    bookToBeAdded["mediaId"] = mediaDetails.id;
-    bookToBeAdded["mediaType"] = "BOOK";
-    bookToBeAdded["genre"] = mediaDetails.volumeInfo.categories.join();
-    bookToBeAdded["picture"] = mediaDetails.volumeInfo.imageLinks.thumbnail;
-    bookToBeAdded["author"] = mediaDetails.volumeInfo.authors;
+    const bookToBeAdded = {
+      name: mediaDetails.volumeInfo.title,
+      dateReleased: mediaDetails.volumeInfo.publishedDate,
+      description: mediaDetails.volumeInfo.description,
+      mediaId: mediaDetails.id,
+      mediaType: "BOOK",
+      genre: (mediaDetails.volumeInfo.categories || []).join(),
+      picture: mediaDetails.volumeInfo.imageLinks?.thumbnail,
+      author: mediaDetails.volumeInfo.authors || [],
+    };
 
     return createNewMedia(bookToBeAdded, response);
+  } catch (error) {
+    return sendBadGateway(
+      response,
+      "Unable to fetch media details from Google Books"
+    );
   }
 };
 
-module.exports = { createNewMedia, getMovieTvShowDetails, getMusicDetails, getBookDetails };
+module.exports = {
+  createNewMedia,
+  getMovieTvShowDetails,
+  getMusicDetails,
+  getBookDetails,
+};
