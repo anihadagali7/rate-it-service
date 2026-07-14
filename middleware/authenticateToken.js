@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const UsersModel = require("../repository/userModel");
 require("dotenv").config();
 
 const authToken = async (request, response, next) => {
@@ -14,11 +15,21 @@ const authToken = async (request, response, next) => {
 
   try {
     const decoded = await jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const user = await UsersModel.findById(decoded.id);
+
+    if (!user || user.isActive !== true) {
+      return response.status(403).json({
+        errors: {
+          msg: "Invalid token",
+        },
+      });
+    }
+
     request.user = {
-      email: decoded.email,
-      userName: decoded.userName,
-      id: decoded.id,
-      isAdmin: decoded.isAdmin,
+      email: user.email,
+      userName: user.userName,
+      id: user._id.toString(),
+      isAdmin: user.isAdmin,
     };
     next();
   } catch (error) {

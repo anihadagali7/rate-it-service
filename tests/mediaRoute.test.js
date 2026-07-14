@@ -23,6 +23,7 @@ const googleClient = require("../client/googleClient");
 const MediaModel = require("../repository/mediaModel");
 const { connect, clearDatabase, closeDatabase } = require("./helpers/db");
 const { createAccessToken } = require("./helpers/auth");
+const { createTestUser } = require("./helpers/seed");
 
 const movieDetails = {
   original_title: "Route Movie",
@@ -70,10 +71,22 @@ const googleBook = {
 };
 
 describe("mediaRoute", () => {
-  const accessToken = createAccessToken();
+  let accessToken;
 
   beforeAll(async () => {
     await connect();
+  });
+
+  beforeEach(async () => {
+    const user = await createTestUser({
+      email: "media@example.com",
+      userName: "mediauser",
+    });
+    accessToken = createAccessToken({
+      email: user.email,
+      userName: user.userName,
+      id: user._id.toString(),
+    });
   });
 
   afterEach(async () => {

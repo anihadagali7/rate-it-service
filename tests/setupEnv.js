@@ -1,5 +1,8 @@
 process.env.ACCESS_TOKEN_SECRET =
   process.env.ACCESS_TOKEN_SECRET || "test-access-token-secret";
+process.env.JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+process.env.CORS_ORIGIN =
+  process.env.CORS_ORIGIN || "http://localhost:3000,http://127.0.0.1:3000";
 process.env.SLACK_LOGIN_URL =
   process.env.SLACK_LOGIN_URL || "https://example.com/slack";
 process.env.SLACK_TOKEN = process.env.SLACK_TOKEN || "test-slack-token";

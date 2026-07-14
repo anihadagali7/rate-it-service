@@ -15,7 +15,38 @@ const playlistRoute = require("./routes/playlistRoute");
 
 const app = express();
 
-app.use(cors());
+const getAllowedOrigins = () => {
+  if (process.env.CORS_ORIGIN) {
+    return process.env.CORS_ORIGIN.split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean);
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return [];
+  }
+
+  return ["http://localhost:3000", "http://127.0.0.1:3000"];
+};
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      const allowedOrigins = getAllowedOrigins();
+
+      // Non-browser clients (curl, Postman, server-to-server) send no Origin.
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(null, false);
+    },
+  })
+);
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api", authenticationRoute);

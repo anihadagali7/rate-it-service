@@ -74,6 +74,7 @@ describe("Auth flow", () => {
         isAdmin: false,
       });
       expect(decoded.id).toBeDefined();
+      expect(decoded.exp - decoded.iat).toBe(7 * 24 * 60 * 60);
     });
 
     it("stores a bcrypt-hashed password in the database", async () => {
@@ -88,6 +89,17 @@ describe("Auth flow", () => {
       expect(await bcrypt.compare(validUser.password, rawUser.password)).toBe(
         true
       );
+    });
+
+    it("rejects invalid signup payloads", async () => {
+      const response = await createUser({
+        email: "not-an-email",
+        password: "short",
+        userName: "",
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.errors.msg).toEqual(expect.any(String));
     });
 
     it("rejects duplicate email addresses", async () => {
@@ -133,6 +145,16 @@ describe("Auth flow", () => {
       expect(response.body.data.user.password).toBeUndefined();
     });
 
+    it("rejects invalid login payloads", async () => {
+      const response = await request(app).post("/api/login").send({
+        email: "not-an-email",
+        password: "",
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.errors.msg).toEqual(expect.any(String));
+    });
+
     it("rejects an invalid password", async () => {
       const response = await request(app).post("/api/login").send({
         email: validUser.email,
@@ -143,14 +165,29 @@ describe("Auth flow", () => {
       expect(response.body.errors.msg).toBe("Email or password is invalid");
     });
 
-    it("rejects an unknown email", async () => {
+    it("rejects an unknown email with the same message", async () => {
       const response = await request(app).post("/api/login").send({
         email: "missing@example.com",
         password: validUser.password,
       });
 
       expect(response.status).toBe(401);
-      expect(response.body.errors.msg).toBe("Invalid email");
+      expect(response.body.errors.msg).toBe("Email or password is invalid");
+    });
+
+    it("rejects inactive users with the same message", async () => {
+      await UsersModel.findOneAndUpdate(
+        { email: validUser.email },
+        { isActive: false }
+      );
+
+      const response = await request(app).post("/api/login").send({
+        email: validUser.email,
+        password: validUser.password,
+      });
+
+      expect(response.status).toBe(401);
+      expect(response.body.errors.msg).toBe("Email or password is invalid");
     });
   });
 
@@ -185,6 +222,24 @@ describe("Auth flow", () => {
       expect(response.body.errors.msg).toBe("Invalid token");
     });
 
+    it("returns 403 when the authenticated user is inactive", async () => {
+      await UsersModel.findOneAndUpdate(
+        { email: validUser.email },
+        { isActive: false }
+      );
+
+      const response = await request(app)
+        .post("/api/account/resetPassword")
+        .set("Authorization", accessToken)
+        .send({
+          currentPassword: validUser.password,
+          newPassword: "NewPassword1!",
+        });
+
+      expect(response.status).toBe(403);
+      expect(response.body.errors.msg).toBe("Invalid token");
+    });
+
     it("rejects an incorrect current password", async () => {
       const response = await request(app)
         .post("/api/account/resetPassword")
@@ -196,6 +251,21 @@ describe("Auth flow", () => {
 
       expect(response.status).toBe(400);
       expect(response.body.errors.msg).toBe("Current password is not valid");
+    });
+
+    it("rejects a short new password", async () => {
+      const response = await request(app)
+        .post("/api/account/resetPassword")
+        .set("Authorization", accessToken)
+        .send({
+          currentPassword: validUser.password,
+          newPassword: "short",
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.errors.msg).toBe(
+        "New password must be at least 8 characters"
+      );
     });
 
     it("resets the authenticated user's password and excludes the hash from the response", async () => {

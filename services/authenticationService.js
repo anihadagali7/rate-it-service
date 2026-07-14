@@ -56,31 +56,31 @@ const createNewUser = async (
 };
 
 const login = async (email, password, response) => {
-  let existingUser = await UsersModel.findOne({ email: email }).select(
+  const existingUser = await UsersModel.findOne({ email: email }).select(
     "+password"
   );
 
-  if (existingUser) {
-    let isMatch = await bcrypt.compare(password, existingUser.password);
-
-    if (!isMatch) {
-      return sendError(response, 401, "Email or password is invalid");
-    }
-
-    const accessToken = await signJwtToken(existingUser);
-
-    slackClient.postMessage(`${email} logged in!`, process.env.SLACK_LOGIN_URL);
-
-    return response.status(200).json({
-      status: "success",
-      accessToken,
-      data: {
-        user: toPublicUser(existingUser),
-      },
-    });
+  if (!existingUser || existingUser.isActive !== true) {
+    return sendError(response, 401, "Email or password is invalid");
   }
 
-  return sendError(response, 401, "Invalid email");
+  const isMatch = await bcrypt.compare(password, existingUser.password);
+
+  if (!isMatch) {
+    return sendError(response, 401, "Email or password is invalid");
+  }
+
+  const accessToken = await signJwtToken(existingUser);
+
+  slackClient.postMessage(`${email} logged in!`, process.env.SLACK_LOGIN_URL);
+
+  return response.status(200).json({
+    status: "success",
+    accessToken,
+    data: {
+      user: toPublicUser(existingUser),
+    },
+  });
 };
 
 const signJwtToken = async (user) => {
@@ -92,7 +92,7 @@ const signJwtToken = async (user) => {
       id: user._id,
     },
     process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: "365d" }
+    { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
   );
 
   return accessToken;
@@ -108,7 +108,7 @@ const resetPassword = async (
     "+password"
   );
 
-  if (!existingUser) {
+  if (!existingUser || existingUser.isActive !== true) {
     return sendNotFound(response, "User not found");
   }
 

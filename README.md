@@ -29,6 +29,8 @@ Create a `.env` file in the project root (this file is gitignored):
 ```env
 MONGO_DB_HOST=mongodb+srv://<user>:<password>@<cluster>/<db>?retryWrites=true&w=majority
 ACCESS_TOKEN_SECRET=your-jwt-secret
+JWT_EXPIRES_IN=7d
+CORS_ORIGIN=http://localhost:3000
 
 TMDB_TOKEN=your-tmdb-api-key
 SPOTIFY_CLIENT_ID=your-spotify-client-id
@@ -43,7 +45,12 @@ SLACK_RATING_URL=https://hooks.slack.com/services/...
 PORT=8080
 ```
 
-`PORT` is optional locally (defaults to `8080`). Heroku sets `PORT` automatically.
+| Variable | Required | Notes |
+|----------|----------|--------|
+| `ACCESS_TOKEN_SECRET` | Yes | Secret used to sign and verify JWTs |
+| `JWT_EXPIRES_IN` | No | JWT lifetime (default `7d`). Examples: `1h`, `12h`, `7d` |
+| `CORS_ORIGIN` | Recommended | Comma-separated allowlist of browser origins (e.g. `https://your-app.vercel.app,http://localhost:3000`). In production with no value, browser origins are denied. Locally, defaults to `http://localhost:3000` and `http://127.0.0.1:3000` |
+| `PORT` | No | Defaults to `8080` locally; Heroku sets this automatically |
 
 ## Getting started
 
@@ -140,6 +147,8 @@ web: node server.js
    ```bash
    heroku config:set MONGO_DB_HOST="your-mongodb-uri"
    heroku config:set ACCESS_TOKEN_SECRET="your-jwt-secret"
+   heroku config:set JWT_EXPIRES_IN="7d"
+   heroku config:set CORS_ORIGIN="https://your-frontend-origin"
    heroku config:set TMDB_TOKEN="your-tmdb-token"
    heroku config:set SPOTIFY_CLIENT_ID="your-spotify-client-id"
    heroku config:set SPOTIFY_CLIENT_SECRET="your-spotify-client-secret"
