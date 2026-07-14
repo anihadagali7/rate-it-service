@@ -2,6 +2,7 @@ const TmdbClient = require("../client/tmdbClient");
 const SpotifyClient = require("../client/spotifyClient");
 const UserModel = require("../repository/userModel");
 const GoogleClient = require("../client/googleClient");
+const { toPublicUsers } = require("../utils/userSerializer");
 
 const searchMovies = async (keyWord, page, response) => {
   const results = await TmdbClient.searchMovie(keyWord, page);
@@ -64,7 +65,7 @@ const searchUsers = async (keyWord, response) => {
   return response.status(200).json({
     status: "success",
     data: {
-      mediaList: updatedList,
+      mediaList: toPublicUsers(updatedList),
     },
     mediaType: "user",
   });

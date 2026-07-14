@@ -2,6 +2,7 @@ const UsersModel = require("../repository/userModel");
 const JWT = require("jsonwebtoken");
 const slackClient = require("../client/slackClient");
 const bcrypt = require("bcrypt");
+const { toPublicUser } = require("../utils/userSerializer");
 
 const createNewUser = async (
   firstName,
@@ -55,14 +56,16 @@ const createNewUser = async (
       status: "success",
       accessToken,
       data: {
-        user: newUser,
+        user: toPublicUser(newUser),
       },
     });
   }
 };
 
 const login = async (email, password, response) => {
-  let existingUser = await UsersModel.findOne({ email: email });
+  let existingUser = await UsersModel.findOne({ email: email }).select(
+    "+password"
+  );
 
   if (existingUser) {
     let isMatch = await bcrypt.compare(password, existingUser.password);
@@ -83,7 +86,7 @@ const login = async (email, password, response) => {
       status: "success",
       accessToken,
       data: {
-        user: existingUser,
+        user: toPublicUser(existingUser),
       },
     });
   }
@@ -116,44 +119,50 @@ const resetPassword = async (
   newPassword,
   response
 ) => {
-  let existingUser = await UsersModel.findOne({ userName: userName });
+  let existingUser = await UsersModel.findOne({ userName: userName }).select(
+    "+password"
+  );
 
-  if (existingUser) {
-    let isMatch = await bcrypt.compare(currentPassword, existingUser.password);
-
-    console.log("passwords match", isMatch);
-
-    if (!isMatch) {
-      return response.status(400).json({
-        errors: {
-          msg: "Current password is not valid",
-        },
-      });
-    } else {
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-      const updateExistingUser = await UsersModel.findOneAndUpdate(
-        {
-          userName: userName,
-        },
-        {
-          password: hashedPassword,
-          dateUpdated: Date.now(),
-        },
-        {
-          new: true,
-        }
-      );
-
-      return response.status(200).json({
-        status: "success",
-        data: {
-          user: updateExistingUser,
-        },
-      });
-    }
+  if (!existingUser) {
+    return response.status(404).json({
+      errors: {
+        msg: "User not found",
+      },
+    });
   }
+
+  let isMatch = await bcrypt.compare(currentPassword, existingUser.password);
+
+  if (!isMatch) {
+    return response.status(400).json({
+      errors: {
+        msg: "Current password is not valid",
+      },
+    });
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+  const updateExistingUser = await UsersModel.findOneAndUpdate(
+    {
+      userName: userName,
+    },
+    {
+      password: hashedPassword,
+      dateUpdated: Date.now(),
+    },
+    {
+      new: true,
+    }
+  );
+
+  return response.status(200).json({
+    status: "success",
+    data: {
+      user: toPublicUser(updateExistingUser),
+    },
+  });
 };
 
 module.exports = { createNewUser, login, resetPassword };

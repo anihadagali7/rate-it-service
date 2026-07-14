@@ -1,19 +1,37 @@
 const UserModel = require("../repository/userModel");
 const UsersModel = require("../repository/userModel");
+const { toPublicUser, toPublicUsers } = require("../utils/userSerializer");
 
 const getAccountDetails = async (userName, response) => {
   const user = await UserModel.findOne({ userName: userName });
+  if (!user) {
+    return response.status(404).json({
+      errors: {
+        msg: "User not found",
+      },
+    });
+  }
 
   return response.status(200).json({
     status: "success",
     data: {
-      user: user,
+      user: toPublicUser(user),
     },
   });
 };
 
 const followUser = async (userRequest, userToFollow, response) => {
   const currentUser = await UserModel.findOne({ userName: userRequest });
+  if (!currentUser) {
+    return response.status(404).json({
+      errors: [
+        {
+          msg: "User not found.",
+        },
+      ],
+    });
+  }
+
   const userToBeFollowed = await UserModel.findOne({ userName: userToFollow });
 
   if (userRequest === userToFollow) {
@@ -25,7 +43,7 @@ const followUser = async (userRequest, userToFollow, response) => {
       ],
     });
   } else if (!userToBeFollowed) {
-    return response.status(400).json({
+    return response.status(404).json({
       errors: [
         {
           msg: "User not found.",
@@ -59,6 +77,16 @@ const followUser = async (userRequest, userToFollow, response) => {
 
 const unFollowUser = async (userRequest, userToFollow, response) => {
   const currentUser = await UserModel.findOne({ userName: userRequest });
+  if (!currentUser) {
+    return response.status(404).json({
+      errors: [
+        {
+          msg: "User not found.",
+        },
+      ],
+    });
+  }
+
   const userToBeUnfollowed = await UserModel.findOne({
     userName: userToFollow,
   });
@@ -72,17 +100,14 @@ const unFollowUser = async (userRequest, userToFollow, response) => {
       ],
     });
   } else if (!userToBeUnfollowed) {
-    return response.status(400).json({
+    return response.status(404).json({
       errors: [
         {
           msg: "User not found.",
         },
       ],
     });
-  } else if (
-    userToBeUnfollowed &&
-    !currentUser.following.includes(userToBeUnfollowed.userName)
-  ) {
+  } else if (!currentUser.following.includes(userToBeUnfollowed.userName)) {
     return response.status(400).json({
       errors: [
         {
@@ -112,66 +137,101 @@ const unFollowUser = async (userRequest, userToFollow, response) => {
 };
 
 const getAllFollowing = async (user, response) => {
-  let followingList = [];
   const currentUser = await UserModel.findOne({ userName: user });
-  let currentUserFollowingList = currentUser.following;
+  if (!currentUser) {
+    return response.status(404).json({
+      errors: {
+        msg: "User not found",
+      },
+    });
+  }
+
+  const followingList = [];
+  const currentUserFollowingList = currentUser.following || [];
 
   for (const following of currentUserFollowingList) {
     const friend = await UserModel.findOne({ userName: following });
-    followingList.push(friend);
+    if (friend) {
+      followingList.push(friend);
+    }
   }
 
   return response.status(200).json({
     status: "success",
-    data: followingList,
+    data: toPublicUsers(followingList),
   });
 };
 
 const getAllFollowers = async (user, response) => {
-  let followersList = [];
   const currentUser = await UserModel.findOne({ userName: user });
-  let currentUserFollowersList = currentUser.followers;
+  if (!currentUser) {
+    return response.status(404).json({
+      errors: {
+        msg: "User not found",
+      },
+    });
+  }
+
+  const followersList = [];
+  const currentUserFollowersList = currentUser.followers || [];
 
   for (const follower of currentUserFollowersList) {
     const friend = await UserModel.findOne({ userName: follower });
-    followersList.push(friend);
+    if (friend) {
+      followersList.push(friend);
+    }
   }
 
   return response.status(200).json({
     status: "success",
-    data: followersList,
+    data: toPublicUsers(followersList),
   });
 };
 
 const getAllFriends = async (user, response) => {
-  let followersList = [];
-  let followingList = [];
   const currentUser = await UserModel.findOne({ userName: user });
-  let currentUserFollowersList = currentUser.followers;
-  let currentUserFollowingList = currentUser.following;
+  if (!currentUser) {
+    return response.status(404).json({
+      errors: {
+        msg: "User not found",
+      },
+    });
+  }
+
+  const followersList = [];
+  const followingList = [];
+  const currentUserFollowersList = currentUser.followers || [];
+  const currentUserFollowingList = currentUser.following || [];
 
   for (const follower of currentUserFollowersList) {
     const friend = await UserModel.findOne({ userName: follower });
-    followersList.push(friend);
+    if (friend) {
+      followersList.push(friend);
+    }
   }
 
   for (const following of currentUserFollowingList) {
     const friend = await UserModel.findOne({ userName: following });
-    followingList.push(friend);
+    if (friend) {
+      followingList.push(friend);
+    }
   }
 
   return response.status(200).json({
     status: "success",
-    data: { followersList: followersList, followingList: followingList },
+    data: {
+      followersList: toPublicUsers(followersList),
+      followingList: toPublicUsers(followingList),
+    },
   });
 };
 
 const getAllUsers = async (response) => {
-  let allUsers = await UserModel.find();
+  const allUsers = await UserModel.find();
 
   return response.status(200).json({
     status: "success",
-    data: allUsers,
+    data: toPublicUsers(allUsers),
   });
 };
 
@@ -198,9 +258,9 @@ const updateUser = async (
   );
 
   if (!updateExistingUser) {
-    return response.status(400).json({
+    return response.status(404).json({
       errors: {
-        msg: "This user does not exist",
+        msg: "User not found",
       },
     });
   }
@@ -208,7 +268,7 @@ const updateUser = async (
   return response.status(200).json({
     status: "success",
     data: {
-      user: updateExistingUser,
+      user: toPublicUser(updateExistingUser),
     },
   });
 };

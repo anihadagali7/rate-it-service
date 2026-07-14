@@ -3,6 +3,7 @@ const UserModel = require("../repository/userModel");
 const { response } = require("express");
 const MediaModel = require("../repository/mediaModel");
 const PlaylistMediaModel = require("../repository/playlist_mediaModel");
+const { toPublicUser } = require("../utils/userSerializer");
 
 const isPlaylistOwnedBy = (playlist, authenticatedUserId) => {
   const ownerId = playlist.addedBy?._id || playlist.addedBy;
@@ -130,10 +131,10 @@ const addMediaToMultiplePlaylist = async (
         );
       }
 
-      const updatedPlaylist = await existingPlaylist.save();
+      await existingPlaylist.save();
 
       await PlaylistMediaModel.deleteOne({
-        playlistList: playlist,
+        playlist: playlist,
         media: media,
       });
     }
@@ -288,7 +289,9 @@ const preparePlaylistList = async (playlistList) => {
   let list = [];
   for (let playlist of playlistList) {
     let playlistObject = JSON.parse(JSON.stringify(playlist));
-    playlistObject.addedBy = await UserModel.findById(playlist.addedBy);
+    playlistObject.addedBy = toPublicUser(
+      await UserModel.findById(playlist.addedBy)
+    );
     list.push(playlistObject);
   }
 
@@ -343,8 +346,17 @@ const addPostersForPlaylist = async () => {
 
 const getPlaylistsWithThisMedia = async (userName, mediaId, response) => {
   const existingUser = await UserModel.findOne({ userName: userName });
-  const existingMedia = await MediaModel.findById(mediaId);
+  if (existingUser == null) {
+    return response.status(404).json({
+      errors: [
+        {
+          msg: "User not found",
+        },
+      ],
+    });
+  }
 
+  const existingMedia = await MediaModel.findById(mediaId);
   if (existingMedia == null) {
     return response.status(400).json({
       errors: [
@@ -359,28 +371,24 @@ const getPlaylistsWithThisMedia = async (userName, mediaId, response) => {
     media: existingMedia._id,
   });
 
-  if (allPlaylistByMedia == null || allPlaylistByMedia.length == 0) {
+  if (allPlaylistByMedia == null || allPlaylistByMedia.length === 0) {
     return response.status(200).json({
       status: "That media has not been added to any playlists",
       data: [],
     });
   }
 
-  const playlistIds = [];
+  const selectedPlaylists = [];
 
-  for (let mediaPlaylist of allPlaylistByMedia) {
-    playlistIds.push(mediaPlaylist.playlist);
-  }
-
-  let selectedPlaylists = [];
-
-  for (let playlist of playlistIds) {
+  for (const mediaPlaylist of allPlaylistByMedia) {
     const existingPlaylist = await PlaylistModel.findOne({
-      _id: playlist._id,
-      addedBy: existingUser,
+      _id: mediaPlaylist.playlist,
+      addedBy: existingUser._id,
     });
 
-    selectedPlaylists.push(existingPlaylist);
+    if (existingPlaylist) {
+      selectedPlaylists.push(existingPlaylist);
+    }
   }
 
   return response.status(200).json({

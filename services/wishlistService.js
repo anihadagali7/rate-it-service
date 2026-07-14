@@ -1,13 +1,28 @@
 const MediaModel = require("../repository/mediaModel");
 const WishlistModel = require("../repository/wishlistModel");
 const UserModel = require("../repository/userModel");
-const {response} = require("express");
+const { toPublicUser } = require("../utils/userSerializer");
 
 const createNewWishlist = async (mediaId, userName, response) => {
-  const existingUser = await UserModel.findOne({userName: userName});
-  const existingMedia = await MediaModel.findOne({ mediaId: mediaId });
+  const existingUser = await UserModel.findOne({ userName: userName });
+  if (!existingUser) {
+    return response.status(404).json({
+      errors: {
+        msg: "User not found",
+      },
+    });
+  }
 
-  const newWishlist = await new WishlistModel ({
+  const existingMedia = await MediaModel.findOne({ mediaId: mediaId });
+  if (!existingMedia) {
+    return response.status(404).json({
+      errors: {
+        msg: "Media not found",
+      },
+    });
+  }
+
+  const newWishlist = await new WishlistModel({
     media: existingMedia,
     addedBy: existingUser,
     isActive: true,
@@ -23,10 +38,17 @@ const createNewWishlist = async (mediaId, userName, response) => {
 };
 
 const getWishlistForUser = async (userName, response) => {
-  const existingUser = await UserModel.findOne({userName: userName});
-  const list = await WishlistModel.find({addedBy: existingUser});
+  const existingUser = await UserModel.findOne({ userName: userName });
+  if (!existingUser) {
+    return response.status(404).json({
+      errors: {
+        msg: "User not found",
+      },
+    });
+  }
 
-  let wishlistList = await prepareWishlistList(list);
+  const list = await WishlistModel.find({ addedBy: existingUser });
+  const wishlistList = await prepareWishlistList(list);
 
   return response.status(200).json({
     status: "success",
@@ -34,19 +56,21 @@ const getWishlistForUser = async (userName, response) => {
       wishlistList,
     },
   });
-}
+};
 
 const prepareWishlistList = async (wishlist) => {
-  let list = [];
-  for(let media of wishlist) {
-    let wishlistObject = JSON.parse(JSON.stringify(media));
+  const list = [];
+  for (const media of wishlist) {
+    const wishlistObject = JSON.parse(JSON.stringify(media));
     wishlistObject.media = await MediaModel.findById(media.media);
-    wishlistObject.addedBy = await UserModel.findById(media.addedBy);
+    wishlistObject.addedBy = toPublicUser(
+      await UserModel.findById(media.addedBy)
+    );
     list.push(wishlistObject);
   }
 
-  list.sort((a,b)=>a.dateCreated - b.dateCreated);
+  list.sort((a, b) => a.dateCreated - b.dateCreated);
   return list;
-}
+};
 
 module.exports = { createNewWishlist, getWishlistForUser };

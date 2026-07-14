@@ -55,6 +55,36 @@ describe("wishlistService", () => {
       expect(storedWishlist).toBeTruthy();
       expect(storedWishlist.media.toString()).toBe(media._id.toString());
     });
+
+    it("returns 404 when the user does not exist", async () => {
+      const response = createMockResponse();
+
+      await wishlistService.createNewWishlist(
+        media.mediaId,
+        "ghostuser",
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "User not found" },
+      });
+    });
+
+    it("returns 404 when the media does not exist", async () => {
+      const response = createMockResponse();
+
+      await wishlistService.createNewWishlist(
+        "missing-media",
+        user.userName,
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "Media not found" },
+      });
+    });
   });
 
   describe("getWishlistForUser", () => {
@@ -86,6 +116,9 @@ describe("wishlistService", () => {
           ],
         },
       });
+      expect(
+        response.json.mock.calls[0][0].data.wishlistList[0].addedBy.password
+      ).toBeUndefined();
     });
 
     it("returns an empty list when the user has no wishlist items", async () => {
@@ -97,6 +130,17 @@ describe("wishlistService", () => {
       expect(response.json).toHaveBeenCalledWith({
         status: "success",
         data: { wishlistList: [] },
+      });
+    });
+
+    it("returns 404 when the user does not exist", async () => {
+      const response = createMockResponse();
+
+      await wishlistService.getWishlistForUser("ghostuser", response);
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "User not found" },
       });
     });
   });

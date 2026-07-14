@@ -53,6 +53,17 @@ describe("userService", () => {
         },
       });
     });
+
+    it("returns 404 when the user does not exist", async () => {
+      const response = createMockResponse();
+
+      await userService.getAccountDetails("ghostuser", response);
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "User not found" },
+      });
+    });
   });
 
   describe("followUser", () => {
@@ -88,7 +99,7 @@ describe("userService", () => {
 
       await userService.followUser(user.userName, "ghostuser", response);
 
-      expect(response.status).toHaveBeenCalledWith(400);
+      expect(response.status).toHaveBeenCalledWith(404);
       expect(response.json).toHaveBeenCalledWith({
         errors: [{ msg: "User not found." }],
       });
@@ -183,6 +194,17 @@ describe("userService", () => {
         ],
       });
     });
+
+    it("returns 404 when the user does not exist", async () => {
+      const response = createMockResponse();
+
+      await userService.getAllFollowing("ghostuser", response);
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "User not found" },
+      });
+    });
   });
 
   describe("getAllFollowers", () => {
@@ -201,6 +223,17 @@ describe("userService", () => {
             userName: user.userName,
           }),
         ],
+      });
+    });
+
+    it("returns 404 when the user does not exist", async () => {
+      const response = createMockResponse();
+
+      await userService.getAllFollowers("ghostuser", response);
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "User not found" },
       });
     });
   });
@@ -229,6 +262,17 @@ describe("userService", () => {
             expect.objectContaining({ userName: targetUser.userName }),
           ],
         },
+      });
+    });
+
+    it("returns 404 when the user does not exist", async () => {
+      const response = createMockResponse();
+
+      await userService.getAllFriends("ghostuser", response);
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "User not found" },
       });
     });
   });
@@ -282,7 +326,7 @@ describe("userService", () => {
       expect(updatedUser.phoneNumber).toBe("9999999999");
     });
 
-    it("returns 400 when the user does not exist", async () => {
+    it("returns 404 when the user does not exist", async () => {
       const response = createMockResponse();
 
       await userService.updateUser(
@@ -293,9 +337,9 @@ describe("userService", () => {
         response
       );
 
-      expect(response.status).toHaveBeenCalledWith(400);
+      expect(response.status).toHaveBeenCalledWith(404);
       expect(response.json).toHaveBeenCalledWith({
-        errors: { msg: "This user does not exist" },
+        errors: { msg: "User not found" },
       });
     });
   });

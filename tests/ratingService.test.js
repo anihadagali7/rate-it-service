@@ -78,6 +78,40 @@ describe("ratingService", () => {
       expect(storedRating.ratedBy.toString()).toBe(user._id.toString());
       expect(storedRating.media.toString()).toBe(media._id.toString());
     });
+
+    it("returns 404 when the user does not exist", async () => {
+      const response = createMockResponse();
+
+      await ratingService.createNewRating(
+        media.mediaId,
+        "4",
+        "Missing user rating",
+        "ghostuser",
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "User not found" },
+      });
+    });
+
+    it("returns 404 when the media does not exist", async () => {
+      const response = createMockResponse();
+
+      await ratingService.createNewRating(
+        "missing-media",
+        "4",
+        "Missing media rating",
+        user.userName,
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "Media not found" },
+      });
+    });
   });
 
   describe("getRatingsForUser", () => {
@@ -105,6 +139,20 @@ describe("ratingService", () => {
           ],
         },
       });
+      expect(
+        response.json.mock.calls[0][0].data.ratingsList[0].ratedBy.password
+      ).toBeUndefined();
+    });
+
+    it("returns 404 when the user does not exist", async () => {
+      const response = createMockResponse();
+
+      await ratingService.getRatingsForUser("ghostuser", response);
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "User not found" },
+      });
     });
   });
 
@@ -126,6 +174,17 @@ describe("ratingService", () => {
             }),
           ],
         },
+      });
+    });
+
+    it("returns 404 when the media does not exist", async () => {
+      const response = createMockResponse();
+
+      await ratingService.getRatingsForMedia("missing-media", response);
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "Media not found" },
       });
     });
   });
@@ -186,6 +245,17 @@ describe("ratingService", () => {
       expect(response.json).toHaveBeenCalledWith({
         status: "success",
         data: { ratingsList: [] },
+      });
+    });
+
+    it("returns 404 when the user does not exist", async () => {
+      const response = createMockResponse();
+
+      await ratingService.getRatingsByFollowing("ghostuser", response);
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "User not found" },
       });
     });
   });
