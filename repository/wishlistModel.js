@@ -10,5 +10,8 @@ const wishlistSchema = new Schema({
   dateCreated: Date,
 });
 
+wishlistSchema.index({ addedBy: 1, media: 1 }, { unique: true });
+wishlistSchema.index({ addedBy: 1 });
+
 const wishlists = mongoose.model("wishlist", wishlistSchema);
 module.exports = wishlists;

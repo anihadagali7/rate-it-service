@@ -3,12 +3,15 @@ const router = express.Router();
 const authToken = require("../middleware/authenticateToken");
 
 const userService = require("../services/userService");
-const {request, response} = require("express");
 
 router.get("/account/:userName", authToken, async (request, response) => {
   const { userName } = request.params;
 
-  return userService.getAccountDetails(userName, response);
+  return userService.getAccountDetails(
+    userName,
+    request.user.userName,
+    response
+  );
 });
 
 router.get("/allUsers", authToken, async (request, response) => {
@@ -16,15 +19,23 @@ router.get("/allUsers", authToken, async (request, response) => {
 });
 
 router.post("/friends/follow", authToken, async (request, response) => {
-  const { currentUser, userToFollow } = request.body;
+  const { userToFollow } = request.body;
 
-  return userService.followUser(currentUser, userToFollow, response);
+  return userService.followUser(
+    request.user.userName,
+    userToFollow,
+    response
+  );
 });
 
 router.post("/friends/unfollow", authToken, async (request, response) => {
-  const { currentUser, userToUnfollow } = request.body;
+  const { userToUnfollow } = request.body;
 
-  return userService.unFollowUser(currentUser, userToUnfollow, response);
+  return userService.unFollowUser(
+    request.user.userName,
+    userToUnfollow,
+    response
+  );
 });
 
 router.get("/:userName/following", authToken, async (request, response) => {
@@ -46,9 +57,15 @@ router.get("/:userName/friendsList", authToken, async (request, response) => {
 });
 
 router.put("/account/update", authToken, async (request, response) => {
-  const { firstName, lastName, email, phoneNumber, userName } = request.body;
+  const { firstName, lastName, phoneNumber } = request.body;
 
-  return userService.updateUser(firstName, lastName, email, phoneNumber, userName, response);
+  return userService.updateUser(
+    firstName,
+    lastName,
+    phoneNumber,
+    request.user.userName,
+    response
+  );
 });
 
 module.exports = router;

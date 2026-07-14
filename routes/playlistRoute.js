@@ -5,9 +5,13 @@ const authToken = require("../middleware/authenticateToken");
 const playlistService = require("../services/playlistService");
 
 router.post("/create", authToken, async (request, response) => {
-  const { playlistName, userName } = request.body;
+  const { playlistName } = request.body;
 
-  return playlistService.createNewPlaylist(playlistName, userName, response);
+  return playlistService.createNewPlaylist(
+    playlistName,
+    request.user.userName,
+    response
+  );
 });
 
 router.post("/addMediaToMultiplePlaylists", authToken, async (request, response) => {
@@ -17,6 +21,7 @@ router.post("/addMediaToMultiplePlaylists", authToken, async (request, response)
     playlistsToAdd,
     playlistsToRemove,
     mediaId,
+    request.user.id,
     response
   );
 });
@@ -24,7 +29,12 @@ router.post("/addMediaToMultiplePlaylists", authToken, async (request, response)
 router.post("/addMedia", authToken, async (request, response) => {
   const { playlistId, mediaId } = request.body;
 
-  return playlistService.addMediaToPlaylist(playlistId, mediaId, response);
+  return playlistService.addMediaToPlaylist(
+    playlistId,
+    mediaId,
+    request.user.id,
+    response
+  );
 });
 
 router.get("/user/:userName", authToken, async (request, response) => {
@@ -41,10 +51,10 @@ router.get(
   "/getPlaylistsWithThisMedia",
   authToken,
   async (request, response) => {
-    const { mediaId, userName } = request.query;
+    const { mediaId } = request.query;
 
     return playlistService.getPlaylistsWithThisMedia(
-      userName,
+      request.user.userName,
       mediaId,
       response
     );

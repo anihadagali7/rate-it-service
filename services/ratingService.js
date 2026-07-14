@@ -2,54 +2,86 @@ const RatingModel = require("../repository/ratingModel");
 const slackClient = require("../client/slackClient");
 const MediaModel = require("../repository/mediaModel");
 const UserModel = require("../repository/userModel");
-const {response} = require("express");
+const { toPublicUser } = require("../utils/userSerializer");
+const { sendNotFound, sendConflict } = require("../utils/httpErrors");
+const { isDuplicateKeyError } = require("../utils/mongoErrors");
 
 const createNewRating = async (mediaId, rating, comments, userName, response) => {
-  const existingUser = await UserModel.findOne({userName: userName});
+  const existingUser = await UserModel.findOne({ userName: userName });
+  if (!existingUser) {
+    return sendNotFound(response, "User not found");
+  }
+
   const existingMedia = await MediaModel.findOne({ mediaId: mediaId });
+  if (!existingMedia) {
+    return sendNotFound(response, "Media not found");
+  }
 
-  const newRating = await new RatingModel({
-    media: existingMedia,
-    ratedBy: existingUser,
-    rating: rating,
-    comments: comments,
-    isActive: true,
-    dateCreated: Date.now(),
-    dateUpdated: Date.now(),
-  }).save();
+  const existingRating = await RatingModel.findOne({
+    ratedBy: existingUser._id,
+    media: existingMedia._id,
+  });
 
-  slackClient.postMessage(
-    `Rating has been added for ${existingMedia.name} - ${existingMedia.mediaType} by ${existingUser.userName}!`,
-    process.env.SLACK_RATING_URL
-  );
+  if (existingRating) {
+    return sendConflict(response, "You have already rated this media");
+  }
 
-  return response.status(201).json({
+  try {
+    const newRating = await new RatingModel({
+      media: existingMedia._id,
+      ratedBy: existingUser._id,
+      rating: rating,
+      comments: comments,
+      isActive: true,
+      dateCreated: Date.now(),
+      dateUpdated: Date.now(),
+    }).save();
+
+    slackClient.postMessage(
+      `Rating has been added for ${existingMedia.name} - ${existingMedia.mediaType} by ${existingUser.userName}!`,
+      process.env.SLACK_RATING_URL
+    );
+
+    return response.status(201).json({
+      status: "success",
+      data: {
+        newRating,
+      },
+    });
+  } catch (error) {
+    if (isDuplicateKeyError(error)) {
+      return sendConflict(response, "You have already rated this media");
+    }
+
+    throw error;
+  }
+};
+
+const getRatingsForUser = async (userName, response) => {
+  const existingUser = await UserModel.findOne({ userName: userName });
+  if (!existingUser) {
+    return sendNotFound(response, "User not found");
+  }
+
+  const list = await RatingModel.find({ ratedBy: existingUser });
+  const ratingsList = await prepareRatingsList(list);
+
+  return response.status(200).json({
     status: "success",
     data: {
-      newRating,
+      ratingsList,
     },
   });
 };
 
-const getRatingsForUser = async (userName, response) => {
-  const existingUser = await UserModel.findOne({userName: userName});
-  const list = await RatingModel.find({ratedBy: existingUser});
-
-  let ratingsList = await prepareRatingsList(list);
-
-  return response.status(200).json({
-    status: "success",
-    data: {
-      ratingsList,
-    },
-  });
-}
-
 const getRatingsForMedia = async (mediaId, response) => {
-  const existingMedia = await MediaModel.findOne({mediaId: mediaId});
-  const list = await RatingModel.find({media: existingMedia});
+  const existingMedia = await MediaModel.findOne({ mediaId: mediaId });
+  if (!existingMedia) {
+    return sendNotFound(response, "Media not found");
+  }
 
-  let ratingsList = await prepareRatingsList(list);
+  const list = await RatingModel.find({ media: existingMedia });
+  const ratingsList = await prepareRatingsList(list);
 
   return response.status(200).json({
     status: "success",
@@ -57,11 +89,10 @@ const getRatingsForMedia = async (mediaId, response) => {
       ratingsList,
     },
   });
-}
+};
 
 const getExploreRatings = async (response) => {
   const getAllRatings = await RatingModel.find();
-
   const ratingsList = await prepareRatingsList(getAllRatings);
 
   return response.status(200).json({
@@ -73,13 +104,21 @@ const getExploreRatings = async (response) => {
 };
 
 const getRatingsByFollowing = async (userName, response) => {
-  const existingUser = await UserModel.findOne({userName: userName});
-  const listOfRatingsByFollowers = [];
-  let followingList = existingUser.following;
+  const existingUser = await UserModel.findOne({ userName: userName });
+  if (!existingUser) {
+    return sendNotFound(response, "User not found");
+  }
 
-  for(let user of followingList){
-    const userModel = await UserModel.findOne({userName: user});
-    const list = await RatingModel.find({ratedBy: userModel});
+  const listOfRatingsByFollowers = [];
+  const followingList = existingUser.following || [];
+
+  for (const user of followingList) {
+    const userModel = await UserModel.findOne({ userName: user });
+    if (!userModel) {
+      continue;
+    }
+
+    const list = await RatingModel.find({ ratedBy: userModel });
     listOfRatingsByFollowers.push(...list);
   }
 
@@ -94,16 +133,24 @@ const getRatingsByFollowing = async (userName, response) => {
 };
 
 const prepareRatingsList = async (ratings) => {
-  let ratingsList = [];
-  for(let rating of ratings) {
-    let ratingObject = JSON.parse(JSON.stringify(rating));
+  const ratingsList = [];
+  for (const rating of ratings) {
+    const ratingObject = JSON.parse(JSON.stringify(rating));
     ratingObject.media = await MediaModel.findById(rating.media);
-    ratingObject.ratedBy = await UserModel.findById(rating.ratedBy);
+    ratingObject.ratedBy = toPublicUser(
+      await UserModel.findById(rating.ratedBy)
+    );
     ratingsList.push(ratingObject);
   }
 
-  ratingsList.sort((a,b)=>a.dateCreated - b.dateCreated);
+  ratingsList.sort((a, b) => a.dateCreated - b.dateCreated);
   return ratingsList;
-}
+};
 
-module.exports = { createNewRating, getRatingsForUser, getRatingsForMedia, getExploreRatings, getRatingsByFollowing };
+module.exports = {
+  createNewRating,
+  getRatingsForUser,
+  getRatingsForMedia,
+  getExploreRatings,
+  getRatingsByFollowing,
+};

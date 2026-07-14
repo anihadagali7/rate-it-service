@@ -8,7 +8,7 @@ const userSchema = new Schema({
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   email: { type: String, unique: true },
-  password: { type: String, required: true },
+  password: { type: String, required: true, select: false },
   phoneNumber: String,
   picture: String,
   followers: [{ type: String }],
@@ -18,6 +18,14 @@ const userSchema = new Schema({
   dateCreated: Date,
   dateUpdated: Date,
 });
+
+const stripPassword = (_doc, ret) => {
+  delete ret.password;
+  return ret;
+};
+
+userSchema.set("toJSON", { transform: stripPassword });
+userSchema.set("toObject", { transform: stripPassword });
 
 const users = mongoose.model("user", userSchema);
 module.exports = users;
