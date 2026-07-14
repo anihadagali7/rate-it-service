@@ -13,8 +13,13 @@ const authToken = async (request, response, next) => {
   }
 
   try {
-    const user = await jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    request.user = user.email;
+    const decoded = await jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    request.user = {
+      email: decoded.email,
+      userName: decoded.userName,
+      id: decoded.id,
+      isAdmin: decoded.isAdmin,
+    };
     next();
   } catch (error) {
     return response.status(403).json({

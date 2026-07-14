@@ -4,6 +4,11 @@ const { response } = require("express");
 const MediaModel = require("../repository/mediaModel");
 const PlaylistMediaModel = require("../repository/playlist_mediaModel");
 
+const isPlaylistOwnedBy = (playlist, authenticatedUserId) => {
+  const ownerId = playlist.addedBy?._id || playlist.addedBy;
+  return ownerId?.toString() === authenticatedUserId?.toString();
+};
+
 const createNewPlaylist = async (playlistName, userName, response) => {
   const existingUser = await UserModel.findOne({ userName: userName });
 
@@ -37,6 +42,7 @@ const addMediaToMultiplePlaylist = async (
   playlistsToAdd,
   playlistsToRemove,
   media,
+  authenticatedUserId,
   response
 ) => {
   const existingMedia = await MediaModel.findById(media);
@@ -60,6 +66,16 @@ const addMediaToMultiplePlaylist = async (
           errors: [
             {
               msg: "That playlist does not exist",
+            },
+          ],
+        });
+      }
+
+      if (!isPlaylistOwnedBy(existingPlaylist, authenticatedUserId)) {
+        return response.status(403).json({
+          errors: [
+            {
+              msg: "You do not own this playlist",
             },
           ],
         });
@@ -96,6 +112,16 @@ const addMediaToMultiplePlaylist = async (
         });
       }
 
+      if (!isPlaylistOwnedBy(existingPlaylist, authenticatedUserId)) {
+        return response.status(403).json({
+          errors: [
+            {
+              msg: "You do not own this playlist",
+            },
+          ],
+        });
+      }
+
       const removePoster = existingMedia.picture;
 
       if (Array.isArray(existingPlaylist.posters)) {
@@ -118,7 +144,12 @@ const addMediaToMultiplePlaylist = async (
   });
 };
 
-const addMediaToPlaylist = async (playlist, media, response) => {
+const addMediaToPlaylist = async (
+  playlist,
+  media,
+  authenticatedUserId,
+  response
+) => {
   const existingPlaylist = await PlaylistModel.findById(playlist);
   const existingMedia = await MediaModel.findById(media);
 
@@ -137,6 +168,16 @@ const addMediaToPlaylist = async (playlist, media, response) => {
       errors: [
         {
           msg: "That playlist does not exist",
+        },
+      ],
+    });
+  }
+
+  if (!isPlaylistOwnedBy(existingPlaylist, authenticatedUserId)) {
+    return response.status(403).json({
+      errors: [
+        {
+          msg: "You do not own this playlist",
         },
       ],
     });

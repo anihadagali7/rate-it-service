@@ -178,46 +178,39 @@ const getAllUsers = async (response) => {
 const updateUser = async (
   firstName,
   lastName,
-  email,
   phoneNumber,
-  userName,
+  authenticatedUserName,
   response
 ) => {
-  let existingUser = await UsersModel.exists({
-    email: email,
-    userName: userName,
-  });
+  const updateExistingUser = await UsersModel.findOneAndUpdate(
+    {
+      userName: authenticatedUserName,
+    },
+    {
+      firstName: firstName,
+      lastName: lastName,
+      phoneNumber: phoneNumber,
+      dateUpdated: Date.now(),
+    },
+    {
+      new: true,
+    }
+  );
 
-  if (existingUser) {
-    const updateExistingUser = await UsersModel.findOneAndUpdate(
-      {
-        email: email,
-        userName: userName,
-      },
-      {
-        firstName: firstName,
-        lastName: lastName,
-        phoneNumber: phoneNumber,
-        dateUpdated: Date.now(),
-      },
-      {
-        new: true,
-      }
-    );
-
-    return response.status(200).json({
-      status: "success",
-      data: {
-        user: updateExistingUser,
-      },
-    });
-  } else {
+  if (!updateExistingUser) {
     return response.status(400).json({
       errors: {
         msg: "This user does not exist",
       },
     });
   }
+
+  return response.status(200).json({
+    status: "success",
+    data: {
+      user: updateExistingUser,
+    },
+  });
 };
 
 module.exports = {
