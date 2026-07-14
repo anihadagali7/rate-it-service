@@ -112,6 +112,25 @@ describe("ratingService", () => {
         errors: { msg: "Media not found" },
       });
     });
+
+    it("returns 409 when the user has already rated the media", async () => {
+      await createTestRating(user, media, { comments: "First rating" });
+      const response = createMockResponse();
+
+      await ratingService.createNewRating(
+        media.mediaId,
+        "5",
+        "Duplicate rating",
+        user.userName,
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(409);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "You have already rated this media" },
+      });
+      expect(slackClient.postMessage).not.toHaveBeenCalled();
+    });
   });
 
   describe("getRatingsForUser", () => {

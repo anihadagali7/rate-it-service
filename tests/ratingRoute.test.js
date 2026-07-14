@@ -176,6 +176,24 @@ describe("ratingRoute", () => {
         ])
       );
     });
+
+    it("does not expose private user fields on ratedBy", async () => {
+      await createTestRating(user, media, { comments: "Public explore rating" });
+
+      const response = await request(app).get("/api/ratings/explore");
+
+      expect(response.status).toBe(200);
+      const ratedBy = response.body.data.ratingsList[0].ratedBy;
+      expect(ratedBy).toMatchObject({
+        userName: user.userName,
+        firstName: "Test",
+        lastName: "User",
+      });
+      expect(ratedBy.email).toBeUndefined();
+      expect(ratedBy.phoneNumber).toBeUndefined();
+      expect(ratedBy.isAdmin).toBeUndefined();
+      expect(ratedBy.password).toBeUndefined();
+    });
   });
 
   describe("GET /api/ratings/following", () => {

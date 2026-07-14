@@ -2,7 +2,8 @@ const MediaModel = require("../repository/mediaModel");
 const WishlistModel = require("../repository/wishlistModel");
 const UserModel = require("../repository/userModel");
 const { toPublicUser } = require("../utils/userSerializer");
-const { sendNotFound } = require("../utils/httpErrors");
+const { sendNotFound, sendConflict } = require("../utils/httpErrors");
+const { isDuplicateKeyError } = require("../utils/mongoErrors");
 
 const createNewWishlist = async (mediaId, userName, response) => {
   const existingUser = await UserModel.findOne({ userName: userName });
@@ -15,19 +16,36 @@ const createNewWishlist = async (mediaId, userName, response) => {
     return sendNotFound(response, "Media not found");
   }
 
-  const newWishlist = await new WishlistModel({
-    media: existingMedia,
-    addedBy: existingUser,
-    isActive: true,
-    dateCreated: Date.now(),
-  }).save();
-
-  return response.status(201).json({
-    status: "success",
-    data: {
-      newWishlist,
-    },
+  const existingWishlist = await WishlistModel.findOne({
+    addedBy: existingUser._id,
+    media: existingMedia._id,
   });
+
+  if (existingWishlist) {
+    return sendConflict(response, "This media is already in your wishlist");
+  }
+
+  try {
+    const newWishlist = await new WishlistModel({
+      media: existingMedia._id,
+      addedBy: existingUser._id,
+      isActive: true,
+      dateCreated: Date.now(),
+    }).save();
+
+    return response.status(201).json({
+      status: "success",
+      data: {
+        newWishlist,
+      },
+    });
+  } catch (error) {
+    if (isDuplicateKeyError(error)) {
+      return sendConflict(response, "This media is already in your wishlist");
+    }
+
+    throw error;
+  }
 };
 
 const getWishlistForUser = async (userName, response) => {

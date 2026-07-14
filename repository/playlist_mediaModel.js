@@ -8,5 +8,9 @@ const playlistMediaSchema = new Schema({
   media: { type: Schema.Types.ObjectId, ref: "media", required: true },
 });
 
+playlistMediaSchema.index({ playlist: 1, media: 1 }, { unique: true });
+playlistMediaSchema.index({ playlist: 1 });
+playlistMediaSchema.index({ media: 1 });
+
 const playlistMedia = mongoose.model("playlistMedia", playlistMediaSchema);
 module.exports = playlistMedia;

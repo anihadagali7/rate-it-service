@@ -1,18 +1,25 @@
 const UserModel = require("../repository/userModel");
 const UsersModel = require("../repository/userModel");
-const { toPublicUser, toPublicUsers } = require("../utils/userSerializer");
+const {
+  toPublicUser,
+  toAccountUser,
+  toPublicUsers,
+} = require("../utils/userSerializer");
 const { sendNotFound, sendError } = require("../utils/httpErrors");
 
-const getAccountDetails = async (userName, response) => {
+const getAccountDetails = async (userName, authenticatedUserName, response) => {
   const user = await UserModel.findOne({ userName: userName });
   if (!user) {
     return sendNotFound(response, "User not found");
   }
 
+  const serializeUser =
+    authenticatedUserName === userName ? toAccountUser : toPublicUser;
+
   return response.status(200).json({
     status: "success",
     data: {
-      user: toPublicUser(user),
+      user: serializeUser(user),
     },
   });
 };
@@ -201,7 +208,7 @@ const updateUser = async (
   return response.status(200).json({
     status: "success",
     data: {
-      user: toPublicUser(updateExistingUser),
+      user: toAccountUser(updateExistingUser),
     },
   });
 };

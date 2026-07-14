@@ -220,6 +220,8 @@ describe("searchService", () => {
           firstName: "Ani",
         })
       );
+      expect(mediaList[0].email).toBeUndefined();
+      expect(mediaList[0].phoneNumber).toBeUndefined();
     });
 
     it("returns an empty list when no users match", async () => {

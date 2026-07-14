@@ -56,7 +56,26 @@ describe("userRoute", () => {
         userName: user.userName,
         firstName: "Test",
         email: "test@example.com",
+        phoneNumber: "3135551212",
       });
+      expect(response.body.data.user.password).toBeUndefined();
+    });
+
+    it("returns only public fields when viewing another user's profile", async () => {
+      const response = await request(app)
+        .get(`/api/account/${targetUser.userName}`)
+        .set("Authorization", accessToken);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.user).toMatchObject({
+        userName: targetUser.userName,
+        firstName: "Target",
+        followers: [],
+        following: [],
+      });
+      expect(response.body.data.user.email).toBeUndefined();
+      expect(response.body.data.user.phoneNumber).toBeUndefined();
+      expect(response.body.data.user.isAdmin).toBeUndefined();
       expect(response.body.data.user.password).toBeUndefined();
     });
   });

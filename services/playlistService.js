@@ -3,11 +3,52 @@ const UserModel = require("../repository/userModel");
 const MediaModel = require("../repository/mediaModel");
 const PlaylistMediaModel = require("../repository/playlist_mediaModel");
 const { toPublicUser } = require("../utils/userSerializer");
-const { sendNotFound, sendError } = require("../utils/httpErrors");
+const { sendNotFound, sendError, sendConflict } = require("../utils/httpErrors");
+const { isDuplicateKeyError } = require("../utils/mongoErrors");
 
 const isPlaylistOwnedBy = (playlist, authenticatedUserId) => {
   const ownerId = playlist.addedBy?._id || playlist.addedBy;
   return ownerId?.toString() === authenticatedUserId?.toString();
+};
+
+const linkMediaToPlaylist = async (playlist, media) => {
+  const existingLink = await PlaylistMediaModel.findOne({
+    playlist: playlist._id,
+    media: media._id,
+  });
+
+  if (existingLink) {
+    return { conflict: true };
+  }
+
+  const newPoster = media.picture;
+
+  if (newPoster) {
+    if (Array.isArray(playlist.posters)) {
+      if (!playlist.posters.includes(newPoster)) {
+        playlist.posters.push(newPoster);
+      }
+    } else {
+      playlist.posters = [newPoster];
+    }
+  }
+
+  await playlist.save();
+
+  try {
+    const playlistMedia = await new PlaylistMediaModel({
+      media: media._id,
+      playlist: playlist._id,
+    }).save();
+
+    return { conflict: false, playlistMedia };
+  } catch (error) {
+    if (isDuplicateKeyError(error)) {
+      return { conflict: true };
+    }
+
+    throw error;
+  }
 };
 
 const createNewPlaylist = async (playlistName, userName, response) => {
@@ -58,20 +99,17 @@ const addMediaToMultiplePlaylist = async (
         return sendError(response, 403, "You do not own this playlist");
       }
 
-      const newPoster = existingMedia.picture;
+      const linkResult = await linkMediaToPlaylist(
+        existingPlaylist,
+        existingMedia
+      );
 
-      if (Array.isArray(existingPlaylist.posters)) {
-        existingPlaylist.posters.push(newPoster);
-      } else {
-        existingPlaylist.posters = [newPoster];
+      if (linkResult.conflict) {
+        return sendConflict(
+          response,
+          "This media is already in the playlist"
+        );
       }
-
-      const updatedPlaylist = await existingPlaylist.save();
-
-      const newPlaylist = await new PlaylistMediaModel({
-        media: existingMedia,
-        playlist: updatedPlaylist,
-      }).save();
     }
   }
 
@@ -130,27 +168,29 @@ const addMediaToPlaylist = async (
     return sendError(response, 403, "You do not own this playlist");
   }
 
-  const newPoster = existingMedia.picture;
+  try {
+    const linkResult = await linkMediaToPlaylist(
+      existingPlaylist,
+      existingMedia
+    );
 
-  if (Array.isArray(existingPlaylist.posters)) {
-    existingPlaylist.posters.push(newPoster);
-  } else {
-    existingPlaylist.posters = [newPoster];
+    if (linkResult.conflict) {
+      return sendConflict(response, "This media is already in the playlist");
+    }
+
+    return response.status(201).json({
+      status: "success",
+      data: {
+        newPlaylist: linkResult.playlistMedia,
+      },
+    });
+  } catch (error) {
+    if (isDuplicateKeyError(error)) {
+      return sendConflict(response, "This media is already in the playlist");
+    }
+
+    throw error;
   }
-
-  const updatedPlaylist = await existingPlaylist.save();
-
-  const newPlaylist = await new PlaylistMediaModel({
-    media: existingMedia,
-    playlist: updatedPlaylist,
-  }).save();
-
-  return response.status(201).json({
-    status: "success",
-    data: {
-      newPlaylist,
-    },
-  });
 };
 
 const getPlaylistForUser = async (userName, response) => {

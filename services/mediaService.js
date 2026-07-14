@@ -4,21 +4,58 @@ const tmdbClient = require("../client/tmdbClient");
 const spotifyClient = require("../client/spotifyClient");
 const googleClient = require("../client/googleClient");
 const { sendNotFound, sendBadGateway } = require("../utils/httpErrors");
+const { isDuplicateKeyError } = require("../utils/mongoErrors");
 
 const createNewMedia = async (media, response) => {
-  const newMedia = await new MediaModel(media).save();
+  if (media.mediaId && media.mediaType) {
+    const existingMedia = await MediaModel.findOne({
+      mediaId: media.mediaId,
+      mediaType: media.mediaType,
+    });
 
-  slackClient.postMessage(
-    `${newMedia.name} - ${newMedia.mediaType} has just been added!`,
-    process.env.SLACK_MEDIA_URL
-  );
+    if (existingMedia) {
+      return response.status(200).json({
+        status: "success",
+        data: {
+          media: existingMedia,
+        },
+      });
+    }
+  }
 
-  return response.status(201).json({
-    status: "success",
-    data: {
-      media: newMedia,
-    },
-  });
+  try {
+    const newMedia = await new MediaModel(media).save();
+
+    slackClient.postMessage(
+      `${newMedia.name} - ${newMedia.mediaType} has just been added!`,
+      process.env.SLACK_MEDIA_URL
+    );
+
+    return response.status(201).json({
+      status: "success",
+      data: {
+        media: newMedia,
+      },
+    });
+  } catch (error) {
+    if (isDuplicateKeyError(error) && media.mediaId && media.mediaType) {
+      const existingMedia = await MediaModel.findOne({
+        mediaId: media.mediaId,
+        mediaType: media.mediaType,
+      });
+
+      if (existingMedia) {
+        return response.status(200).json({
+          status: "success",
+          data: {
+            media: existingMedia,
+          },
+        });
+      }
+    }
+
+    throw error;
+  }
 };
 
 const getMovieTvShowDetails = async (tmdbId, mediaType, response) => {

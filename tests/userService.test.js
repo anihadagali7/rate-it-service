@@ -39,7 +39,11 @@ describe("userService", () => {
     it("returns account details for a user", async () => {
       const response = createMockResponse();
 
-      await userService.getAccountDetails(user.userName, response);
+      await userService.getAccountDetails(
+        user.userName,
+        user.userName,
+        response
+      );
 
       expect(response.status).toHaveBeenCalledWith(200);
       expect(response.json).toHaveBeenCalledWith({
@@ -57,12 +61,38 @@ describe("userService", () => {
     it("returns 404 when the user does not exist", async () => {
       const response = createMockResponse();
 
-      await userService.getAccountDetails("ghostuser", response);
+      await userService.getAccountDetails("ghostuser", "ghostuser", response);
 
       expect(response.status).toHaveBeenCalledWith(404);
       expect(response.json).toHaveBeenCalledWith({
         errors: { msg: "User not found" },
       });
+    });
+
+    it("returns only public fields when viewing another user", async () => {
+      const response = createMockResponse();
+
+      await userService.getAccountDetails(
+        targetUser.userName,
+        user.userName,
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(200);
+      expect(response.json).toHaveBeenCalledWith({
+        status: "success",
+        data: {
+          user: expect.objectContaining({
+            userName: targetUser.userName,
+            firstName: "Target",
+          }),
+        },
+      });
+
+      const returnedUser = response.json.mock.calls[0][0].data.user;
+      expect(returnedUser.email).toBeUndefined();
+      expect(returnedUser.phoneNumber).toBeUndefined();
+      expect(returnedUser.isAdmin).toBeUndefined();
     });
   });
 

@@ -131,6 +131,34 @@ describe("mediaService", () => {
       expect(storedMedia).toBeTruthy();
       expect(storedMedia.name).toBe("Manual Media");
     });
+
+    it("returns the existing media when the same mediaId and mediaType already exist", async () => {
+      const existing = await MediaModel.create({
+        name: "Existing Media",
+        mediaType: "MOVIE",
+        mediaId: "manual-1",
+      });
+      const response = createMockResponse();
+
+      await mediaService.createNewMedia(
+        {
+          name: "Duplicate Media",
+          mediaType: "MOVIE",
+          mediaId: "manual-1",
+        },
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(200);
+      expect(response.json).toHaveBeenCalledWith({
+        status: "success",
+        data: {
+          media: expect.objectContaining({ _id: existing._id, name: "Existing Media" }),
+        },
+      });
+      expect(slackClient.postMessage).not.toHaveBeenCalled();
+      expect(await MediaModel.countDocuments({ mediaId: "manual-1" })).toBe(1);
+    });
   });
 
   describe("getMovieTvShowDetails", () => {

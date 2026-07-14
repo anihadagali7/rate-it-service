@@ -13,5 +13,10 @@ const ratingSchema = new Schema({
   dateUpdated: Date,
 });
 
+ratingSchema.index({ ratedBy: 1, media: 1 }, { unique: true });
+ratingSchema.index({ ratedBy: 1 });
+ratingSchema.index({ media: 1 });
+ratingSchema.index({ dateCreated: -1 });
+
 const ratings = mongoose.model("rating", ratingSchema);
 module.exports = ratings;

@@ -2,7 +2,7 @@ const UsersModel = require("../repository/userModel");
 const JWT = require("jsonwebtoken");
 const slackClient = require("../client/slackClient");
 const bcrypt = require("bcrypt");
-const { toPublicUser } = require("../utils/userSerializer");
+const { toAccountUser } = require("../utils/userSerializer");
 const { sendNotFound, sendError } = require("../utils/httpErrors");
 
 const createNewUser = async (
@@ -49,7 +49,7 @@ const createNewUser = async (
       status: "success",
       accessToken,
       data: {
-        user: toPublicUser(newUser),
+        user: toAccountUser(newUser),
       },
     });
   }
@@ -78,7 +78,7 @@ const login = async (email, password, response) => {
     status: "success",
     accessToken,
     data: {
-      user: toPublicUser(existingUser),
+        user: toAccountUser(existingUser),
     },
   });
 };
@@ -137,7 +137,7 @@ const resetPassword = async (
   return response.status(200).json({
     status: "success",
     data: {
-      user: toPublicUser(updateExistingUser),
+      user: toAccountUser(updateExistingUser),
     },
   });
 };

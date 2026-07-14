@@ -14,17 +14,27 @@ const mediaSchema = new Schema({
   genre: String,
   album: String,
   description: String,
-  tag_line: String,
+  tagLine: String,
   mediaType: {
     type: String,
     enum: ["MOVIE", "BOOK", "PODCAST", "TV", "MUSIC", "THEATRE"],
-    // default: "user",
     required: true,
   },
   picture: String,
   dateReleased: Date,
   mediaId: String,
 });
+
+mediaSchema.index(
+  { mediaId: 1, mediaType: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      mediaId: { $exists: true, $ne: null },
+    },
+  }
+);
+mediaSchema.index({ mediaType: 1 });
 
 const media = mongoose.model("media", mediaSchema);
 module.exports = media;

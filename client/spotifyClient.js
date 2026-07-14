@@ -8,21 +8,55 @@ const auth_token = Buffer.from(
   "utf-8"
 ).toString("base64");
 
+const TOKEN_REFRESH_BUFFER_MS = 60 * 1000;
+const DEFAULT_TOKEN_TTL_MS = 3600 * 1000;
+
+let cachedToken = null;
+let tokenExpiresAt = 0;
+let inFlightTokenRequest = null;
+
+const clearTokenCache = () => {
+  cachedToken = null;
+  tokenExpiresAt = 0;
+  inFlightTokenRequest = null;
+};
+
+const fetchTokenFromSpotify = async () => {
+  const token_url = "https://accounts.spotify.com/api/token";
+  const data = qs.stringify({ grant_type: "client_credentials" });
+
+  const response = await axios.post(token_url, data, {
+    headers: {
+      Authorization: `Basic ${auth_token}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+  });
+
+  cachedToken = response.data.access_token;
+  const expiresInMs = (response.data.expires_in || 3600) * 1000;
+  tokenExpiresAt = Date.now() + expiresInMs;
+
+  return cachedToken;
+};
+
 const getToken = async () => {
+  const now = Date.now();
+
+  if (cachedToken && now < tokenExpiresAt - TOKEN_REFRESH_BUFFER_MS) {
+    return cachedToken;
+  }
+
+  if (inFlightTokenRequest) {
+    return inFlightTokenRequest;
+  }
+
   try {
-    const token_url = "https://accounts.spotify.com/api/token";
-    const data = qs.stringify({ grant_type: "client_credentials" });
-
-    const response = await axios.post(token_url, data, {
-      headers: {
-        Authorization: `Basic ${auth_token}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    });
-
-    return response.data.access_token;
+    inFlightTokenRequest = fetchTokenFromSpotify();
+    return await inFlightTokenRequest;
   } catch (error) {
     throw new Error(`Spotify auth failed: ${error.message}`);
+  } finally {
+    inFlightTokenRequest = null;
   }
 };
 
@@ -62,4 +96,8 @@ const searchTrackBySpotifyId = async (spotifyId) => {
   }
 };
 
-module.exports = { searchByTrackArtist, searchTrackBySpotifyId };
+module.exports = {
+  searchByTrackArtist,
+  searchTrackBySpotifyId,
+  clearTokenCache,
+};

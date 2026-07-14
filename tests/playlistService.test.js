@@ -165,6 +165,37 @@ describe("playlistService", () => {
         errors: { msg: "You do not own this playlist" },
       });
     });
+
+    it("returns 409 when the media is already in the playlist", async () => {
+      const media = await createTestMedia();
+      const playlist = await createTestPlaylist(user);
+      const response = createMockResponse();
+
+      await playlistService.addMediaToPlaylist(
+        playlist._id,
+        media._id,
+        user._id,
+        response
+      );
+
+      await playlistService.addMediaToPlaylist(
+        playlist._id,
+        media._id,
+        user._id,
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(409);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "This media is already in the playlist" },
+      });
+
+      const playlistMediaLinks = await PlaylistMediaModel.find({
+        playlist: playlist._id,
+        media: media._id,
+      });
+      expect(playlistMediaLinks).toHaveLength(1);
+    });
   });
 
   describe("addMediaToMultiplePlaylist", () => {

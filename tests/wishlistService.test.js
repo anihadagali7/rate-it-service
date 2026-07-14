@@ -85,6 +85,27 @@ describe("wishlistService", () => {
         errors: { msg: "Media not found" },
       });
     });
+
+    it("returns 409 when the media is already in the wishlist", async () => {
+      await WishlistModel.create({
+        media: media._id,
+        addedBy: user._id,
+        isActive: true,
+        dateCreated: Date.now(),
+      });
+      const response = createMockResponse();
+
+      await wishlistService.createNewWishlist(
+        media.mediaId,
+        user.userName,
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(409);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "This media is already in your wishlist" },
+      });
+    });
   });
 
   describe("getWishlistForUser", () => {

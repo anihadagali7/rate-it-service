@@ -10,6 +10,10 @@ const sendNotFound = (response, msg = "User not found") => {
   return sendError(response, 404, msg);
 };
 
+const sendConflict = (response, msg = "Resource already exists") => {
+  return sendError(response, 409, msg);
+};
+
 const sendBadGateway = (
   response,
   msg = "External service unavailable"
@@ -20,5 +24,6 @@ const sendBadGateway = (
 module.exports = {
   sendError,
   sendNotFound,
+  sendConflict,
   sendBadGateway,
 };

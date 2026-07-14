@@ -3,7 +3,8 @@ const slackClient = require("../client/slackClient");
 const MediaModel = require("../repository/mediaModel");
 const UserModel = require("../repository/userModel");
 const { toPublicUser } = require("../utils/userSerializer");
-const { sendNotFound } = require("../utils/httpErrors");
+const { sendNotFound, sendConflict } = require("../utils/httpErrors");
+const { isDuplicateKeyError } = require("../utils/mongoErrors");
 
 const createNewRating = async (mediaId, rating, comments, userName, response) => {
   const existingUser = await UserModel.findOne({ userName: userName });
@@ -16,27 +17,44 @@ const createNewRating = async (mediaId, rating, comments, userName, response) =>
     return sendNotFound(response, "Media not found");
   }
 
-  const newRating = await new RatingModel({
-    media: existingMedia,
-    ratedBy: existingUser,
-    rating: rating,
-    comments: comments,
-    isActive: true,
-    dateCreated: Date.now(),
-    dateUpdated: Date.now(),
-  }).save();
-
-  slackClient.postMessage(
-    `Rating has been added for ${existingMedia.name} - ${existingMedia.mediaType} by ${existingUser.userName}!`,
-    process.env.SLACK_RATING_URL
-  );
-
-  return response.status(201).json({
-    status: "success",
-    data: {
-      newRating,
-    },
+  const existingRating = await RatingModel.findOne({
+    ratedBy: existingUser._id,
+    media: existingMedia._id,
   });
+
+  if (existingRating) {
+    return sendConflict(response, "You have already rated this media");
+  }
+
+  try {
+    const newRating = await new RatingModel({
+      media: existingMedia._id,
+      ratedBy: existingUser._id,
+      rating: rating,
+      comments: comments,
+      isActive: true,
+      dateCreated: Date.now(),
+      dateUpdated: Date.now(),
+    }).save();
+
+    slackClient.postMessage(
+      `Rating has been added for ${existingMedia.name} - ${existingMedia.mediaType} by ${existingUser.userName}!`,
+      process.env.SLACK_RATING_URL
+    );
+
+    return response.status(201).json({
+      status: "success",
+      data: {
+        newRating,
+      },
+    });
+  } catch (error) {
+    if (isDuplicateKeyError(error)) {
+      return sendConflict(response, "You have already rated this media");
+    }
+
+    throw error;
+  }
 };
 
 const getRatingsForUser = async (userName, response) => {

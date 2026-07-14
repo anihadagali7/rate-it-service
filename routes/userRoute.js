@@ -7,7 +7,11 @@ const userService = require("../services/userService");
 router.get("/account/:userName", authToken, async (request, response) => {
   const { userName } = request.params;
 
-  return userService.getAccountDetails(userName, response);
+  return userService.getAccountDetails(
+    userName,
+    request.user.userName,
+    response
+  );
 });
 
 router.get("/allUsers", authToken, async (request, response) => {
