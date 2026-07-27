@@ -1,5 +1,6 @@
 const RatingModel = require("../repository/ratingModel");
 const LikeModel = require("../repository/likeModel");
+const CommentModel = require("../repository/commentModel");
 const slackClient = require("../client/slackClient");
 const MediaModel = require("../repository/mediaModel");
 const UserModel = require("../repository/userModel");
@@ -159,7 +160,7 @@ const getRatingsByFollowing = async (userName, response, currentUserId = null) =
 const prepareRatingsList = async (ratings, currentUserId = null) => {
   const ratingIds = ratings.map((rating) => rating._id);
 
-  const [counts, likedIds] = await Promise.all([
+  const [counts, likedIds, commentDocs] = await Promise.all([
     ratingIds.length
       ? LikeModel.aggregate([
           { $match: { rating: { $in: ratingIds } } },
@@ -172,12 +173,40 @@ const prepareRatingsList = async (ratings, currentUserId = null) => {
           likedBy: currentUserId,
         }).distinct("rating")
       : Promise.resolve([]),
+    ratingIds.length
+      ? CommentModel.find({ rating: { $in: ratingIds } }).sort({
+          dateCreated: 1,
+        })
+      : Promise.resolve([]),
   ]);
 
   const countByRating = new Map(
     counts.map((entry) => [entry._id.toString(), entry.count])
   );
   const likedSet = new Set(likedIds.map((id) => id.toString()));
+
+  const commenterIds = [
+    ...new Set(commentDocs.map((comment) => comment.commentedBy.toString())),
+  ];
+  const commenters = commenterIds.length
+    ? await UserModel.find({ _id: { $in: commenterIds } })
+    : [];
+  const commenterById = new Map(
+    commenters.map((user) => [user._id.toString(), toPublicUser(user)])
+  );
+
+  const commentsByRating = new Map();
+  for (const comment of commentDocs) {
+    const ratingKey = comment.rating.toString();
+    const list = commentsByRating.get(ratingKey) || [];
+    list.push({
+      _id: comment._id,
+      text: comment.text,
+      dateCreated: comment.dateCreated,
+      commentedBy: commenterById.get(comment.commentedBy.toString()) || null,
+    });
+    commentsByRating.set(ratingKey, list);
+  }
 
   const ratingsList = [];
   for (const rating of ratings) {
@@ -190,6 +219,9 @@ const prepareRatingsList = async (ratings, currentUserId = null) => {
     ratingObject.likedByCurrentUser = currentUserId
       ? likedSet.has(rating._id.toString())
       : false;
+    const commentList = commentsByRating.get(rating._id.toString()) || [];
+    ratingObject.commentList = commentList;
+    ratingObject.commentCount = commentList.length;
     ratingsList.push(ratingObject);
   }
 

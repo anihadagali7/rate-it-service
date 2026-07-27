@@ -11,6 +11,7 @@ const {
   createTestMedia,
   createTestRating,
   createTestLike,
+  createTestComment,
 } = require("./helpers/seed");
 
 const createMockResponse = () => {
@@ -197,6 +198,33 @@ describe("ratingService", () => {
           likedByCurrentUser: true,
         })
       );
+    });
+
+    it("includes commentList and commentCount", async () => {
+      const rating = await createTestRating(user, media, {
+        comments: "Review with replies",
+      });
+      await createTestComment(followedUser, rating, { text: "First!" });
+      await createTestComment(user, rating, { text: "Thanks" });
+      const response = createMockResponse();
+
+      await ratingService.getRatingsForUser(user.userName, response);
+
+      expect(response.status).toHaveBeenCalledWith(200);
+      const ratingPayload = response.json.mock.calls[0][0].data.ratingsList[0];
+      expect(ratingPayload.commentCount).toBe(2);
+      expect(ratingPayload.commentList).toEqual([
+        expect.objectContaining({
+          text: "First!",
+          commentedBy: expect.objectContaining({
+            userName: followedUser.userName,
+          }),
+        }),
+        expect.objectContaining({
+          text: "Thanks",
+          commentedBy: expect.objectContaining({ userName: user.userName }),
+        }),
+      ]);
     });
   });
 

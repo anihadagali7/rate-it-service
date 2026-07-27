@@ -4,6 +4,7 @@ const MediaModel = require("../../repository/mediaModel");
 const PlaylistModel = require("../../repository/playlistModel");
 const RatingModel = require("../../repository/ratingModel");
 const LikeModel = require("../../repository/likeModel");
+const CommentModel = require("../../repository/commentModel");
 
 const createTestUser = async (overrides = {}) => {
   const salt = await bcrypt.genSalt(10);
@@ -69,10 +70,21 @@ const createTestLike = async (user, rating, overrides = {}) => {
   });
 };
 
+const createTestComment = async (user, rating, overrides = {}) => {
+  return CommentModel.create({
+    rating: rating._id,
+    commentedBy: user._id,
+    text: "Nice take!",
+    dateCreated: Date.now(),
+    ...overrides,
+  });
+};
+
 module.exports = {
   createTestUser,
   createTestMedia,
   createTestPlaylist,
   createTestRating,
   createTestLike,
+  createTestComment,
 };
