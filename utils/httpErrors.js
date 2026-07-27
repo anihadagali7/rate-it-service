@@ -21,9 +21,14 @@ const sendBadGateway = (
   return sendError(response, 502, msg);
 };
 
+const sendBadRequest = (response, msg = "Bad request") => {
+  return sendError(response, 400, msg);
+};
+
 module.exports = {
   sendError,
   sendNotFound,
   sendConflict,
   sendBadGateway,
+  sendBadRequest,
 };

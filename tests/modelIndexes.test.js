@@ -1,5 +1,6 @@
 const RatingModel = require("../repository/ratingModel");
 const WishlistModel = require("../repository/wishlistModel");
+const LikeModel = require("../repository/likeModel");
 const PlaylistMediaModel = require("../repository/playlist_mediaModel");
 const MediaModel = require("../repository/mediaModel");
 const PlaylistModel = require("../repository/playlistModel");
@@ -22,6 +23,29 @@ describe("model indexes", () => {
   it("defines wishlist indexes for uniqueness and lookups", () => {
     expect(getIndexNames(WishlistModel)).toEqual(
       expect.arrayContaining([{ addedBy: 1, media: 1 }, { addedBy: 1 }])
+    );
+  });
+
+  it("defines like indexes for uniqueness and lookups", () => {
+    expect(getIndexNames(LikeModel)).toEqual(
+      expect.arrayContaining([{ likedBy: 1, rating: 1 }, { rating: 1 }])
+    );
+  });
+
+  it("defines comment indexes for rating lookups", () => {
+    const CommentModel = require("../repository/commentModel");
+    expect(getIndexNames(CommentModel)).toEqual(
+      expect.arrayContaining([
+        { rating: 1, dateCreated: 1 },
+        { commentedBy: 1 },
+      ])
+    );
+  });
+
+  it("defines comment like indexes for uniqueness and lookups", () => {
+    const CommentLikeModel = require("../repository/commentLikeModel");
+    expect(getIndexNames(CommentLikeModel)).toEqual(
+      expect.arrayContaining([{ likedBy: 1, comment: 1 }, { comment: 1 }])
     );
   });
 
