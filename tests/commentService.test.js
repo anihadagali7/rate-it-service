@@ -141,4 +141,81 @@ describe("commentService", () => {
       });
     });
   });
+
+  describe("likeComment", () => {
+    it("likes a comment and returns 201", async () => {
+      const comment = await CommentModel.create({
+        rating: rating._id,
+        commentedBy: user._id,
+        text: "Like me",
+        dateCreated: Date.now(),
+      });
+      const response = createMockResponse();
+
+      await commentService.likeComment(
+        comment._id.toString(),
+        user.userName,
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(201);
+      const CommentLikeModel = require("../repository/commentLikeModel");
+      expect(
+        await CommentLikeModel.findOne({ comment: comment._id })
+      ).toBeTruthy();
+    });
+
+    it("returns 409 when already liked", async () => {
+      const comment = await CommentModel.create({
+        rating: rating._id,
+        commentedBy: user._id,
+        text: "Like me",
+        dateCreated: Date.now(),
+      });
+      const CommentLikeModel = require("../repository/commentLikeModel");
+      await CommentLikeModel.create({
+        comment: comment._id,
+        likedBy: user._id,
+        dateCreated: Date.now(),
+      });
+      const response = createMockResponse();
+
+      await commentService.likeComment(
+        comment._id.toString(),
+        user.userName,
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(409);
+    });
+  });
+
+  describe("unlikeComment", () => {
+    it("removes a comment like", async () => {
+      const comment = await CommentModel.create({
+        rating: rating._id,
+        commentedBy: user._id,
+        text: "Unlike me",
+        dateCreated: Date.now(),
+      });
+      const CommentLikeModel = require("../repository/commentLikeModel");
+      await CommentLikeModel.create({
+        comment: comment._id,
+        likedBy: user._id,
+        dateCreated: Date.now(),
+      });
+      const response = createMockResponse();
+
+      await commentService.unlikeComment(
+        comment._id.toString(),
+        user.userName,
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(200);
+      expect(
+        await CommentLikeModel.findOne({ comment: comment._id })
+      ).toBeNull();
+    });
+  });
 });

@@ -15,6 +15,26 @@ router.post("/", authToken, async (request, response) => {
   );
 });
 
+router.post("/:commentId/like", authToken, async (request, response) => {
+  const { commentId } = request.params;
+
+  return commentService.likeComment(
+    commentId,
+    request.user.userName,
+    response
+  );
+});
+
+router.delete("/:commentId/like", authToken, async (request, response) => {
+  const { commentId } = request.params;
+
+  return commentService.unlikeComment(
+    commentId,
+    request.user.userName,
+    response
+  );
+});
+
 router.delete("/:commentId", authToken, async (request, response) => {
   const { commentId } = request.params;
 

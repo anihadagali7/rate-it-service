@@ -1,6 +1,7 @@
 const RatingModel = require("../repository/ratingModel");
 const LikeModel = require("../repository/likeModel");
 const CommentModel = require("../repository/commentModel");
+const CommentLikeModel = require("../repository/commentLikeModel");
 const slackClient = require("../client/slackClient");
 const MediaModel = require("../repository/mediaModel");
 const UserModel = require("../repository/userModel");
@@ -188,11 +189,34 @@ const prepareRatingsList = async (ratings, currentUserId = null) => {
   const commenterIds = [
     ...new Set(commentDocs.map((comment) => comment.commentedBy.toString())),
   ];
-  const commenters = commenterIds.length
-    ? await UserModel.find({ _id: { $in: commenterIds } })
-    : [];
+  const commentIds = commentDocs.map((comment) => comment._id);
+
+  const [commenters, commentLikeCounts, likedCommentIds] = await Promise.all([
+    commenterIds.length
+      ? UserModel.find({ _id: { $in: commenterIds } })
+      : Promise.resolve([]),
+    commentIds.length
+      ? CommentLikeModel.aggregate([
+          { $match: { comment: { $in: commentIds } } },
+          { $group: { _id: "$comment", count: { $sum: 1 } } },
+        ])
+      : Promise.resolve([]),
+    currentUserId && commentIds.length
+      ? CommentLikeModel.find({
+          comment: { $in: commentIds },
+          likedBy: currentUserId,
+        }).distinct("comment")
+      : Promise.resolve([]),
+  ]);
+
   const commenterById = new Map(
     commenters.map((user) => [user._id.toString(), toPublicUser(user)])
+  );
+  const commentLikeCountById = new Map(
+    commentLikeCounts.map((entry) => [entry._id.toString(), entry.count])
+  );
+  const likedCommentSet = new Set(
+    likedCommentIds.map((id) => id.toString())
   );
 
   const commentsByRating = new Map();
@@ -204,6 +228,10 @@ const prepareRatingsList = async (ratings, currentUserId = null) => {
       text: comment.text,
       dateCreated: comment.dateCreated,
       commentedBy: commenterById.get(comment.commentedBy.toString()) || null,
+      likeCount: commentLikeCountById.get(comment._id.toString()) || 0,
+      likedByCurrentUser: currentUserId
+        ? likedCommentSet.has(comment._id.toString())
+        : false,
     });
     commentsByRating.set(ratingKey, list);
   }

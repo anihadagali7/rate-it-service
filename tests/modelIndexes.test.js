@@ -42,6 +42,13 @@ describe("model indexes", () => {
     );
   });
 
+  it("defines comment like indexes for uniqueness and lookups", () => {
+    const CommentLikeModel = require("../repository/commentLikeModel");
+    expect(getIndexNames(CommentLikeModel)).toEqual(
+      expect.arrayContaining([{ likedBy: 1, comment: 1 }, { comment: 1 }])
+    );
+  });
+
   it("defines playlist media indexes for uniqueness and lookups", () => {
     expect(getIndexNames(PlaylistMediaModel)).toEqual(
       expect.arrayContaining([

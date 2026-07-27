@@ -116,4 +116,42 @@ describe("commentRoute", () => {
       expect(await CommentModel.findById(comment._id)).toBeNull();
     });
   });
+
+  describe("POST/DELETE /api/comments/:commentId/like", () => {
+    it("likes and unlikes a comment", async () => {
+      const comment = await CommentModel.create({
+        rating: rating._id,
+        commentedBy: otherUser._id,
+        text: "Likeable",
+        dateCreated: Date.now(),
+      });
+
+      const likeResponse = await request(app)
+        .post(`/api/comments/${comment._id.toString()}/like`)
+        .set("Authorization", accessToken);
+
+      expect(likeResponse.status).toBe(201);
+
+      const unlikeResponse = await request(app)
+        .delete(`/api/comments/${comment._id.toString()}/like`)
+        .set("Authorization", accessToken);
+
+      expect(unlikeResponse.status).toBe(200);
+    });
+
+    it("requires authentication to like", async () => {
+      const comment = await CommentModel.create({
+        rating: rating._id,
+        commentedBy: user._id,
+        text: "Hi",
+        dateCreated: Date.now(),
+      });
+
+      const response = await request(app).post(
+        `/api/comments/${comment._id.toString()}/like`
+      );
+
+      expect(response.status).toBe(401);
+    });
+  });
 });

@@ -216,15 +216,49 @@ describe("ratingService", () => {
       expect(ratingPayload.commentList).toEqual([
         expect.objectContaining({
           text: "First!",
+          likeCount: 0,
+          likedByCurrentUser: false,
           commentedBy: expect.objectContaining({
             userName: followedUser.userName,
           }),
         }),
         expect.objectContaining({
           text: "Thanks",
+          likeCount: 0,
+          likedByCurrentUser: false,
           commentedBy: expect.objectContaining({ userName: user.userName }),
         }),
       ]);
+    });
+
+    it("includes comment likeCount and likedByCurrentUser", async () => {
+      const rating = await createTestRating(user, media, {
+        comments: "Review",
+      });
+      const comment = await createTestComment(followedUser, rating, {
+        text: "Liked comment",
+      });
+      const CommentLikeModel = require("../repository/commentLikeModel");
+      await CommentLikeModel.create({
+        comment: comment._id,
+        likedBy: user._id,
+        dateCreated: Date.now(),
+      });
+      const response = createMockResponse();
+
+      await ratingService.getRatingsForUser(
+        user.userName,
+        response,
+        user._id.toString()
+      );
+
+      expect(response.json.mock.calls[0][0].data.ratingsList[0].commentList[0]).toEqual(
+        expect.objectContaining({
+          text: "Liked comment",
+          likeCount: 1,
+          likedByCurrentUser: true,
+        })
+      );
     });
   });
 
