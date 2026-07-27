@@ -177,6 +177,40 @@ describe("ratingRoute", () => {
       );
     });
 
+    it("excludes followed users and self when authenticated", async () => {
+      const stranger = await createTestUser({
+        email: "stranger@example.com",
+        userName: "stranger",
+      });
+      const strangerMedia = await createTestMedia({
+        name: "Stranger Media",
+        mediaId: "media-stranger",
+      });
+
+      user.following = [followedUser.userName];
+      await user.save();
+
+      await createTestRating(user, media, { comments: "Own rating" });
+      await createTestRating(followedUser, media, {
+        comments: "Followed rating",
+      });
+      await createTestRating(stranger, strangerMedia, {
+        comments: "Discover rating",
+      });
+
+      const response = await request(app)
+        .get("/api/ratings/explore")
+        .set("Authorization", accessToken);
+
+      expect(response.status).toBe(200);
+      const ratingsList = response.body.data.ratingsList;
+      expect(ratingsList).toHaveLength(1);
+      expect(ratingsList[0]).toMatchObject({
+        comments: "Discover rating",
+        ratedBy: { userName: stranger.userName },
+      });
+    });
+
     it("does not expose private user fields on ratedBy", async () => {
       await createTestRating(user, media, { comments: "Public explore rating" });
 

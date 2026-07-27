@@ -48,6 +48,34 @@ const createNewWishlist = async (mediaId, userName, response) => {
   }
 };
 
+const removeFromWishlist = async (mediaId, userName, response) => {
+  const existingUser = await UserModel.findOne({ userName });
+  if (!existingUser) {
+    return sendNotFound(response, "User not found");
+  }
+
+  const existingMedia = await MediaModel.findOne({ mediaId });
+  if (!existingMedia) {
+    return sendNotFound(response, "Media not found");
+  }
+
+  const deletedWishlist = await WishlistModel.findOneAndDelete({
+    addedBy: existingUser._id,
+    media: existingMedia._id,
+  });
+
+  if (!deletedWishlist) {
+    return sendNotFound(response, "Wishlist item not found");
+  }
+
+  return response.status(200).json({
+    status: "success",
+    data: {
+      deletedWishlist,
+    },
+  });
+};
+
 const getWishlistForUser = async (userName, response) => {
   const existingUser = await UserModel.findOne({ userName: userName });
   if (!existingUser) {
@@ -80,4 +108,8 @@ const prepareWishlistList = async (wishlist) => {
   return list;
 };
 
-module.exports = { createNewWishlist, getWishlistForUser };
+module.exports = {
+  createNewWishlist,
+  removeFromWishlist,
+  getWishlistForUser,
+};

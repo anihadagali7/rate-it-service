@@ -127,4 +127,63 @@ describe("wishlistRoute", () => {
       expect(response.body.data.wishlistList).toEqual([]);
     });
   });
+
+  describe("DELETE /api/wishlist/:mediaId", () => {
+    it("returns 401 when no token is provided", async () => {
+      const response = await request(app).delete(
+        `/api/wishlist/${media.mediaId}`
+      );
+
+      expect(response.status).toBe(401);
+      expect(response.body.errors.msg).toBe("Token not found");
+    });
+
+    it("removes media from the authenticated user's wishlist", async () => {
+      await WishlistModel.create({
+        media: media._id,
+        addedBy: user._id,
+        isActive: true,
+        dateCreated: Date.now(),
+      });
+
+      const response = await request(app)
+        .delete(`/api/wishlist/${media.mediaId}`)
+        .set("Authorization", accessToken);
+
+      expect(response.status).toBe(200);
+      expect(response.body.status).toBe("success");
+
+      const storedWishlist = await WishlistModel.findOne({ addedBy: user._id });
+      expect(storedWishlist).toBeNull();
+    });
+
+    it("returns 404 when the media is not on the wishlist", async () => {
+      const response = await request(app)
+        .delete(`/api/wishlist/${media.mediaId}`)
+        .set("Authorization", accessToken);
+
+      expect(response.status).toBe(404);
+      expect(response.body.errors.msg).toBe("Wishlist item not found");
+    });
+
+    it("does not remove another user's wishlist item", async () => {
+      await WishlistModel.create({
+        media: media._id,
+        addedBy: otherUser._id,
+        isActive: true,
+        dateCreated: Date.now(),
+      });
+
+      const response = await request(app)
+        .delete(`/api/wishlist/${media.mediaId}`)
+        .set("Authorization", accessToken);
+
+      expect(response.status).toBe(404);
+
+      const otherWishlist = await WishlistModel.findOne({
+        addedBy: otherUser._id,
+      });
+      expect(otherWishlist).toBeTruthy();
+    });
+  });
 });

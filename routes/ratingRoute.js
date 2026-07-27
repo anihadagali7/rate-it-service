@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authToken = require("../middleware/authenticateToken");
+const optionalAuthToken = require("../middleware/optionalAuthenticateToken");
 
 const ratingService = require("../services/ratingService");
 
@@ -28,8 +29,9 @@ router.get("/media/:mediaId", authToken, async (request, response) => {
   return ratingService.getRatingsForMedia(mediaId, response);
 });
 
-router.get("/explore", async (request, response) => {
-  return ratingService.getExploreRatings(response);
+router.get("/explore", optionalAuthToken, async (request, response) => {
+  const userName = request.user?.userName || null;
+  return ratingService.getExploreRatings(userName, response);
 });
 
 router.get("/following", authToken, async (request, response) => {

@@ -209,7 +209,7 @@ describe("ratingService", () => {
   });
 
   describe("getExploreRatings", () => {
-    it("returns all ratings", async () => {
+    it("returns all ratings when no user is provided", async () => {
       const otherMedia = await createTestMedia({
         name: "Other Media",
         mediaId: "media-2",
@@ -218,7 +218,7 @@ describe("ratingService", () => {
       await createTestRating(user, otherMedia, { comments: "Second rating" });
       const response = createMockResponse();
 
-      await ratingService.getExploreRatings(response);
+      await ratingService.getExploreRatings(null, response);
 
       expect(response.status).toHaveBeenCalledWith(200);
       const ratingsList = response.json.mock.calls[0][0].data.ratingsList;
@@ -226,6 +226,52 @@ describe("ratingService", () => {
       expect(ratingsList.map((rating) => rating.comments)).toEqual(
         expect.arrayContaining(["First rating", "Second rating"])
       );
+    });
+
+    it("excludes followed users and the requester from discover", async () => {
+      const stranger = await createTestUser({
+        email: "stranger@example.com",
+        userName: "stranger",
+      });
+      const strangerMedia = await createTestMedia({
+        name: "Stranger Media",
+        mediaId: "media-stranger",
+      });
+
+      user.following = [followedUser.userName];
+      await user.save();
+
+      await createTestRating(user, media, { comments: "Own rating" });
+      await createTestRating(followedUser, media, {
+        comments: "Followed rating",
+      });
+      await createTestRating(stranger, strangerMedia, {
+        comments: "Discover rating",
+      });
+      const response = createMockResponse();
+
+      await ratingService.getExploreRatings(user.userName, response);
+
+      expect(response.status).toHaveBeenCalledWith(200);
+      const ratingsList = response.json.mock.calls[0][0].data.ratingsList;
+      expect(ratingsList).toHaveLength(1);
+      expect(ratingsList[0]).toEqual(
+        expect.objectContaining({
+          comments: "Discover rating",
+          ratedBy: expect.objectContaining({ userName: stranger.userName }),
+        })
+      );
+    });
+
+    it("returns 404 when the authenticated user does not exist", async () => {
+      const response = createMockResponse();
+
+      await ratingService.getExploreRatings("ghostuser", response);
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "User not found" },
+      });
     });
   });
 

@@ -91,9 +91,29 @@ const getRatingsForMedia = async (mediaId, response) => {
   });
 };
 
-const getExploreRatings = async (response) => {
+const getExploreRatings = async (userName, response) => {
   const getAllRatings = await RatingModel.find();
-  const ratingsList = await prepareRatingsList(getAllRatings);
+  let ratingsList = await prepareRatingsList(getAllRatings);
+
+  // Signed-in Discover: only ratings from people you don't follow
+  // (and not your own), so it surfaces new people and reviews.
+  if (userName) {
+    const existingUser = await UserModel.findOne({ userName });
+    if (!existingUser) {
+      return sendNotFound(response, "User not found");
+    }
+
+    const excludedUserNames = new Set([
+      existingUser.userName,
+      ...(existingUser.following || []),
+    ]);
+
+    ratingsList = ratingsList.filter(
+      (rating) =>
+        rating.ratedBy?.userName &&
+        !excludedUserNames.has(rating.ratedBy.userName)
+    );
+  }
 
   return response.status(200).json({
     status: "success",
@@ -143,7 +163,9 @@ const prepareRatingsList = async (ratings) => {
     ratingsList.push(ratingObject);
   }
 
-  ratingsList.sort((a, b) => a.dateCreated - b.dateCreated);
+  ratingsList.sort(
+    (a, b) => new Date(b.dateCreated) - new Date(a.dateCreated)
+  );
   return ratingsList;
 };
 
