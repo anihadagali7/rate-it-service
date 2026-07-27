@@ -3,6 +3,7 @@ const UserModel = require("../../repository/userModel");
 const MediaModel = require("../../repository/mediaModel");
 const PlaylistModel = require("../../repository/playlistModel");
 const RatingModel = require("../../repository/ratingModel");
+const LikeModel = require("../../repository/likeModel");
 
 const createTestUser = async (overrides = {}) => {
   const salt = await bcrypt.genSalt(10);
@@ -59,9 +60,19 @@ const createTestRating = async (user, media, overrides = {}) => {
   });
 };
 
+const createTestLike = async (user, rating, overrides = {}) => {
+  return LikeModel.create({
+    rating: rating._id,
+    likedBy: user._id,
+    dateCreated: Date.now(),
+    ...overrides,
+  });
+};
+
 module.exports = {
   createTestUser,
   createTestMedia,
   createTestPlaylist,
   createTestRating,
+  createTestLike,
 };

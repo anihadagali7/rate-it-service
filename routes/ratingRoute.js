@@ -20,22 +20,35 @@ router.post("", authToken, async (request, response) => {
 router.get("/user/:userName", authToken, async (request, response) => {
   const { userName } = request.params;
 
-  return ratingService.getRatingsForUser(userName, response);
+  return ratingService.getRatingsForUser(
+    userName,
+    response,
+    request.user.id
+  );
 });
 
 router.get("/media/:mediaId", authToken, async (request, response) => {
   const { mediaId } = request.params;
 
-  return ratingService.getRatingsForMedia(mediaId, response);
+  return ratingService.getRatingsForMedia(
+    mediaId,
+    response,
+    request.user.id
+  );
 });
 
 router.get("/explore", optionalAuthToken, async (request, response) => {
   const userName = request.user?.userName || null;
-  return ratingService.getExploreRatings(userName, response);
+  const currentUserId = request.user?.id || null;
+  return ratingService.getExploreRatings(userName, response, currentUserId);
 });
 
 router.get("/following", authToken, async (request, response) => {
-  return ratingService.getRatingsByFollowing(request.user.userName, response);
+  return ratingService.getRatingsByFollowing(
+    request.user.userName,
+    response,
+    request.user.id
+  );
 });
 
 module.exports = router;

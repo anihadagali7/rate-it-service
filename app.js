@@ -12,6 +12,7 @@ const searchRoute = require("./routes/searchRoute");
 const userRoute = require("./routes/userRoute");
 const wishlistRoute = require("./routes/wishlistRoute");
 const playlistRoute = require("./routes/playlistRoute");
+const likeRoute = require("./routes/likeRoute");
 
 const app = express();
 
@@ -56,5 +57,6 @@ app.use("/api/search", searchRoute);
 app.use("/api", userRoute);
 app.use("/api/wishlist", wishlistRoute);
 app.use("/api/playlist", playlistRoute);
+app.use("/api/likes", likeRoute);
 
 module.exports = app;

@@ -1,4 +1,5 @@
 const RatingModel = require("../repository/ratingModel");
+const LikeModel = require("../repository/likeModel");
 const slackClient = require("../client/slackClient");
 const MediaModel = require("../repository/mediaModel");
 const UserModel = require("../repository/userModel");
@@ -57,14 +58,14 @@ const createNewRating = async (mediaId, rating, comments, userName, response) =>
   }
 };
 
-const getRatingsForUser = async (userName, response) => {
+const getRatingsForUser = async (userName, response, currentUserId = null) => {
   const existingUser = await UserModel.findOne({ userName: userName });
   if (!existingUser) {
     return sendNotFound(response, "User not found");
   }
 
   const list = await RatingModel.find({ ratedBy: existingUser });
-  const ratingsList = await prepareRatingsList(list);
+  const ratingsList = await prepareRatingsList(list, currentUserId);
 
   return response.status(200).json({
     status: "success",
@@ -74,14 +75,14 @@ const getRatingsForUser = async (userName, response) => {
   });
 };
 
-const getRatingsForMedia = async (mediaId, response) => {
+const getRatingsForMedia = async (mediaId, response, currentUserId = null) => {
   const existingMedia = await MediaModel.findOne({ mediaId: mediaId });
   if (!existingMedia) {
     return sendNotFound(response, "Media not found");
   }
 
   const list = await RatingModel.find({ media: existingMedia });
-  const ratingsList = await prepareRatingsList(list);
+  const ratingsList = await prepareRatingsList(list, currentUserId);
 
   return response.status(200).json({
     status: "success",
@@ -91,9 +92,9 @@ const getRatingsForMedia = async (mediaId, response) => {
   });
 };
 
-const getExploreRatings = async (userName, response) => {
+const getExploreRatings = async (userName, response, currentUserId = null) => {
   const getAllRatings = await RatingModel.find();
-  let ratingsList = await prepareRatingsList(getAllRatings);
+  let ratingsList = await prepareRatingsList(getAllRatings, currentUserId);
 
   // Signed-in Discover: only ratings from people you don't follow
   // (and not your own), so it surfaces new people and reviews.
@@ -123,7 +124,7 @@ const getExploreRatings = async (userName, response) => {
   });
 };
 
-const getRatingsByFollowing = async (userName, response) => {
+const getRatingsByFollowing = async (userName, response, currentUserId = null) => {
   const existingUser = await UserModel.findOne({ userName: userName });
   if (!existingUser) {
     return sendNotFound(response, "User not found");
@@ -142,7 +143,10 @@ const getRatingsByFollowing = async (userName, response) => {
     listOfRatingsByFollowers.push(...list);
   }
 
-  const ratingsList = await prepareRatingsList(listOfRatingsByFollowers);
+  const ratingsList = await prepareRatingsList(
+    listOfRatingsByFollowers,
+    currentUserId
+  );
 
   return response.status(200).json({
     status: "success",
@@ -152,7 +156,29 @@ const getRatingsByFollowing = async (userName, response) => {
   });
 };
 
-const prepareRatingsList = async (ratings) => {
+const prepareRatingsList = async (ratings, currentUserId = null) => {
+  const ratingIds = ratings.map((rating) => rating._id);
+
+  const [counts, likedIds] = await Promise.all([
+    ratingIds.length
+      ? LikeModel.aggregate([
+          { $match: { rating: { $in: ratingIds } } },
+          { $group: { _id: "$rating", count: { $sum: 1 } } },
+        ])
+      : Promise.resolve([]),
+    currentUserId && ratingIds.length
+      ? LikeModel.find({
+          rating: { $in: ratingIds },
+          likedBy: currentUserId,
+        }).distinct("rating")
+      : Promise.resolve([]),
+  ]);
+
+  const countByRating = new Map(
+    counts.map((entry) => [entry._id.toString(), entry.count])
+  );
+  const likedSet = new Set(likedIds.map((id) => id.toString()));
+
   const ratingsList = [];
   for (const rating of ratings) {
     const ratingObject = JSON.parse(JSON.stringify(rating));
@@ -160,6 +186,10 @@ const prepareRatingsList = async (ratings) => {
     ratingObject.ratedBy = toPublicUser(
       await UserModel.findById(rating.ratedBy)
     );
+    ratingObject.likeCount = countByRating.get(rating._id.toString()) || 0;
+    ratingObject.likedByCurrentUser = currentUserId
+      ? likedSet.has(rating._id.toString())
+      : false;
     ratingsList.push(ratingObject);
   }
 

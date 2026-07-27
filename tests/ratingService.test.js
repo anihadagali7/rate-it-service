@@ -10,6 +10,7 @@ const {
   createTestUser,
   createTestMedia,
   createTestRating,
+  createTestLike,
 } = require("./helpers/seed");
 
 const createMockResponse = () => {
@@ -172,6 +173,30 @@ describe("ratingService", () => {
       expect(response.json).toHaveBeenCalledWith({
         errors: { msg: "User not found" },
       });
+    });
+
+    it("includes likeCount and likedByCurrentUser", async () => {
+      const rating = await createTestRating(user, media, {
+        comments: "Liked rating",
+      });
+      await createTestLike(followedUser, rating);
+      await createTestLike(user, rating);
+      const response = createMockResponse();
+
+      await ratingService.getRatingsForUser(
+        user.userName,
+        response,
+        user._id.toString()
+      );
+
+      expect(response.status).toHaveBeenCalledWith(200);
+      expect(response.json.mock.calls[0][0].data.ratingsList[0]).toEqual(
+        expect.objectContaining({
+          comments: "Liked rating",
+          likeCount: 2,
+          likedByCurrentUser: true,
+        })
+      );
     });
   });
 
