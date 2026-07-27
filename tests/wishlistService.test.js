@@ -165,4 +165,81 @@ describe("wishlistService", () => {
       });
     });
   });
+
+  describe("removeFromWishlist", () => {
+    it("removes media from a user's wishlist and returns 200", async () => {
+      await WishlistModel.create({
+        media: media._id,
+        addedBy: user._id,
+        isActive: true,
+        dateCreated: Date.now(),
+      });
+      const response = createMockResponse();
+
+      await wishlistService.removeFromWishlist(
+        media.mediaId,
+        user.userName,
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(200);
+      expect(response.json).toHaveBeenCalledWith({
+        status: "success",
+        data: {
+          deletedWishlist: expect.objectContaining({
+            media: media._id,
+            addedBy: user._id,
+          }),
+        },
+      });
+
+      const storedWishlist = await WishlistModel.findOne({ addedBy: user._id });
+      expect(storedWishlist).toBeNull();
+    });
+
+    it("returns 404 when the wishlist item does not exist", async () => {
+      const response = createMockResponse();
+
+      await wishlistService.removeFromWishlist(
+        media.mediaId,
+        user.userName,
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "Wishlist item not found" },
+      });
+    });
+
+    it("returns 404 when the media does not exist", async () => {
+      const response = createMockResponse();
+
+      await wishlistService.removeFromWishlist(
+        "missing-media",
+        user.userName,
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "Media not found" },
+      });
+    });
+
+    it("returns 404 when the user does not exist", async () => {
+      const response = createMockResponse();
+
+      await wishlistService.removeFromWishlist(
+        media.mediaId,
+        "ghostuser",
+        response
+      );
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        errors: { msg: "User not found" },
+      });
+    });
+  });
 });

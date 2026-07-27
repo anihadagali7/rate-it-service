@@ -14,6 +14,16 @@ router.post("/", authToken, async (request, response) => {
   );
 });
 
+router.delete("/:mediaId", authToken, async (request, response) => {
+  const { mediaId } = request.params;
+
+  return wishlistService.removeFromWishlist(
+    mediaId,
+    request.user.userName,
+    response
+  );
+});
+
 router.get("/user/:userName", authToken, async (request, response) => {
   const { userName } = request.params;
 
