@@ -1,3 +1,7 @@
+jest.mock("../client/slackClient", () => ({
+  postMessage: jest.fn().mockResolvedValue(undefined),
+}));
+
 const request = require("supertest");
 const app = require("../app");
 const UserModel = require("../repository/userModel");
@@ -262,6 +266,139 @@ describe("userRoute", () => {
 
       const victim = await UserModel.findOne({ userName: targetUser.userName });
       expect(victim.firstName).toBe("Target");
+    });
+  });
+
+  describe("GET /api/account/me", () => {
+    it("returns the authenticated user's own account details", async () => {
+      const response = await request(app)
+        .get("/api/account/me")
+        .set("Authorization", accessToken);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.user.userName).toBe(user.userName);
+      expect(response.body.data.user.email).toBe(user.email);
+      expect(response.body.data.user.password).toBeUndefined();
+    });
+
+    it("resolves an incomplete social profile that has no userName yet", async () => {
+      const socialUser = await createTestUser({
+        email: "social@example.com",
+        userName: undefined,
+        password: undefined,
+        googleId: "google-sub-1",
+      });
+      const socialAccessToken = createAccessToken({
+        email: socialUser.email,
+        userName: socialUser.userName,
+        id: socialUser._id.toString(),
+      });
+
+      const response = await request(app)
+        .get("/api/account/me")
+        .set("Authorization", socialAccessToken);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.user.userName).toBeUndefined();
+      expect(response.body.data.user.isProfileComplete).toBe(false);
+    });
+  });
+
+  describe("PUT /api/account/complete-profile", () => {
+    let socialUser;
+    let socialAccessToken;
+
+    beforeEach(async () => {
+      socialUser = await createTestUser({
+        email: "social@example.com",
+        userName: undefined,
+        password: undefined,
+        googleId: "google-sub-1",
+      });
+      socialAccessToken = createAccessToken({
+        email: socialUser.email,
+        userName: socialUser.userName,
+        id: socialUser._id.toString(),
+      });
+    });
+
+    it("sets the username and marks the profile complete", async () => {
+      const response = await request(app)
+        .put("/api/account/complete-profile")
+        .set("Authorization", socialAccessToken)
+        .send({ userName: "newsocialuser" });
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.user.userName).toBe("newsocialuser");
+      expect(response.body.data.user.isProfileComplete).toBe(true);
+    });
+
+    it("optionally sets a password so the user can also log in with it", async () => {
+      await request(app)
+        .put("/api/account/complete-profile")
+        .set("Authorization", socialAccessToken)
+        .send({ userName: "newsocialuser", password: "NewPassword1!" });
+
+      const loginResponse = await request(app).post("/api/login").send({
+        email: "social@example.com",
+        password: "NewPassword1!",
+      });
+
+      expect(loginResponse.status).toBe(200);
+    });
+
+    it("does not require a password to complete the profile", async () => {
+      const response = await request(app)
+        .put("/api/account/complete-profile")
+        .set("Authorization", socialAccessToken)
+        .send({ userName: "newsocialuser" });
+
+      expect(response.status).toBe(200);
+
+      const loginAttempt = await request(app).post("/api/login").send({
+        email: "social@example.com",
+        password: "anything",
+      });
+      expect(loginAttempt.status).toBe(401);
+    });
+
+    it("rejects a taken username", async () => {
+      const response = await request(app)
+        .put("/api/account/complete-profile")
+        .set("Authorization", socialAccessToken)
+        .send({ userName: user.userName });
+
+      expect(response.status).toBe(400);
+      expect(response.body.errors.msg).toBe(
+        "This username is already being used"
+      );
+    });
+
+    it("rejects a second attempt once the profile is already complete", async () => {
+      await request(app)
+        .put("/api/account/complete-profile")
+        .set("Authorization", socialAccessToken)
+        .send({ userName: "newsocialuser" });
+
+      const response = await request(app)
+        .put("/api/account/complete-profile")
+        .set("Authorization", socialAccessToken)
+        .send({ userName: "anotherusername" });
+
+      expect(response.status).toBe(400);
+      expect(response.body.errors.msg).toBe("Profile is already complete");
+    });
+
+    it("uses JWT identity, not a userName in the body", async () => {
+      const response = await request(app)
+        .put("/api/account/complete-profile")
+        .set("Authorization", socialAccessToken)
+        .send({ userName: "newsocialuser" });
+
+      expect(response.status).toBe(200);
+
+      const updated = await UserModel.findById(socialUser._id);
+      expect(updated.userName).toBe("newsocialuser");
     });
   });
 });

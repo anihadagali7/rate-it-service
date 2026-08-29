@@ -37,6 +37,12 @@ SPOTIFY_CLIENT_ID=your-spotify-client-id
 SPOTIFY_CLIENT_SECRET=your-spotify-client-secret
 GOOGLE_API_KEY=your-google-books-api-key
 
+GOOGLE_OAUTH_CLIENT_ID=your-google-oauth-client-id
+GOOGLE_OAUTH_CLIENT_SECRET=your-google-oauth-client-secret
+FACEBOOK_APP_ID=your-facebook-app-id
+FACEBOOK_APP_SECRET=your-facebook-app-secret
+APPLE_CLIENT_ID=your-apple-services-id
+
 SLACK_TOKEN=your-slack-bot-token
 SLACK_LOGIN_URL=https://hooks.slack.com/services/...
 SLACK_MEDIA_URL=https://hooks.slack.com/services/...
@@ -50,6 +56,9 @@ PORT=8080
 | `ACCESS_TOKEN_SECRET` | Yes | Secret used to sign and verify JWTs |
 | `JWT_EXPIRES_IN` | No | JWT lifetime (default `7d`). Examples: `1h`, `12h`, `7d` |
 | `CORS_ORIGIN` | Recommended | Comma-separated allowlist of browser origins (e.g. `https://your-app.vercel.app,http://localhost:3000`). In production with no value, browser origins are denied. Locally, defaults to `http://localhost:3000` and `http://127.0.0.1:3000` |
+| `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` | For Google sign-in | OAuth client credentials from Google Cloud Console. Distinct from `GOOGLE_API_KEY` (Google Books). Used to exchange the frontend's auth code and verify the resulting ID token |
+| `FACEBOOK_APP_ID` / `FACEBOOK_APP_SECRET` | For Facebook sign-in | From a Facebook Login app. Used to validate that an access token was issued to this app before trusting it |
+| `APPLE_CLIENT_ID` | For Apple sign-in | Your Apple Services ID, used as the audience when verifying the identity token against Apple's JWKS |
 | `PORT` | No | Defaults to `8080` locally; Heroku sets this automatically |
 
 ## Getting started
@@ -153,6 +162,11 @@ web: node server.js
    heroku config:set SPOTIFY_CLIENT_ID="your-spotify-client-id"
    heroku config:set SPOTIFY_CLIENT_SECRET="your-spotify-client-secret"
    heroku config:set GOOGLE_API_KEY="your-google-api-key"
+   heroku config:set GOOGLE_OAUTH_CLIENT_ID="your-google-oauth-client-id"
+   heroku config:set GOOGLE_OAUTH_CLIENT_SECRET="your-google-oauth-client-secret"
+   heroku config:set FACEBOOK_APP_ID="your-facebook-app-id"
+   heroku config:set FACEBOOK_APP_SECRET="your-facebook-app-secret"
+   heroku config:set APPLE_CLIENT_ID="your-apple-services-id"
    heroku config:set SLACK_TOKEN="your-slack-token"
    heroku config:set SLACK_LOGIN_URL="your-slack-webhook"
    heroku config:set SLACK_MEDIA_URL="your-slack-webhook"

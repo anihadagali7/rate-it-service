@@ -175,6 +175,22 @@ describe("Auth flow", () => {
       expect(response.body.errors.msg).toBe("Email or password is invalid");
     });
 
+    it("rejects a social-only user with no password, without crashing", async () => {
+      await UsersModel.findOneAndUpdate(
+        { email: validUser.email },
+        { $unset: { password: 1 }, googleId: "google-sub-123" },
+        { runValidators: false }
+      );
+
+      const response = await request(app).post("/api/login").send({
+        email: validUser.email,
+        password: validUser.password,
+      });
+
+      expect(response.status).toBe(401);
+      expect(response.body.errors.msg).toBe("Email or password is invalid");
+    });
+
     it("rejects inactive users with the same message", async () => {
       await UsersModel.findOneAndUpdate(
         { email: validUser.email },

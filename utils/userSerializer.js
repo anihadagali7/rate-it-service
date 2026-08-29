@@ -53,7 +53,9 @@ const toAccountUser = (user) => {
     return null;
   }
 
-  return pickUserFields(plainUser, ACCOUNT_USER_FIELDS);
+  const account = pickUserFields(plainUser, ACCOUNT_USER_FIELDS);
+  account.isProfileComplete = !!plainUser.userName;
+  return account;
 };
 
 const toPublicUsers = (users = []) => {

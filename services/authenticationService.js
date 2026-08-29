@@ -64,6 +64,10 @@ const login = async (email, password, response) => {
     return sendError(response, 401, "Email or password is invalid");
   }
 
+  if (!existingUser.password) {
+    return sendError(response, 401, "Email or password is invalid");
+  }
+
   const isMatch = await bcrypt.compare(password, existingUser.password);
 
   if (!isMatch) {
@@ -142,4 +146,4 @@ const resetPassword = async (
   });
 };
 
-module.exports = { createNewUser, login, resetPassword };
+module.exports = { createNewUser, login, resetPassword, signJwtToken };

@@ -1,3 +1,4 @@
+const bcrypt = require("bcrypt");
 const UserModel = require("../repository/userModel");
 const UsersModel = require("../repository/userModel");
 const {
@@ -213,6 +214,69 @@ const updateUser = async (
   });
 };
 
+const getMe = async (userId, response) => {
+  const user = await UsersModel.findById(userId);
+  if (!user) {
+    return sendNotFound(response, "User not found");
+  }
+
+  return response.status(200).json({
+    status: "success",
+    data: {
+      user: toAccountUser(user),
+    },
+  });
+};
+
+const completeProfile = async (
+  userId,
+  { userName, firstName, lastName, password },
+  response
+) => {
+  const user = await UsersModel.findById(userId);
+  if (!user) {
+    return sendNotFound(response, "User not found");
+  }
+
+  if (user.userName) {
+    return sendError(response, 400, "Profile is already complete");
+  }
+
+  const existingUserName = await UsersModel.findOne({ userName: userName });
+  if (existingUserName) {
+    return sendError(response, 400, "This username is already being used");
+  }
+
+  const update = {
+    userName: userName,
+    dateUpdated: Date.now(),
+  };
+
+  if (firstName) {
+    update.firstName = firstName;
+  }
+  if (lastName) {
+    update.lastName = lastName;
+  }
+  if (password) {
+    const salt = await bcrypt.genSalt(10);
+    update.password = await bcrypt.hash(password, salt);
+  }
+
+  const updatedUser = await UsersModel.findOneAndUpdate(
+    { _id: userId },
+    update,
+    { new: true, runValidators: true }
+  );
+
+  return response.status(200).json({
+    status: "success",
+    data: {
+      user: toAccountUser(updatedUser),
+    },
+  });
+};
+
 module.exports = {
   getAccountDetails,
   followUser,
@@ -222,4 +286,6 @@ module.exports = {
   getAllUsers,
   updateUser,
   getAllFriends,
+  getMe,
+  completeProfile,
 };

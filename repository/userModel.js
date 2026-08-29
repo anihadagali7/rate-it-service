@@ -4,11 +4,20 @@ const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
   _id: { type: Schema.Types.ObjectId, auto: true },
-  userName: { type: String, unique: true },
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
+  userName: { type: String, unique: true, sparse: true },
+  firstName: { type: String, default: "" },
+  lastName: { type: String, default: "" },
   email: { type: String, unique: true },
-  password: { type: String, required: true, select: false },
+  password: {
+    type: String,
+    select: false,
+    required: function () {
+      return !this.googleId && !this.facebookId && !this.appleId;
+    },
+  },
+  googleId: { type: String, unique: true, sparse: true },
+  facebookId: { type: String, unique: true, sparse: true },
+  appleId: { type: String, unique: true, sparse: true },
   phoneNumber: String,
   picture: String,
   followers: [{ type: String }],
