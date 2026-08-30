@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const authToken = require("../middleware/authenticateToken");
 const optionalAuthToken = require("../middleware/optionalAuthenticateToken");
 
 const searchService = require("../services/searchService");
@@ -22,7 +23,11 @@ router.post("/music", optionalAuthToken, async (request, response) => {
   return searchService.searchMusic(keyWord, page, response);
 });
 
-router.post("/user", optionalAuthToken, async (request, response) => {
+// Kept behind required auth, unlike the media search routes above — profile
+// pages (/profile/:userName) still require login to view, so surfacing user
+// search results to anonymous visitors would just lead to a login-wall on
+// click.
+router.post("/user", authToken, async (request, response) => {
   const { keyWord } = request.body;
 
   return searchService.searchUsers(keyWord, response);

@@ -190,6 +190,15 @@ describe("searchRoute", () => {
   });
 
   describe("POST /api/search/user", () => {
+    it("returns 401 when no token is provided", async () => {
+      const response = await request(app)
+        .post("/api/search/user")
+        .send({ keyWord: "matched" });
+
+      expect(response.status).toBe(401);
+      expect(response.body.errors.msg).toBe("Token not found");
+    });
+
     it("returns matching users from the database", async () => {
       await createTestUser({
         userName: "matcheduser",

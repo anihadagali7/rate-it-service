@@ -151,6 +151,15 @@ describe("ratingRoute", () => {
       );
     });
 
+    it("returns 403 for a request with an invalid token", async () => {
+      const response = await request(app)
+        .get(`/api/ratings/media/${media.mediaId}`)
+        .set("Authorization", "invalid.token.value");
+
+      expect(response.status).toBe(403);
+      expect(response.body.errors.msg).toBe("Invalid token");
+    });
+
     it("returns ratings for the requested media", async () => {
       await createTestRating(user, media, { comments: "Media page rating" });
 
