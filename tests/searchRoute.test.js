@@ -106,13 +106,30 @@ describe("searchRoute", () => {
   });
 
   describe("POST /api/search/movie", () => {
-    it("returns 401 when no token is provided", async () => {
+    it("returns movie search results for anonymous visitors with no token", async () => {
+      tmdbClient.searchMovie.mockResolvedValue(movieSearchResult);
+
       const response = await request(app)
         .post("/api/search/movie")
         .send({ keyWord: "matrix", page: 1 });
 
-      expect(response.status).toBe(401);
-      expect(response.body.errors.msg).toBe("Token not found");
+      expect(response.status).toBe(200);
+      expect(response.body.data.mediaList).toEqual([
+        expect.objectContaining({
+          name: "Route Movie",
+          mediaType: "movie",
+        }),
+      ]);
+    });
+
+    it("returns 403 for a request with an invalid token", async () => {
+      const response = await request(app)
+        .post("/api/search/movie")
+        .set("Authorization", "invalid.token.value")
+        .send({ keyWord: "matrix", page: 1 });
+
+      expect(response.status).toBe(403);
+      expect(response.body.errors.msg).toBe("Invalid token");
     });
 
     it("returns movie search results when authenticated", async () => {
@@ -173,6 +190,15 @@ describe("searchRoute", () => {
   });
 
   describe("POST /api/search/user", () => {
+    it("returns 401 when no token is provided", async () => {
+      const response = await request(app)
+        .post("/api/search/user")
+        .send({ keyWord: "matched" });
+
+      expect(response.status).toBe(401);
+      expect(response.body.errors.msg).toBe("Token not found");
+    });
+
     it("returns matching users from the database", async () => {
       await createTestUser({
         userName: "matcheduser",
