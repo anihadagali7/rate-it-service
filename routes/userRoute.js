@@ -4,6 +4,10 @@ const authToken = require("../middleware/authenticateToken");
 
 const userService = require("../services/userService");
 
+router.get("/account/me", authToken, async (request, response) => {
+  return userService.getMe(request.user.id, response);
+});
+
 router.get("/account/:userName", authToken, async (request, response) => {
   const { userName } = request.params;
 
@@ -67,5 +71,19 @@ router.put("/account/update", authToken, async (request, response) => {
     response
   );
 });
+
+router.put(
+  "/account/complete-profile",
+  authToken,
+  async (request, response) => {
+    const { userName, firstName, lastName, password } = request.body;
+
+    return userService.completeProfile(
+      request.user.id,
+      { userName, firstName, lastName, password },
+      response
+    );
+  }
+);
 
 module.exports = router;

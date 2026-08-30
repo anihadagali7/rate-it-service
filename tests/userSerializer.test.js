@@ -54,7 +54,14 @@ describe("userSerializer", () => {
       phoneNumber: "3135551212",
       isActive: true,
       isAdmin: false,
+      isProfileComplete: true,
     });
+  });
+
+  it("marks the profile incomplete when there is no userName yet", () => {
+    const { userName, ...userWithoutUserName } = fullUser;
+
+    expect(toAccountUser(userWithoutUserName).isProfileComplete).toBe(false);
   });
 
   it("never exposes password from plain objects", () => {

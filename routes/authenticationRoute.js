@@ -3,6 +3,7 @@ const router = express.Router();
 const { check, validationResult } = require("express-validator");
 
 const authenticationService = require("../services/authenticationService");
+const socialAuthService = require("../services/socialAuthService");
 const authToken = require("../middleware/authenticateToken");
 const { sendError } = require("../utils/httpErrors");
 
@@ -40,6 +41,18 @@ const resetPasswordValidators = [
     .withMessage("New password must be at least 8 characters"),
 ];
 
+const socialCodeValidators = [
+  check("code").notEmpty().withMessage("Code is required"),
+];
+
+const socialAccessTokenValidators = [
+  check("accessToken").notEmpty().withMessage("Access token is required"),
+];
+
+const socialIdentityTokenValidators = [
+  check("identityToken").notEmpty().withMessage("Identity token is required"),
+];
+
 router.get("/", async (request, response) => {
   response.status(200).json({ status: "UP" });
 });
@@ -72,6 +85,49 @@ router.post("/login", loginValidators, async (request, response) => {
 
   return authenticationService.login(email, password, response);
 });
+
+router.post(
+  "/auth/google",
+  socialCodeValidators,
+  async (request, response) => {
+    if (validateRequest(request, response)) {
+      return;
+    }
+
+    return socialAuthService.googleLogin(request.body.code, response);
+  }
+);
+
+router.post(
+  "/auth/facebook",
+  socialAccessTokenValidators,
+  async (request, response) => {
+    if (validateRequest(request, response)) {
+      return;
+    }
+
+    return socialAuthService.facebookLogin(
+      request.body.accessToken,
+      response
+    );
+  }
+);
+
+router.post(
+  "/auth/apple",
+  socialIdentityTokenValidators,
+  async (request, response) => {
+    if (validateRequest(request, response)) {
+      return;
+    }
+
+    return socialAuthService.appleLogin(
+      request.body.identityToken,
+      request.body.user,
+      response
+    );
+  }
+);
 
 router.post(
   "/account/resetPassword",

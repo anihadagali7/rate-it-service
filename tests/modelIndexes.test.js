@@ -4,9 +4,15 @@ const LikeModel = require("../repository/likeModel");
 const PlaylistMediaModel = require("../repository/playlist_mediaModel");
 const MediaModel = require("../repository/mediaModel");
 const PlaylistModel = require("../repository/playlistModel");
+const UserModel = require("../repository/userModel");
 
 const getIndexNames = (model) =>
   model.schema.indexes().map((index) => index[0]);
+
+const getIndexOptions = (model, key) => {
+  const match = model.schema.indexes().find((index) => index[0][key]);
+  return match ? match[1] : undefined;
+};
 
 describe("model indexes", () => {
   it("defines rating indexes for uniqueness and lookups", () => {
@@ -69,5 +75,34 @@ describe("model indexes", () => {
     expect(getIndexNames(PlaylistModel)).toEqual(
       expect.arrayContaining([{ addedBy: 1 }, { addedBy: 1, dateCreated: -1 }])
     );
+  });
+
+  it("defines user indexes for social provider lookups, sparse so incomplete profiles can coexist", () => {
+    expect(getIndexNames(UserModel)).toEqual(
+      expect.arrayContaining([
+        { userName: 1 },
+        { email: 1 },
+        { googleId: 1 },
+        { facebookId: 1 },
+        { appleId: 1 },
+      ])
+    );
+
+    expect(getIndexOptions(UserModel, "userName")).toMatchObject({
+      unique: true,
+      sparse: true,
+    });
+    expect(getIndexOptions(UserModel, "googleId")).toMatchObject({
+      unique: true,
+      sparse: true,
+    });
+    expect(getIndexOptions(UserModel, "facebookId")).toMatchObject({
+      unique: true,
+      sparse: true,
+    });
+    expect(getIndexOptions(UserModel, "appleId")).toMatchObject({
+      unique: true,
+      sparse: true,
+    });
   });
 });
