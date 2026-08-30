@@ -27,13 +27,13 @@ router.get("/user/:userName", authToken, async (request, response) => {
   );
 });
 
-router.get("/media/:mediaId", authToken, async (request, response) => {
+router.get("/media/:mediaId", optionalAuthToken, async (request, response) => {
   const { mediaId } = request.params;
 
   return ratingService.getRatingsForMedia(
     mediaId,
     response,
-    request.user.id
+    request.user?.id || null
   );
 });
 

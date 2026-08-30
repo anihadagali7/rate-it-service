@@ -141,10 +141,28 @@ describe("mediaRoute", () => {
   });
 
   describe("GET /api/media/movie/info/:tmdbId", () => {
-    it("requires authentication", async () => {
-      const response = await request(app).get("/api/media/movie/info/route-movie-1");
+    it("works for anonymous visitors with no token", async () => {
+      await MediaModel.create({
+        name: "Cached Route Movie",
+        mediaType: "MOVIE",
+        mediaId: "route-movie-1",
+      });
 
-      expect(response.status).toBe(401);
+      const response = await request(app).get(
+        "/api/media/movie/info/route-movie-1"
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.media.name).toBe("Cached Route Movie");
+    });
+
+    it("returns 403 for a request with an invalid token", async () => {
+      const response = await request(app)
+        .get("/api/media/movie/info/route-movie-1")
+        .set("Authorization", "invalid.token.value");
+
+      expect(response.status).toBe(403);
+      expect(response.body.errors.msg).toBe("Invalid token");
     });
 
     it("returns cached movie media", async () => {
@@ -199,10 +217,15 @@ describe("mediaRoute", () => {
   });
 
   describe("GET /api/media/music/info/:spotifyId", () => {
-    it("requires authentication", async () => {
-      const response = await request(app).get("/api/media/music/info/route-track-1");
+    it("works for anonymous visitors with no token", async () => {
+      spotifyClient.searchTrackBySpotifyId.mockResolvedValue(spotifyTrack);
 
-      expect(response.status).toBe(401);
+      const response = await request(app).get(
+        "/api/media/music/info/route-track-1"
+      );
+
+      expect(response.status).toBe(201);
+      expect(response.body.data.media.name).toBe("Route Track");
     });
 
     it("creates music media from Spotify when not cached", async () => {
@@ -223,10 +246,15 @@ describe("mediaRoute", () => {
   });
 
   describe("GET /api/media/book/info/:googleBookId", () => {
-    it("requires authentication", async () => {
-      const response = await request(app).get("/api/media/book/info/route-book-1");
+    it("works for anonymous visitors with no token", async () => {
+      googleClient.searchForBooksById.mockResolvedValue(googleBook);
 
-      expect(response.status).toBe(401);
+      const response = await request(app).get(
+        "/api/media/book/info/route-book-1"
+      );
+
+      expect(response.status).toBe(201);
+      expect(response.body.data.media.name).toBe("Route Book");
     });
 
     it("creates book media from Google Books when not cached", async () => {

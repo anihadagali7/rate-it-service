@@ -136,12 +136,19 @@ describe("ratingRoute", () => {
   });
 
   describe("GET /api/ratings/media/:mediaId", () => {
-    it("requires authentication", async () => {
+    it("returns ratings for anonymous visitors with no token", async () => {
+      await createTestRating(user, media, { comments: "Anonymous view rating" });
+
       const response = await request(app).get(
         `/api/ratings/media/${media.mediaId}`
       );
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(200);
+      expect(response.body.data.ratingsList).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ comments: "Anonymous view rating" }),
+        ])
+      );
     });
 
     it("returns ratings for the requested media", async () => {
