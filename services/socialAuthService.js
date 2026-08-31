@@ -4,6 +4,7 @@ const googleAuthClient = require("../client/googleAuthClient");
 const facebookAuthClient = require("../client/facebookAuthClient");
 const appleAuthClient = require("../client/appleAuthClient");
 const { signJwtToken } = require("./authenticationService");
+const emailVerificationService = require("./emailVerificationService");
 const { toAccountUser } = require("../utils/userSerializer");
 const { sendError } = require("../utils/httpErrors");
 
@@ -62,6 +63,10 @@ const findOrCreateSocialUser = async (
     email,
     picture,
     [providerIdField]: providerId,
+    // Trust the provider's verification claim directly for a brand-new
+    // account — the linking-safety concern above is about proving
+    // ownership of an *existing* account, which doesn't apply here.
+    isEmailVerified: !!emailVerified,
     isActive: true,
     isAdmin: false,
     dateCreated: Date.now(),
@@ -74,6 +79,15 @@ const findOrCreateSocialUser = async (
     `New social sign-up via ${providerIdField.replace("Id", "")}!`,
     process.env.SLACK_LOGIN_URL
   );
+
+  if (!newUser.isEmailVerified && email) {
+    try {
+      await emailVerificationService.issueVerificationEmail(newUser);
+    } catch (error) {
+      // Same as classic signup — account creation still succeeds even if
+      // the verification email fails to send.
+    }
+  }
 
   return respondWithUser(newUser, 201, response);
 };

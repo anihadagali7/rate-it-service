@@ -24,6 +24,11 @@ const userSchema = new Schema({
   following: [{ type: String }],
   isAdmin: Boolean,
   isActive: Boolean,
+  isEmailVerified: { type: Boolean, default: false },
+  // Hashed, never the raw token — mirrors how `password` is stored and kept
+  // out of normal query results via select:false.
+  emailVerificationTokenHash: { type: String, select: false },
+  emailVerificationExpires: { type: Date, select: false },
   dateCreated: Date,
   dateUpdated: Date,
 });

@@ -2,6 +2,7 @@ const UsersModel = require("../repository/userModel");
 const JWT = require("jsonwebtoken");
 const slackClient = require("../client/slackClient");
 const bcrypt = require("bcrypt");
+const emailVerificationService = require("./emailVerificationService");
 const { toAccountUser } = require("../utils/userSerializer");
 const { sendNotFound, sendError } = require("../utils/httpErrors");
 
@@ -44,6 +45,13 @@ const createNewUser = async (
       `${userName} created a new account!`,
       process.env.SLACK_LOGIN_URL
     );
+
+    try {
+      await emailVerificationService.issueVerificationEmail(newUser);
+    } catch (error) {
+      // Signup still succeeds even if the verification email fails to
+      // send — the user can request another one via the resend endpoint.
+    }
 
     return response.status(201).json({
       status: "success",

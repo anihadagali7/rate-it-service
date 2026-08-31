@@ -64,6 +64,27 @@ describe("userSerializer", () => {
     expect(toAccountUser(userWithoutUserName).isProfileComplete).toBe(false);
   });
 
+  it("includes isEmailVerified for the account owner when present", () => {
+    expect(
+      toAccountUser({ ...fullUser, isEmailVerified: true }).isEmailVerified
+    ).toBe(true);
+    expect(
+      toAccountUser({ ...fullUser, isEmailVerified: false }).isEmailVerified
+    ).toBe(false);
+  });
+
+  it("never exposes the verification token hash or expiry", () => {
+    const withToken = {
+      ...fullUser,
+      isEmailVerified: false,
+      emailVerificationTokenHash: "secret-hash",
+      emailVerificationExpires: new Date(),
+    };
+
+    expect(toAccountUser(withToken).emailVerificationTokenHash).toBeUndefined();
+    expect(toAccountUser(withToken).emailVerificationExpires).toBeUndefined();
+  });
+
   it("never exposes password from plain objects", () => {
     expect(toPublicUser(fullUser).password).toBeUndefined();
     expect(toAccountUser(fullUser).password).toBeUndefined();

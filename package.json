@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/anihadagali7/rate-it-service#readme",
   "dependencies": {
+    "@sendgrid/mail": "^8.1.6",
     "@slack/client": "^5.0.2",
     "@slack/web-api": "^6.7.2",
     "axios": "^0.27.2",
