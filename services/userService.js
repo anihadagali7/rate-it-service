@@ -1,12 +1,18 @@
 const bcrypt = require("bcrypt");
 const UserModel = require("../repository/userModel");
 const UsersModel = require("../repository/userModel");
+const cloudinaryClient = require("../client/cloudinaryClient");
 const {
   toPublicUser,
   toAccountUser,
   toPublicUsers,
 } = require("../utils/userSerializer");
-const { sendNotFound, sendError } = require("../utils/httpErrors");
+const {
+  sendNotFound,
+  sendError,
+  sendBadRequest,
+  sendBadGateway,
+} = require("../utils/httpErrors");
 
 const getAccountDetails = async (userName, authenticatedUserName, response) => {
   const user = await UserModel.findOne({ userName: userName });
@@ -277,6 +283,65 @@ const completeProfile = async (
   });
 };
 
+const updateProfilePicture = async (userId, file, response) => {
+  if (!file) {
+    return sendBadRequest(response, "No image file was provided");
+  }
+
+  let uploadResult;
+  try {
+    uploadResult = await cloudinaryClient.uploadProfilePicture(
+      userId,
+      file.buffer
+    );
+  } catch (error) {
+    console.error("Profile picture upload failed:", error);
+
+    // Cloudinary marks a rejected file (bad/disallowed format) with a 4xx
+    // http_code, distinct from its own service errors — telling a user to
+    // "try again shortly" for a file that will never work is actively
+    // misleading.
+    if (error.httpCode && error.httpCode < 500) {
+      return sendBadRequest(
+        response,
+        "That file doesn't look like a valid image. Please try a different one."
+      );
+    }
+
+    return sendBadGateway(
+      response,
+      "Could not upload your picture. Please try again shortly."
+    );
+  }
+
+  let updatedUser;
+  try {
+    updatedUser = await UsersModel.findOneAndUpdate(
+      { _id: userId },
+      { picture: uploadResult.secure_url, dateUpdated: Date.now() },
+      { new: true }
+    );
+  } catch (error) {
+    console.error("Failed to save uploaded profile picture:", error);
+    return sendError(
+      response,
+      500,
+      "Could not save your new picture. Please try again."
+    );
+  }
+
+  if (!updatedUser) {
+    return sendNotFound(response, "User not found");
+  }
+
+  return response.status(200).json({
+    status: "success",
+    data: {
+      user: toAccountUser(updatedUser),
+    },
+  });
+};
+
 module.exports = {
   getAccountDetails,
   followUser,
@@ -288,4 +353,5 @@ module.exports = {
   getAllFriends,
   getMe,
   completeProfile,
+  updateProfilePicture,
 };
