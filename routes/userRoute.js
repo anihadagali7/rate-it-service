@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const authToken = require("../middleware/authenticateToken");
+const uploadProfilePicture = require("../middleware/uploadProfilePicture");
+const { sendBadRequest } = require("../utils/httpErrors");
 
 const userService = require("../services/userService");
 
@@ -85,5 +87,19 @@ router.put(
     );
   }
 );
+
+router.put("/account/picture", authToken, (request, response) => {
+  uploadProfilePicture(request, response, (error) => {
+    if (error) {
+      return sendBadRequest(response, error.message || "Invalid file upload");
+    }
+
+    return userService.updateProfilePicture(
+      request.user.id,
+      request.file,
+      response
+    );
+  });
+});
 
 module.exports = router;

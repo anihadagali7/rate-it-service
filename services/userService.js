@@ -1,12 +1,18 @@
 const bcrypt = require("bcrypt");
 const UserModel = require("../repository/userModel");
 const UsersModel = require("../repository/userModel");
+const cloudinaryClient = require("../client/cloudinaryClient");
 const {
   toPublicUser,
   toAccountUser,
   toPublicUsers,
 } = require("../utils/userSerializer");
-const { sendNotFound, sendError } = require("../utils/httpErrors");
+const {
+  sendNotFound,
+  sendError,
+  sendBadRequest,
+  sendBadGateway,
+} = require("../utils/httpErrors");
 
 const getAccountDetails = async (userName, authenticatedUserName, response) => {
   const user = await UserModel.findOne({ userName: userName });
@@ -277,6 +283,42 @@ const completeProfile = async (
   });
 };
 
+const updateProfilePicture = async (userId, file, response) => {
+  if (!file) {
+    return sendBadRequest(response, "No image file was provided");
+  }
+
+  let uploadResult;
+  try {
+    uploadResult = await cloudinaryClient.uploadProfilePicture(
+      userId,
+      file.buffer
+    );
+  } catch (error) {
+    return sendBadGateway(
+      response,
+      "Could not upload your picture. Please try again shortly."
+    );
+  }
+
+  const updatedUser = await UsersModel.findOneAndUpdate(
+    { _id: userId },
+    { picture: uploadResult.secure_url, dateUpdated: Date.now() },
+    { new: true }
+  );
+
+  if (!updatedUser) {
+    return sendNotFound(response, "User not found");
+  }
+
+  return response.status(200).json({
+    status: "success",
+    data: {
+      user: toAccountUser(updatedUser),
+    },
+  });
+};
+
 module.exports = {
   getAccountDetails,
   followUser,
@@ -288,4 +330,5 @@ module.exports = {
   getAllFriends,
   getMe,
   completeProfile,
+  updateProfilePicture,
 };
