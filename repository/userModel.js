@@ -27,7 +27,7 @@ const userSchema = new Schema({
   isEmailVerified: { type: Boolean, default: false },
   // Hashed, never the raw token — mirrors how `password` is stored and kept
   // out of normal query results via select:false.
-  emailVerificationTokenHash: { type: String, select: false },
+  emailVerificationTokenHash: { type: String, select: false, index: true },
   emailVerificationExpires: { type: Date, select: false },
   dateCreated: Date,
   dateUpdated: Date,

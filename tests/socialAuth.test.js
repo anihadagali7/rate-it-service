@@ -118,9 +118,11 @@ describe("Social auth flow", () => {
       expect(response.status).toBe(200);
       expect(response.body.data.user._id).toBe(existing._id.toString());
       expect(response.body.data.user.isProfileComplete).toBe(true);
+      expect(response.body.data.user.isEmailVerified).toBe(true);
 
       const linked = await UsersModel.findById(existing._id);
       expect(linked.googleId).toBe("google-sub-3");
+      expect(linked.isEmailVerified).toBe(true);
 
       const loginWithOldPassword = await request(app)
         .post("/api/login")

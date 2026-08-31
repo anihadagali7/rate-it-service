@@ -196,6 +196,19 @@ describe("Email verification", () => {
       );
     });
 
+    it("returns a clean 502 instead of crashing when SendGrid fails", async () => {
+      emailClient.sendVerificationEmail.mockRejectedValueOnce(
+        new Error("SendGrid is down")
+      );
+
+      const response = await request(app)
+        .post("/api/account/resend-verification")
+        .set("Authorization", accessToken);
+
+      expect(response.status).toBe(502);
+      expect(response.body.errors.msg).toEqual(expect.any(String));
+    });
+
     it("rejects resending for an already-verified account", async () => {
       await UsersModel.findByIdAndUpdate(user._id, { isEmailVerified: true });
 

@@ -46,12 +46,7 @@ const createNewUser = async (
       process.env.SLACK_LOGIN_URL
     );
 
-    try {
-      await emailVerificationService.issueVerificationEmail(newUser);
-    } catch (error) {
-      // Signup still succeeds even if the verification email fails to
-      // send — the user can request another one via the resend endpoint.
-    }
+    await emailVerificationService.issueVerificationEmailSilently(newUser);
 
     return response.status(201).json({
       status: "success",

@@ -50,6 +50,10 @@ const findOrCreateSocialUser = async (
 
       existingByEmail[providerIdField] = providerId;
       existingByEmail.picture = existingByEmail.picture || picture;
+      // The `emailVerified` check above is what makes linking safe at all —
+      // that same proof of ownership means this account's email is now known
+      // to be verified, whether or not the user ever clicks our own link.
+      existingByEmail.isEmailVerified = true;
       existingByEmail.dateUpdated = Date.now();
       await existingByEmail.save();
 
@@ -81,12 +85,7 @@ const findOrCreateSocialUser = async (
   );
 
   if (!newUser.isEmailVerified && email) {
-    try {
-      await emailVerificationService.issueVerificationEmail(newUser);
-    } catch (error) {
-      // Same as classic signup — account creation still succeeds even if
-      // the verification email fails to send.
-    }
+    await emailVerificationService.issueVerificationEmailSilently(newUser);
   }
 
   return respondWithUser(newUser, 201, response);
