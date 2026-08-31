@@ -5,7 +5,11 @@ const {
   hashToken,
 } = require("../utils/emailVerificationToken");
 const { toAccountUser } = require("../utils/userSerializer");
-const { sendError, sendNotFound } = require("../utils/httpErrors");
+const {
+  sendBadRequest,
+  sendBadGateway,
+  sendNotFound,
+} = require("../utils/httpErrors");
 
 const buildVerificationUrl = (rawToken) => {
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
@@ -39,7 +43,7 @@ const issueVerificationEmail = async (user) => {
 
 const verifyEmail = async (token, response) => {
   if (!token) {
-    return sendError(response, 400, "Verification token is required");
+    return sendBadRequest(response, "Verification token is required");
   }
 
   const tokenHash = hashToken(token);
@@ -61,9 +65,8 @@ const verifyEmail = async (token, response) => {
   );
 
   if (!user) {
-    return sendError(
+    return sendBadRequest(
       response,
-      400,
       "This verification link is invalid or has expired"
     );
   }
@@ -82,15 +85,14 @@ const resendVerificationEmail = async (userId, response) => {
   }
 
   if (user.isEmailVerified) {
-    return sendError(response, 400, "This email is already verified");
+    return sendBadRequest(response, "This email is already verified");
   }
 
   try {
     await issueVerificationEmail(user);
   } catch (error) {
-    return sendError(
+    return sendBadGateway(
       response,
-      502,
       "Could not send the verification email. Please try again shortly."
     );
   }
