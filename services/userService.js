@@ -295,17 +295,40 @@ const updateProfilePicture = async (userId, file, response) => {
       file.buffer
     );
   } catch (error) {
+    console.error("Profile picture upload failed:", error);
+
+    // Cloudinary marks a rejected file (bad/disallowed format) with a 4xx
+    // http_code, distinct from its own service errors — telling a user to
+    // "try again shortly" for a file that will never work is actively
+    // misleading.
+    if (error.httpCode && error.httpCode < 500) {
+      return sendBadRequest(
+        response,
+        "That file doesn't look like a valid image. Please try a different one."
+      );
+    }
+
     return sendBadGateway(
       response,
       "Could not upload your picture. Please try again shortly."
     );
   }
 
-  const updatedUser = await UsersModel.findOneAndUpdate(
-    { _id: userId },
-    { picture: uploadResult.secure_url, dateUpdated: Date.now() },
-    { new: true }
-  );
+  let updatedUser;
+  try {
+    updatedUser = await UsersModel.findOneAndUpdate(
+      { _id: userId },
+      { picture: uploadResult.secure_url, dateUpdated: Date.now() },
+      { new: true }
+    );
+  } catch (error) {
+    console.error("Failed to save uploaded profile picture:", error);
+    return sendError(
+      response,
+      500,
+      "Could not save your new picture. Please try again."
+    );
+  }
 
   if (!updatedUser) {
     return sendNotFound(response, "User not found");

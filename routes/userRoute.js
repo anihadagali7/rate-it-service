@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const authToken = require("../middleware/authenticateToken");
 const uploadProfilePicture = require("../middleware/uploadProfilePicture");
-const { sendBadRequest } = require("../utils/httpErrors");
+const { sendBadRequest, sendError } = require("../utils/httpErrors");
 
 const userService = require("../services/userService");
 
@@ -94,11 +94,18 @@ router.put("/account/picture", authToken, (request, response) => {
       return sendBadRequest(response, error.message || "Invalid file upload");
     }
 
-    return userService.updateProfilePicture(
-      request.user.id,
-      request.file,
-      response
-    );
+    // updateProfilePicture handles its own errors internally and always
+    // resolves, but nothing here awaits it (this callback isn't async) — the
+    // catch is a backstop against process-crashing unhandled rejections if
+    // that ever stops being true.
+    userService
+      .updateProfilePicture(request.user.id, request.file, response)
+      .catch((error) => {
+        console.error("Unexpected error updating profile picture:", error);
+        if (!response.headersSent) {
+          sendError(response, 500, "Something went wrong. Please try again.");
+        }
+      });
   });
 });
 

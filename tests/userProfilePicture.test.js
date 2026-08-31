@@ -138,6 +138,47 @@ describe("PUT /api/account/picture", () => {
     expect(stored.picture).toBeUndefined();
   });
 
+  it("returns a 400, not a 502, when Cloudinary rejects the file itself", async () => {
+    const rejectedFileError = new Error(
+      "Cloudinary upload failed: invalid image file"
+    );
+    rejectedFileError.httpCode = 400;
+    cloudinaryClient.uploadProfilePicture.mockRejectedValue(rejectedFileError);
+
+    const response = await request(app)
+      .put("/api/account/picture")
+      .set("Authorization", accessToken)
+      .attach("picture", TINY_PNG, {
+        filename: "avatar.png",
+        contentType: "image/png",
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors.msg).toEqual(expect.any(String));
+  });
+
+  it("returns a clean 500 instead of hanging when saving the uploaded URL fails", async () => {
+    cloudinaryClient.uploadProfilePicture.mockResolvedValue({
+      secure_url: "https://example.com/avatar.png",
+    });
+    const findOneAndUpdateSpy = jest
+      .spyOn(UsersModel, "findOneAndUpdate")
+      .mockRejectedValueOnce(new Error("connection lost"));
+
+    const response = await request(app)
+      .put("/api/account/picture")
+      .set("Authorization", accessToken)
+      .attach("picture", TINY_PNG, {
+        filename: "avatar.png",
+        contentType: "image/png",
+      });
+
+    expect(response.status).toBe(500);
+    expect(response.body.errors.msg).toEqual(expect.any(String));
+
+    findOneAndUpdateSpy.mockRestore();
+  });
+
   it("re-uploading overwrites the previous picture rather than accumulating", async () => {
     cloudinaryClient.uploadProfilePicture
       .mockResolvedValueOnce({ secure_url: "https://example.com/first.png" })
