@@ -212,5 +212,29 @@ describe("Password reset", () => {
         .send({ token: "one-time-token", newPassword: "AnotherPass1!" });
       expect(second.status).toBe(400);
     });
+
+    it("rejects a valid, unexpired token for a deactivated account", async () => {
+      const user = await createTestUser({
+        email: "deactivated@example.com",
+        isActive: false,
+      });
+      await UsersModel.findByIdAndUpdate(user._id, {
+        passwordResetTokenHash: hashToken("deactivated-token"),
+        passwordResetExpires: new Date(Date.now() + 1000 * 60 * 60),
+      });
+
+      const response = await request(app)
+        .post("/api/reset-password")
+        .send({ token: "deactivated-token", newPassword: "NewPassword1!" });
+
+      expect(response.status).toBe(400);
+
+      const stillOld = await UsersModel.findById(user._id).select(
+        "+password"
+      );
+      expect(await bcrypt.compare("Password1!", stillOld.password)).toBe(
+        true
+      );
+    });
   });
 });
