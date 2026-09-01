@@ -7,6 +7,7 @@ const socialAuthService = require("../services/socialAuthService");
 const emailVerificationService = require("../services/emailVerificationService");
 const passwordResetService = require("../services/passwordResetService");
 const authToken = require("../middleware/authenticateToken");
+const authRateLimiter = require("../middleware/authRateLimiter");
 const { sendError } = require("../utils/httpErrors");
 
 require("dotenv").config();
@@ -74,37 +75,48 @@ router.get("/", async (request, response) => {
   response.status(200).json({ status: "UP" });
 });
 
-router.post("/create-user", createUserValidators, async (request, response) => {
-  if (validateRequest(request, response)) {
-    return;
+router.post(
+  "/create-user",
+  authRateLimiter,
+  createUserValidators,
+  async (request, response) => {
+    if (validateRequest(request, response)) {
+      return;
+    }
+
+    const { firstName, lastName, email, password, phoneNumber, userName } =
+      request.body;
+
+    return authenticationService.createNewUser(
+      firstName,
+      lastName,
+      email,
+      password,
+      phoneNumber,
+      userName,
+      response
+    );
   }
+);
 
-  const { firstName, lastName, email, password, phoneNumber, userName } =
-    request.body;
+router.post(
+  "/login",
+  authRateLimiter,
+  loginValidators,
+  async (request, response) => {
+    if (validateRequest(request, response)) {
+      return;
+    }
 
-  return authenticationService.createNewUser(
-    firstName,
-    lastName,
-    email,
-    password,
-    phoneNumber,
-    userName,
-    response
-  );
-});
+    const { email, password } = request.body;
 
-router.post("/login", loginValidators, async (request, response) => {
-  if (validateRequest(request, response)) {
-    return;
+    return authenticationService.login(email, password, response);
   }
-
-  const { email, password } = request.body;
-
-  return authenticationService.login(email, password, response);
-});
+);
 
 router.post(
   "/auth/google",
+  authRateLimiter,
   socialCodeValidators,
   async (request, response) => {
     if (validateRequest(request, response)) {
@@ -117,6 +129,7 @@ router.post(
 
 router.post(
   "/auth/facebook",
+  authRateLimiter,
   socialAccessTokenValidators,
   async (request, response) => {
     if (validateRequest(request, response)) {
@@ -132,6 +145,7 @@ router.post(
 
 router.post(
   "/auth/apple",
+  authRateLimiter,
   socialIdentityTokenValidators,
   async (request, response) => {
     if (validateRequest(request, response)) {
@@ -148,6 +162,7 @@ router.post(
 
 router.post(
   "/verify-email",
+  authRateLimiter,
   verifyEmailValidators,
   async (request, response) => {
     if (validateRequest(request, response)) {
@@ -193,6 +208,7 @@ router.post(
 
 router.post(
   "/account/resetPassword",
+  authRateLimiter,
   authToken,
   resetPasswordValidators,
   async (request, response) => {

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authToken = require("../middleware/authenticateToken");
+const authRateLimiter = require("../middleware/authRateLimiter");
 const uploadProfilePicture = require("../middleware/uploadProfilePicture");
 const { sendBadRequest, sendError } = require("../utils/httpErrors");
 
@@ -91,6 +92,7 @@ router.put(
 
 router.post(
   "/account/resend-verification",
+  authRateLimiter,
   authToken,
   async (request, response) => {
     return emailVerificationService.resendVerificationEmail(
@@ -100,7 +102,7 @@ router.post(
   }
 );
 
-router.put("/account/picture", authToken, (request, response) => {
+router.put("/account/picture", authRateLimiter, authToken, (request, response) => {
   uploadProfilePicture(request, response, (error) => {
     if (error) {
       return sendBadRequest(response, error.message || "Invalid file upload");
