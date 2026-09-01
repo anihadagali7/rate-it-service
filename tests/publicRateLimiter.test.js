@@ -118,6 +118,22 @@ describe("public route rate limiting", () => {
     expect(blockedResponse.status).toBe(429);
   });
 
+  it("rate limits the public explore feed", async () => {
+    for (let i = 0; i < 3; i++) {
+      const response = await request(app)
+        .get("/api/ratings/explore")
+        .set("X-Forwarded-For", "10.0.0.7");
+
+      expect(response.status).toBe(200);
+    }
+
+    const blockedResponse = await request(app)
+      .get("/api/ratings/explore")
+      .set("X-Forwarded-For", "10.0.0.7");
+
+    expect(blockedResponse.status).toBe(429);
+  });
+
   it("does not rate limit the authenticated-only search route", async () => {
     const user = await createTestUser({
       email: "ratelimit@example.com",

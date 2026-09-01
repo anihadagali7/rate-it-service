@@ -55,6 +55,11 @@ SLACK_LOGIN_URL=https://hooks.slack.com/services/...
 SLACK_MEDIA_URL=https://hooks.slack.com/services/...
 SLACK_RATING_URL=https://hooks.slack.com/services/...
 
+PUBLIC_RATE_LIMIT_WINDOW_MS=60000
+PUBLIC_RATE_LIMIT_MAX=60
+AUTH_RATE_LIMIT_WINDOW_MS=900000
+AUTH_RATE_LIMIT_MAX=20
+
 PORT=8080
 ```
 
@@ -70,6 +75,8 @@ PORT=8080
 | `SENDGRID_FROM_EMAIL` | For email verification | Verified SendGrid sender address that verification emails are sent from |
 | `FRONTEND_URL` | For email verification | Base URL used to build the verification link emailed to users (e.g. `https://your-app.vercel.app`); defaults to `http://localhost:3000` |
 | `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | For profile picture uploads | Credentials from your Cloudinary dashboard, used to upload and store user profile pictures |
+| `PUBLIC_RATE_LIMIT_WINDOW_MS` / `PUBLIC_RATE_LIMIT_MAX` | No | Per-IP limit on routes reachable without auth (media info, ratings, search, explore). Defaults to 60 requests per 60000ms (1 minute) |
+| `AUTH_RATE_LIMIT_WINDOW_MS` / `AUTH_RATE_LIMIT_MAX` | No | Per-IP limit on auth-sensitive routes (login, signup, social sign-in, email verification, password reset/change, profile picture upload). Defaults to 20 requests per 900000ms (15 minutes) |
 | `PORT` | No | Defaults to `8080` locally; Heroku sets this automatically |
 
 ## Getting started
@@ -184,6 +191,10 @@ web: node server.js
    heroku config:set CLOUDINARY_CLOUD_NAME="your-cloudinary-cloud-name"
    heroku config:set CLOUDINARY_API_KEY="your-cloudinary-api-key"
    heroku config:set CLOUDINARY_API_SECRET="your-cloudinary-api-secret"
+   heroku config:set PUBLIC_RATE_LIMIT_WINDOW_MS="60000"
+   heroku config:set PUBLIC_RATE_LIMIT_MAX="60"
+   heroku config:set AUTH_RATE_LIMIT_WINDOW_MS="900000"
+   heroku config:set AUTH_RATE_LIMIT_MAX="20"
    heroku config:set SLACK_TOKEN="your-slack-token"
    heroku config:set SLACK_LOGIN_URL="your-slack-webhook"
    heroku config:set SLACK_MEDIA_URL="your-slack-webhook"

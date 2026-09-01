@@ -43,11 +43,16 @@ router.get(
   }
 );
 
-router.get("/explore", optionalAuthToken, async (request, response) => {
-  const userName = request.user?.userName || null;
-  const currentUserId = request.user?.id || null;
-  return ratingService.getExploreRatings(userName, response, currentUserId);
-});
+router.get(
+  "/explore",
+  publicRateLimiter,
+  optionalAuthToken,
+  async (request, response) => {
+    const userName = request.user?.userName || null;
+    const currentUserId = request.user?.id || null;
+    return ratingService.getExploreRatings(userName, response, currentUserId);
+  }
+);
 
 router.get("/following", authToken, async (request, response) => {
   return ratingService.getRatingsByFollowing(
