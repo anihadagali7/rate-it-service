@@ -43,6 +43,9 @@ FACEBOOK_APP_ID=your-facebook-app-id
 FACEBOOK_APP_SECRET=your-facebook-app-secret
 APPLE_CLIENT_ID=your-apple-services-id
 
+SENDGRID_API_KEY=your-sendgrid-api-key
+SENDGRID_FROM_EMAIL=no-reply@your-domain.com
+FRONTEND_URL=http://localhost:3000
 CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
 CLOUDINARY_API_KEY=your-cloudinary-api-key
 CLOUDINARY_API_SECRET=your-cloudinary-api-secret
@@ -63,6 +66,9 @@ PORT=8080
 | `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` | For Google sign-in | OAuth client credentials from Google Cloud Console. Distinct from `GOOGLE_API_KEY` (Google Books). Used to exchange the frontend's auth code and verify the resulting ID token |
 | `FACEBOOK_APP_ID` / `FACEBOOK_APP_SECRET` | For Facebook sign-in | From a Facebook Login app. Used to validate that an access token was issued to this app before trusting it |
 | `APPLE_CLIENT_ID` | For Apple sign-in | Your Apple Services ID, used as the audience when verifying the identity token against Apple's JWKS |
+| `SENDGRID_API_KEY` | For email verification | SendGrid API key used to send account-verification emails |
+| `SENDGRID_FROM_EMAIL` | For email verification | Verified SendGrid sender address that verification emails are sent from |
+| `FRONTEND_URL` | For email verification | Base URL used to build the verification link emailed to users (e.g. `https://your-app.vercel.app`); defaults to `http://localhost:3000` |
 | `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | For profile picture uploads | Credentials from your Cloudinary dashboard, used to upload and store user profile pictures |
 | `PORT` | No | Defaults to `8080` locally; Heroku sets this automatically |
 
@@ -172,6 +178,9 @@ web: node server.js
    heroku config:set FACEBOOK_APP_ID="your-facebook-app-id"
    heroku config:set FACEBOOK_APP_SECRET="your-facebook-app-secret"
    heroku config:set APPLE_CLIENT_ID="your-apple-services-id"
+   heroku config:set SENDGRID_API_KEY="your-sendgrid-api-key"
+   heroku config:set SENDGRID_FROM_EMAIL="no-reply@your-domain.com"
+   heroku config:set FRONTEND_URL="https://your-frontend-origin"
    heroku config:set CLOUDINARY_CLOUD_NAME="your-cloudinary-cloud-name"
    heroku config:set CLOUDINARY_API_KEY="your-cloudinary-api-key"
    heroku config:set CLOUDINARY_API_SECRET="your-cloudinary-api-secret"

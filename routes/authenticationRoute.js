@@ -4,6 +4,7 @@ const { check, validationResult } = require("express-validator");
 
 const authenticationService = require("../services/authenticationService");
 const socialAuthService = require("../services/socialAuthService");
+const emailVerificationService = require("../services/emailVerificationService");
 const authToken = require("../middleware/authenticateToken");
 const { sendError } = require("../utils/httpErrors");
 
@@ -51,6 +52,10 @@ const socialAccessTokenValidators = [
 
 const socialIdentityTokenValidators = [
   check("identityToken").notEmpty().withMessage("Identity token is required"),
+];
+
+const verifyEmailValidators = [
+  check("token").notEmpty().withMessage("Verification token is required"),
 ];
 
 router.get("/", async (request, response) => {
@@ -126,6 +131,18 @@ router.post(
       request.body.user,
       response
     );
+  }
+);
+
+router.post(
+  "/verify-email",
+  verifyEmailValidators,
+  async (request, response) => {
+    if (validateRequest(request, response)) {
+      return;
+    }
+
+    return emailVerificationService.verifyEmail(request.body.token, response);
   }
 );
 

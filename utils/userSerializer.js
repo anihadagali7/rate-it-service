@@ -14,6 +14,7 @@ const ACCOUNT_USER_FIELDS = [
   "phoneNumber",
   "isActive",
   "isAdmin",
+  "isEmailVerified",
 ];
 
 const toPlainUser = (user) => {

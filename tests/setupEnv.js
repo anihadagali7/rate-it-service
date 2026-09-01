@@ -19,6 +19,12 @@ process.env.FACEBOOK_APP_SECRET =
   process.env.FACEBOOK_APP_SECRET || "test-app-secret";
 process.env.APPLE_CLIENT_ID =
   process.env.APPLE_CLIENT_ID || "test-apple-client-id";
+process.env.SENDGRID_API_KEY =
+  process.env.SENDGRID_API_KEY || "SG.test-sendgrid-api-key";
+process.env.SENDGRID_FROM_EMAIL =
+  process.env.SENDGRID_FROM_EMAIL || "no-reply@example.com";
+process.env.FRONTEND_URL =
+  process.env.FRONTEND_URL || "http://localhost:3000";
 process.env.CLOUDINARY_CLOUD_NAME =
   process.env.CLOUDINARY_CLOUD_NAME || "test-cloud-name";
 process.env.CLOUDINARY_API_KEY =

@@ -1,6 +1,9 @@
 jest.mock("../client/slackClient", () => ({
   postMessage: jest.fn().mockResolvedValue(undefined),
 }));
+jest.mock("../client/emailClient", () => ({
+  sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
+}));
 
 const request = require("supertest");
 const app = require("../app");

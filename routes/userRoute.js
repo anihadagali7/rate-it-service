@@ -5,6 +5,7 @@ const uploadProfilePicture = require("../middleware/uploadProfilePicture");
 const { sendBadRequest, sendError } = require("../utils/httpErrors");
 
 const userService = require("../services/userService");
+const emailVerificationService = require("../services/emailVerificationService");
 
 router.get("/account/me", authToken, async (request, response) => {
   return userService.getMe(request.user.id, response);
@@ -83,6 +84,17 @@ router.put(
     return userService.completeProfile(
       request.user.id,
       { userName, firstName, lastName, password },
+      response
+    );
+  }
+);
+
+router.post(
+  "/account/resend-verification",
+  authToken,
+  async (request, response) => {
+    return emailVerificationService.resendVerificationEmail(
+      request.user.id,
       response
     );
   }

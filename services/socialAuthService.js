@@ -4,6 +4,7 @@ const googleAuthClient = require("../client/googleAuthClient");
 const facebookAuthClient = require("../client/facebookAuthClient");
 const appleAuthClient = require("../client/appleAuthClient");
 const { signJwtToken } = require("./authenticationService");
+const emailVerificationService = require("./emailVerificationService");
 const { toAccountUser } = require("../utils/userSerializer");
 const { sendError } = require("../utils/httpErrors");
 
@@ -49,6 +50,10 @@ const findOrCreateSocialUser = async (
 
       existingByEmail[providerIdField] = providerId;
       existingByEmail.picture = existingByEmail.picture || picture;
+      // The `emailVerified` check above is what makes linking safe at all —
+      // that same proof of ownership means this account's email is now known
+      // to be verified, whether or not the user ever clicks our own link.
+      existingByEmail.isEmailVerified = true;
       existingByEmail.dateUpdated = Date.now();
       await existingByEmail.save();
 
@@ -62,6 +67,10 @@ const findOrCreateSocialUser = async (
     email,
     picture,
     [providerIdField]: providerId,
+    // Trust the provider's verification claim directly for a brand-new
+    // account — the linking-safety concern above is about proving
+    // ownership of an *existing* account, which doesn't apply here.
+    isEmailVerified: !!emailVerified,
     isActive: true,
     isAdmin: false,
     dateCreated: Date.now(),
@@ -74,6 +83,10 @@ const findOrCreateSocialUser = async (
     `New social sign-up via ${providerIdField.replace("Id", "")}!`,
     process.env.SLACK_LOGIN_URL
   );
+
+  if (!newUser.isEmailVerified && email) {
+    await emailVerificationService.issueVerificationEmailSilently(newUser);
+  }
 
   return respondWithUser(newUser, 201, response);
 };
