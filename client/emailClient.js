@@ -18,4 +18,18 @@ const sendVerificationEmail = async (toEmail, verificationUrl) => {
   });
 };
 
-module.exports = { sendVerificationEmail };
+const sendPasswordResetEmail = async (toEmail, resetUrl) => {
+  await sgMail.send({
+    to: toEmail,
+    from: fromEmail(),
+    subject: "Reset your Rate It password",
+    text: `We received a request to reset your Rate It password. Choose a new one here: ${resetUrl}\n\nThis link expires in 1 hour. If you didn't request this, you can ignore this email — your password won't change.`,
+    html: `
+      <p>We received a request to reset your Rate It password.</p>
+      <p><a href="${resetUrl}">Choose a new password</a></p>
+      <p>This link expires in 1 hour. If you didn't request this, you can ignore this email — your password won't change.</p>
+    `,
+  });
+};
+
+module.exports = { sendVerificationEmail, sendPasswordResetEmail };

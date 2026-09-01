@@ -5,6 +5,7 @@ const { check, validationResult } = require("express-validator");
 const authenticationService = require("../services/authenticationService");
 const socialAuthService = require("../services/socialAuthService");
 const emailVerificationService = require("../services/emailVerificationService");
+const passwordResetService = require("../services/passwordResetService");
 const authToken = require("../middleware/authenticateToken");
 const { sendError } = require("../utils/httpErrors");
 
@@ -56,6 +57,17 @@ const socialIdentityTokenValidators = [
 
 const verifyEmailValidators = [
   check("token").notEmpty().withMessage("Verification token is required"),
+];
+
+const forgotPasswordValidators = [
+  check("email").isEmail().withMessage("A valid email is required"),
+];
+
+const resetPasswordWithTokenValidators = [
+  check("token").notEmpty().withMessage("Reset token is required"),
+  check("newPassword")
+    .isLength({ min: 8 })
+    .withMessage("New password must be at least 8 characters"),
 ];
 
 router.get("/", async (request, response) => {
@@ -143,6 +155,39 @@ router.post(
     }
 
     return emailVerificationService.verifyEmail(request.body.token, response);
+  }
+);
+
+router.post(
+  "/forgot-password",
+  forgotPasswordValidators,
+  async (request, response) => {
+    if (validateRequest(request, response)) {
+      return;
+    }
+
+    return passwordResetService.requestPasswordReset(
+      request.body.email,
+      response
+    );
+  }
+);
+
+router.post(
+  "/reset-password",
+  resetPasswordWithTokenValidators,
+  async (request, response) => {
+    if (validateRequest(request, response)) {
+      return;
+    }
+
+    const { token, newPassword } = request.body;
+
+    return passwordResetService.resetPasswordWithToken(
+      token,
+      newPassword,
+      response
+    );
   }
 );
 
