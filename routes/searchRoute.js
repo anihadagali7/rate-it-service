@@ -2,26 +2,42 @@ const express = require("express");
 const router = express.Router();
 const authToken = require("../middleware/authenticateToken");
 const optionalAuthToken = require("../middleware/optionalAuthenticateToken");
+const publicRateLimiter = require("../middleware/publicRateLimiter");
 
 const searchService = require("../services/searchService");
 
-router.post("/movie", optionalAuthToken, async (request, response) => {
-  const { keyWord, page } = request.body;
+router.post(
+  "/movie",
+  publicRateLimiter,
+  optionalAuthToken,
+  async (request, response) => {
+    const { keyWord, page } = request.body;
 
-  return searchService.searchMovies(keyWord, page, response);
-});
+    return searchService.searchMovies(keyWord, page, response);
+  }
+);
 
-router.post("/tv", optionalAuthToken, async (request, response) => {
-  const { keyWord, page } = request.body;
+router.post(
+  "/tv",
+  publicRateLimiter,
+  optionalAuthToken,
+  async (request, response) => {
+    const { keyWord, page } = request.body;
 
-  return searchService.searchTvShows(keyWord, page, response);
-});
+    return searchService.searchTvShows(keyWord, page, response);
+  }
+);
 
-router.post("/music", optionalAuthToken, async (request, response) => {
-  const { keyWord, page } = request.body;
+router.post(
+  "/music",
+  publicRateLimiter,
+  optionalAuthToken,
+  async (request, response) => {
+    const { keyWord, page } = request.body;
 
-  return searchService.searchMusic(keyWord, page, response);
-});
+    return searchService.searchMusic(keyWord, page, response);
+  }
+);
 
 // Kept behind required auth, unlike the media search routes above — profile
 // pages (/profile/:userName) still require login to view, so surfacing user
@@ -33,16 +49,26 @@ router.post("/user", authToken, async (request, response) => {
   return searchService.searchUsers(keyWord, response);
 });
 
-router.post("/book", optionalAuthToken, async (request, response) => {
-  const { keyWord, page } = request.body;
+router.post(
+  "/book",
+  publicRateLimiter,
+  optionalAuthToken,
+  async (request, response) => {
+    const { keyWord, page } = request.body;
 
-  return searchService.searchBooks(keyWord, page, response);
-});
+    return searchService.searchBooks(keyWord, page, response);
+  }
+);
 
-router.post("/all", optionalAuthToken, async (request, response) => {
-  const { keyWord } = request.body;
+router.post(
+  "/all",
+  publicRateLimiter,
+  optionalAuthToken,
+  async (request, response) => {
+    const { keyWord } = request.body;
 
-  return searchService.searchAllMedia(keyWord, response);
-});
+    return searchService.searchAllMedia(keyWord, response);
+  }
+);
 
 module.exports = router;

@@ -1,3 +1,11 @@
+// This file exercises the auth flows themselves, not rate limiting, and
+// legitimately makes far more than the default (20/15min) auth-route
+// requests across its own test cases — raise the ceiling so it doesn't trip
+// the limiter added for authRateLimiter.test.js's dedicated coverage of
+// that behavior. Must be set before the app (and authRateLimiter) is
+// required.
+process.env.AUTH_RATE_LIMIT_MAX = "1000";
+
 jest.mock("../client/slackClient", () => ({
   postMessage: jest.fn().mockResolvedValue(undefined),
 }));
@@ -38,6 +46,7 @@ describe("Auth flow", () => {
 
   afterAll(async () => {
     await closeDatabase();
+    delete process.env.AUTH_RATE_LIMIT_MAX;
   });
 
   describe("GET /api", () => {

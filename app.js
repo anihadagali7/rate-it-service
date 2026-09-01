@@ -17,6 +17,12 @@ const commentRoute = require("./routes/commentRoute");
 
 const app = express();
 
+// The app runs behind a single platform proxy/router (see Procfile), which
+// sets X-Forwarded-For. Trust exactly that one hop so req.ip resolves to the
+// real client IP for rate limiting, rather than every request appearing to
+// come from the proxy.
+app.set("trust proxy", 1);
+
 const getAllowedOrigins = () => {
   if (process.env.CORS_ORIGIN) {
     return process.env.CORS_ORIGIN.split(",")
