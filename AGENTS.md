@@ -24,7 +24,7 @@ same command on every PR.
 
 ## Stack
 
-- Node 24 + Express 4, Mongoose 6 on MongoDB
+- Node 24 + Express 5, Mongoose 6 on MongoDB
 - Deployed on Heroku (`Procfile`: `web: node server.js`)
 - External APIs: TMDB (movies/TV), Spotify (music), Google Books, Cloudinary (images),
   SendGrid (email), Slack (internal notifications), Google/Facebook/Apple sign-in
@@ -67,10 +67,21 @@ Requests flow **route → service → repository**:
 
 ### Error handling
 
-Express 4 does **not** catch rejected promises from async handlers — an unhandled
-throw can crash the dyno. New service code that can throw (DB writes, external calls)
-must catch and respond (500 via `sendError`, 502 via `sendBadGateway` for upstream
-failures). Handle Mongo duplicate keys with `isDuplicateKeyError` → 409.
+Express 5 forwards anything a route handler throws, or any promise it rejects, to
+`middleware/errorHandler.js`, registered last in `app.js`. That handler:
+- logs the method and path, never bodies or tokens;
+- responds 500 `{ errors: { msg: "Something went wrong. Please try again." } }`;
+- turns malformed JSON into 400 and oversized bodies into 413.
+
+So an unexpected error can't hang a request or crash the dyno.
+
+- Services still handle **expected** failures themselves and return the specific status:
+  400 validation, 404 not found, 409 via `isDuplicateKeyError`, 502 via `sendBadGateway`
+  for upstream failures. Don't catch errors just to turn them into a generic 500; let
+  them throw.
+- Work that isn't awaited by the request (fire-and-forget) must attach its own `.catch`,
+  because the error handler only sees errors from the request's promise chain.
+- `request.body` is always an object: `app.js` defaults it to `{}` when nothing was parsed.
 
 Slack notifications are fire-and-forget; never let a Slack failure fail the request.
 
@@ -84,7 +95,8 @@ it by hand.
   `TokenNotFound`, `InvalidToken`, `NotFound`, `RateLimited`) are in
   `openapi/components.yaml`. Add a tag to `scripts/generate-openapi.js` for a new area.
 - **Adding or changing an endpoint:** update its `@openapi` block. Document every status
-  the code can return, including errors and 429 when a rate limiter is attached. Call
+  the code can return, including errors, 429 when a rate limiter is attached, and
+  `500: $ref: "#/components/responses/ServerError"` on every operation. Call
   `expect(response).toSatisfyApiSpec()` in its route tests, then run `npm run openapi`
   and commit `openapi.json`.
 - CI fails if `openapi.json` is out of date, if a route is missing from the spec (see

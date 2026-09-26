@@ -37,6 +37,14 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
+    ServerError:
+      description: >-
+        An unexpected error (`"Something went wrong. Please try again."`). Details
+        are logged on the server, never returned.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
     RateLimited:
       description: >-
         Too many requests from this IP (`"Too many requests. Please try again

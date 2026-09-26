@@ -67,6 +67,8 @@ const ratingService = require("../services/ratingService");
  *           application/json:
  *             schema:
  *               $ref: "#/components/schemas/ErrorResponse"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
  */
 router.post("", authToken, async (request, response) => {
   const { mediaId, rating, comments } = request.body;
@@ -107,6 +109,8 @@ router.post("", authToken, async (request, response) => {
  *         $ref: "#/components/responses/InvalidToken"
  *       404:
  *         $ref: "#/components/responses/NotFound"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
  */
 router.get("/user/:userName", authToken, async (request, response) => {
   const { userName } = request.params;
@@ -150,6 +154,8 @@ router.get("/user/:userName", authToken, async (request, response) => {
  *         $ref: "#/components/responses/NotFound"
  *       429:
  *         $ref: "#/components/responses/RateLimited"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
  */
 router.get(
   "/media/:mediaId",
@@ -192,6 +198,8 @@ router.get(
  *         $ref: "#/components/responses/NotFound"
  *       429:
  *         $ref: "#/components/responses/RateLimited"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
  */
 router.get(
   "/explore",
@@ -225,6 +233,8 @@ router.get(
  *         $ref: "#/components/responses/InvalidToken"
  *       404:
  *         $ref: "#/components/responses/NotFound"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
  */
 router.get("/following", authToken, async (request, response) => {
   return ratingService.getRatingsByFollowing(

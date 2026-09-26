@@ -31,6 +31,16 @@
         },
         "description": "Too many requests from this IP (`\"Too many requests. Please try again later.\"`). `RateLimit-*` headers describe the window."
       },
+      "ServerError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        },
+        "description": "An unexpected error (`\"Something went wrong. Please try again.\"`). Details are logged on the server, never returned."
+      },
       "TokenNotFound": {
         "content": {
           "application/json": {
@@ -523,6 +533,9 @@
               }
             },
             "description": "The service is running."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
           }
         },
         "summary": "Health check",
@@ -588,6 +601,9 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
           }
         },
         "security": [
@@ -686,6 +702,9 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
           }
         },
         "summary": "Sign in with Apple",
@@ -762,6 +781,9 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
           }
         },
         "summary": "Sign in with Facebook",
@@ -838,6 +860,9 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
           }
         },
         "summary": "Sign in with Google",
@@ -911,6 +936,9 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
           }
         },
         "summary": "Sign up with email and password",
@@ -970,6 +998,9 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
           }
         },
         "summary": "Log in with email and password",
@@ -1068,6 +1099,9 @@
               }
             },
             "description": "`\"You have already rated this media\"`."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
           }
         },
         "security": [
@@ -1103,6 +1137,9 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
           }
         },
         "security": [
@@ -1138,6 +1175,9 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
           }
         },
         "security": [
@@ -1184,6 +1224,9 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
           }
         },
         "security": [
@@ -1229,6 +1272,9 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
           }
         },
         "security": [
@@ -1286,6 +1332,9 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
           }
         },
         "summary": "Verify an email address",
