@@ -29,6 +29,8 @@ const userSchema = new Schema({
   // out of normal query results via select:false.
   emailVerificationTokenHash: { type: String, select: false, index: true },
   emailVerificationExpires: { type: Date, select: false },
+  passwordResetTokenHash: { type: String, select: false, index: true },
+  passwordResetExpires: { type: Date, select: false },
   dateCreated: Date,
   dateUpdated: Date,
 });

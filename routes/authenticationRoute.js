@@ -5,6 +5,7 @@ const { check, validationResult } = require("express-validator");
 const authenticationService = require("../services/authenticationService");
 const socialAuthService = require("../services/socialAuthService");
 const emailVerificationService = require("../services/emailVerificationService");
+const passwordResetService = require("../services/passwordResetService");
 const authToken = require("../middleware/authenticateToken");
 const authRateLimiter = require("../middleware/authRateLimiter");
 const { sendError } = require("../utils/httpErrors");
@@ -57,6 +58,17 @@ const socialIdentityTokenValidators = [
 
 const verifyEmailValidators = [
   check("token").notEmpty().withMessage("Verification token is required"),
+];
+
+const forgotPasswordValidators = [
+  check("email").isEmail().withMessage("A valid email is required"),
+];
+
+const resetPasswordWithTokenValidators = [
+  check("token").notEmpty().withMessage("Reset token is required"),
+  check("newPassword")
+    .isLength({ min: 8 })
+    .withMessage("New password must be at least 8 characters"),
 ];
 
 /**
@@ -539,6 +551,137 @@ router.post(
  *       500:
  *         $ref: "#/components/responses/ServerError"
  */
+/**
+ * @openapi
+ * /api/forgot-password:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Request a password reset email
+ *     description: >-
+ *       Public. If an active account has this email, issues a one-time reset
+ *       link (valid for 1 hour) and emails it. The response is identical
+ *       whether or not the email is registered, so it can't be used to find
+ *       out which emails have accounts. Outside production, the reset URL is
+ *       also logged to the server console for local testing.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: >-
+ *           Always the same generic message: "If an account with that email
+ *           exists, we've sent a link to reset the password."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, data]
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                 data:
+ *                   type: object
+ *                   required: [msg]
+ *                   properties:
+ *                     msg:
+ *                       type: string
+ *       400:
+ *         $ref: "#/components/responses/ValidationError"
+ *       429:
+ *         $ref: "#/components/responses/RateLimited"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
+ */
+router.post(
+  "/forgot-password",
+  authRateLimiter,
+  forgotPasswordValidators,
+  async (request, response) => {
+    if (validateRequest(request, response)) {
+      return;
+    }
+
+    return passwordResetService.requestPasswordReset(
+      request.body.email,
+      response
+    );
+  }
+);
+
+/**
+ * @openapi
+ * /api/reset-password:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Set a new password with a reset token
+ *     description: >-
+ *       Public. Consumes the one-time token from the reset email, sets the new
+ *       password, and logs the user in, since they have no session at this
+ *       point. Different from `/api/account/resetPassword`, which changes the
+ *       password of a logged-in user and needs the current password.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token, newPassword]
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: The `token` query parameter from the reset link.
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 8
+ *     responses:
+ *       200:
+ *         description: Password reset; the user is logged in.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/AuthSuccess"
+ *       400:
+ *         description: >-
+ *           Validation failed, or `"This password reset link is invalid or has
+ *           expired"` (unknown, expired, already used, or the account is
+ *           inactive).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ErrorResponse"
+ *       429:
+ *         $ref: "#/components/responses/RateLimited"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
+ */
+router.post(
+  "/reset-password",
+  authRateLimiter,
+  resetPasswordWithTokenValidators,
+  async (request, response) => {
+    if (validateRequest(request, response)) {
+      return;
+    }
+
+    const { token, newPassword } = request.body;
+
+    return passwordResetService.resetPasswordWithToken(
+      token,
+      newPassword,
+      response
+    );
+  }
+);
+
 router.post(
   "/account/resetPassword",
   authRateLimiter,

@@ -10,6 +10,7 @@ jest.mock("../client/slackClient", () => ({
 }));
 jest.mock("../client/emailClient", () => ({
   sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
+  sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
 }));
 
 const request = require("supertest");
@@ -97,6 +98,30 @@ describe("auth route rate limiting", () => {
       .send({ email: "ratelimit0@example.com", password: "Password1!" });
 
     expect(blockedLogin.status).toBe(429);
+  });
+
+  it.each([
+    ["/api/forgot-password", { email: "someone@example.com" }, "10.1.0.6"],
+    [
+      "/api/reset-password",
+      { token: "not-a-real-token", newPassword: "NewPassword1!" },
+      "10.1.0.7",
+    ],
+  ])("rate limits the public %s route", async (path, body, ip) => {
+    for (let i = 0; i < 3; i++) {
+      await request(app).post(path).set("X-Forwarded-For", ip).send(body);
+    }
+
+    const blockedResponse = await request(app)
+      .post(path)
+      .set("X-Forwarded-For", ip)
+      .send(body);
+
+    expect(blockedResponse).toSatisfyApiSpec();
+    expect(blockedResponse.status).toBe(429);
+    expect(blockedResponse.body.errors.msg).toBe(
+      "Too many requests. Please try again later."
+    );
   });
 
   it("rate limits the authenticated resend-verification route", async () => {

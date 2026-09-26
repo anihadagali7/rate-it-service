@@ -27,7 +27,7 @@ same command on every PR.
 - Node 24 + Express 5, Mongoose 6 on MongoDB
 - Deployed on Heroku (`Procfile`: `web: node server.js`)
 - External APIs: TMDB (movies/TV), Spotify (music), Google Books, Cloudinary (images),
-  SendGrid (email), Slack (internal notifications), Google/Facebook/Apple sign-in
+  Brevo (transactional email), Slack (internal notifications), Google/Facebook/Apple sign-in
 
 ## Architecture
 
