@@ -7,14 +7,19 @@ on:
 
 jobs:
   test:
-    name: test
+    name: test (node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 16.15.0 is what Heroku runs in prod (package.json engines); 20 is the upgrade target.
+        node-version: ["16.15.0", "20"]
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: ${{ matrix.node-version }}
           cache: npm
 
       - name: Install dependencies
