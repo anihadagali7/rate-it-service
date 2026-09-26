@@ -43,8 +43,9 @@ FACEBOOK_APP_ID=your-facebook-app-id
 FACEBOOK_APP_SECRET=your-facebook-app-secret
 APPLE_CLIENT_ID=your-apple-services-id
 
-SENDGRID_API_KEY=your-sendgrid-api-key
-SENDGRID_FROM_EMAIL=no-reply@your-domain.com
+BREVO_API_KEY=your-brevo-api-key
+EMAIL_FROM=no-reply@your-domain.com
+EMAIL_FROM_NAME=Rate It
 FRONTEND_URL=http://localhost:3000
 CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
 CLOUDINARY_API_KEY=your-cloudinary-api-key
@@ -71,9 +72,10 @@ PORT=8080
 | `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` | For Google sign-in | OAuth client credentials from Google Cloud Console. Distinct from `GOOGLE_API_KEY` (Google Books). Used to exchange the frontend's auth code and verify the resulting ID token |
 | `FACEBOOK_APP_ID` / `FACEBOOK_APP_SECRET` | For Facebook sign-in | From a Facebook Login app. Used to validate that an access token was issued to this app before trusting it |
 | `APPLE_CLIENT_ID` | For Apple sign-in | Your Apple Services ID, used as the audience when verifying the identity token against Apple's JWKS |
-| `SENDGRID_API_KEY` | For email verification | SendGrid API key used to send account-verification emails |
-| `SENDGRID_FROM_EMAIL` | For email verification | Verified SendGrid sender address that verification emails are sent from |
-| `FRONTEND_URL` | For email verification | Base URL used to build the verification link emailed to users (e.g. `https://your-app.vercel.app`); defaults to `http://localhost:3000` |
+| `BREVO_API_KEY` | For emails | Brevo API key (Settings → SMTP & API → API keys) used to send verification and password-reset emails. Without it, emails aren't sent and a warning is logged. Heroku has no fixed outbound IP, so turn off Brevo's IP blocking (Settings → Security → Authorized IPs → Deactivate blocking), or Brevo will start rejecting sends. Use separate keys for dev and prod |
+| `EMAIL_FROM` | For emails | Sender address. It must be a sender or domain verified in Brevo (Senders, Domains & Dedicated IPs). Authenticate the domain (SPF/DKIM/DMARC) so mail doesn't land in spam |
+| `EMAIL_FROM_NAME` | No | Sender display name; defaults to `Rate It` |
+| `FRONTEND_URL` | For emails | Base URL used to build the verification and password-reset links emailed to users (e.g. `https://your-app.vercel.app`); defaults to `http://localhost:3000` |
 | `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | For profile picture uploads | Credentials from your Cloudinary dashboard, used to upload and store user profile pictures |
 | `PUBLIC_RATE_LIMIT_WINDOW_MS` / `PUBLIC_RATE_LIMIT_MAX` | No | Per-IP limit on routes reachable without auth (media info, ratings, search, explore). Defaults to 60 requests per 60000ms (1 minute) |
 | `AUTH_RATE_LIMIT_WINDOW_MS` / `AUTH_RATE_LIMIT_MAX` | No | Per-IP limit on auth-sensitive routes (login, signup, social sign-in, email verification, password reset/change, profile picture upload). Defaults to 20 requests per 900000ms (15 minutes) |
@@ -109,7 +111,7 @@ Expected response:
 
 ### Testing password reset locally
 
-`POST /api/forgot-password` emails a one-time reset link through SendGrid. Outside
+`POST /api/forgot-password` emails a one-time reset link through Brevo. Outside
 production, the server also prints the link to its console, so you can test the flow
 without working email:
 
@@ -222,8 +224,8 @@ needs the `heroku-24` stack; check it with `heroku stack -a <app>`.
    heroku config:set FACEBOOK_APP_ID="your-facebook-app-id"
    heroku config:set FACEBOOK_APP_SECRET="your-facebook-app-secret"
    heroku config:set APPLE_CLIENT_ID="your-apple-services-id"
-   heroku config:set SENDGRID_API_KEY="your-sendgrid-api-key"
-   heroku config:set SENDGRID_FROM_EMAIL="no-reply@your-domain.com"
+   heroku config:set BREVO_API_KEY="your-brevo-api-key"
+   heroku config:set EMAIL_FROM="no-reply@your-domain.com"
    heroku config:set FRONTEND_URL="https://your-frontend-origin"
    heroku config:set CLOUDINARY_CLOUD_NAME="your-cloudinary-cloud-name"
    heroku config:set CLOUDINARY_API_KEY="your-cloudinary-api-key"

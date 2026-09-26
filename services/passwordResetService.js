@@ -41,7 +41,10 @@ const requestPasswordReset = async (email, response) => {
       const resetUrl = buildResetUrl(rawToken);
       emailClient
         .sendPasswordResetEmail(user.email, resetUrl)
-        .catch(() => {});
+        .catch((error) => {
+          // Logged, not surfaced: the response must look the same either way.
+          console.error("Password reset email failed:", error.message);
+        });
 
       // Local testing aid: the raw token only ever leaves the server in the
       // email, so without working email there's no way to click through the

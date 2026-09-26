@@ -95,6 +95,30 @@ describe("Password reset", () => {
       expect(untouched).toBeNull();
     });
 
+    it("logs a failed send without the recipient, and still returns the generic message", async () => {
+      await createTestUser({ email: "sendfails@example.com" });
+      emailClient.sendPasswordResetEmail.mockRejectedValueOnce(
+        new Error("Brevo send failed (401 unauthorized): Key not found")
+      );
+      const consoleError = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      const response = await request(app)
+        .post("/api/forgot-password")
+        .send({ email: "sendfails@example.com" });
+      await new Promise((resolve) => setImmediate(resolve));
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(200);
+      const logged = consoleError.mock.calls.map((args) => args.join(" "));
+      expect(logged).toEqual([
+        "Password reset email failed: Brevo send failed (401 unauthorized): Key not found",
+      ]);
+      expect(logged.join()).not.toContain("sendfails@example.com");
+      consoleError.mockRestore();
+    });
+
     it("does not issue a reset token for an inactive account", async () => {
       const user = await createTestUser({
         email: "inactive@example.com",

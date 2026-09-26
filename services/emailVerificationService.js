@@ -91,6 +91,7 @@ const resendVerificationEmail = async (userId, response) => {
   try {
     await issueVerificationEmail(user);
   } catch (error) {
+    console.error("Verification email failed:", error.message);
     return sendBadGateway(
       response,
       "Could not send the verification email. Please try again shortly."
@@ -102,7 +103,7 @@ const resendVerificationEmail = async (userId, response) => {
 
 // For signup-time call sites. Awaits the (fast, local) token save so a
 // verify-email click immediately after signup works even before the email
-// arrives, but does not await the outbound SendGrid call itself — mirrors
+// arrives, but does not await the outbound email (Brevo) call itself — mirrors
 // the existing non-blocking slackClient.postMessage pattern used elsewhere
 // for post-signup side effects. Never rejects: the account is created either
 // way, and a failed send just means the user needs the resend endpoint.
@@ -111,7 +112,9 @@ const issueVerificationEmailSilently = async (user) => {
     const rawToken = await issueVerificationToken(user);
     emailClient
       .sendVerificationEmail(user.email, buildVerificationUrl(rawToken))
-      .catch(() => {});
+      .catch((error) => {
+        console.error("Verification email failed:", error.message);
+      });
   } catch (error) {
     // Signup still succeeds even if we can't persist/send the verification
     // token — the user can request another one via the resend endpoint.

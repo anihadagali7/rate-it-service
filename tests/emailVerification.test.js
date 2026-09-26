@@ -63,8 +63,11 @@ describe("Email verification", () => {
 
     it("still creates the account when the verification email fails to send", async () => {
       emailClient.sendVerificationEmail.mockRejectedValueOnce(
-        new Error("SendGrid is down")
+        new Error("Brevo send failed (503): down")
       );
+      const consoleError = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       const response = await request(app)
         .post("/api/create-user")
@@ -73,6 +76,12 @@ describe("Email verification", () => {
       expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.data.user.email).toBe(validUser.email);
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(consoleError).toHaveBeenCalledWith(
+        "Verification email failed:",
+        "Brevo send failed (503): down"
+      );
+      consoleError.mockRestore();
     });
   });
 
@@ -204,10 +213,13 @@ describe("Email verification", () => {
       );
     });
 
-    it("returns a clean 502 instead of crashing when SendGrid fails", async () => {
+    it("returns a clean 502 instead of crashing when the email provider fails", async () => {
       emailClient.sendVerificationEmail.mockRejectedValueOnce(
-        new Error("SendGrid is down")
+        new Error("Brevo send failed (503): down")
       );
+      const consoleError = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       const response = await request(app)
         .post("/api/account/resend-verification")
@@ -215,6 +227,11 @@ describe("Email verification", () => {
 
       expect(response.status).toBe(502);
       expect(response.body.errors.msg).toEqual(expect.any(String));
+      expect(consoleError).toHaveBeenCalledWith(
+        "Verification email failed:",
+        "Brevo send failed (503): down"
+      );
+      consoleError.mockRestore();
     });
 
     it("rejects resending for an already-verified account", async () => {
