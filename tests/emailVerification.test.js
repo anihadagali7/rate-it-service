@@ -197,6 +197,7 @@ describe("Email verification", () => {
         "/api/account/resend-verification"
       );
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
     });
 
@@ -205,6 +206,7 @@ describe("Email verification", () => {
         .post("/api/account/resend-verification")
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(emailClient.sendVerificationEmail).toHaveBeenCalledTimes(1);
       expect(emailClient.sendVerificationEmail).toHaveBeenCalledWith(
@@ -225,6 +227,7 @@ describe("Email verification", () => {
         .post("/api/account/resend-verification")
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(502);
       expect(response.body.errors.msg).toEqual(expect.any(String));
       expect(consoleError).toHaveBeenCalledWith(
@@ -241,6 +244,7 @@ describe("Email verification", () => {
         .post("/api/account/resend-verification")
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(400);
       expect(response.body.errors.msg).toBe("This email is already verified");
       expect(emailClient.sendVerificationEmail).not.toHaveBeenCalled();
@@ -255,6 +259,7 @@ describe("Email verification", () => {
       const response = await request(app)
         .post("/api/account/resend-verification")
         .set("Authorization", accessToken);
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
 
       const staleAttempt = await request(app)

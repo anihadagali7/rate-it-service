@@ -1,6 +1,16 @@
 {
   "components": {
     "responses": {
+      "BadGateway": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        },
+        "description": "An external service (TMDB, Spotify, Google Books, SendGrid, or Cloudinary) failed. `msg` names the service."
+      },
       "InvalidToken": {
         "content": {
           "application/json": {
@@ -155,6 +165,78 @@
         ],
         "type": "object"
       },
+      "BookSearchResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "mediaList": {
+                "items": {
+                  "$ref": "#/components/schemas/BookSearchResult"
+                },
+                "type": "array"
+              },
+              "totalPages": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "mediaList",
+              "totalPages"
+            ],
+            "type": "object"
+          },
+          "mediaType": {
+            "enum": [
+              "book"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "success"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "data",
+          "mediaType"
+        ],
+        "type": "object"
+      },
+      "BookSearchResult": {
+        "properties": {
+          "author": {
+            "description": "Author names joined with commas.",
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "mediaId": {
+            "description": "Google Books volume id.",
+            "type": "string"
+          },
+          "mediaType": {
+            "enum": [
+              "book"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "poster": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mediaId",
+          "mediaType"
+        ],
+        "type": "object"
+      },
       "ErrorResponse": {
         "properties": {
           "errors": {
@@ -172,6 +254,42 @@
         },
         "required": [
           "errors"
+        ],
+        "type": "object"
+      },
+      "FriendsListResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "followersList": {
+                "items": {
+                  "$ref": "#/components/schemas/PublicUser"
+                },
+                "type": "array"
+              },
+              "followingList": {
+                "items": {
+                  "$ref": "#/components/schemas/PublicUser"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "followersList",
+              "followingList"
+            ],
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "success"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "data"
         ],
         "type": "object"
       },
@@ -259,7 +377,181 @@
         },
         "required": [
           "_id",
-          "name",
+          "name"
+        ],
+        "type": "object"
+      },
+      "MediaResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "media": {
+                "$ref": "#/components/schemas/Media"
+              }
+            },
+            "required": [
+              "media"
+            ],
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "success"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "data"
+        ],
+        "type": "object"
+      },
+      "MovieTvSearchResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "mediaList": {
+                "items": {
+                  "$ref": "#/components/schemas/MovieTvSearchResult"
+                },
+                "type": "array"
+              },
+              "totalPages": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "mediaList",
+              "totalPages"
+            ],
+            "type": "object"
+          },
+          "mediaType": {
+            "enum": [
+              "movie",
+              "tv"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "success"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "data",
+          "mediaType"
+        ],
+        "type": "object"
+      },
+      "MovieTvSearchResult": {
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "mediaId": {
+            "description": "TMDB id.",
+            "type": "integer"
+          },
+          "mediaType": {
+            "enum": [
+              "movie",
+              "tv"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "poster": {
+            "description": "Poster URL, or an empty string when TMDB has none.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mediaId",
+          "poster",
+          "mediaType"
+        ],
+        "type": "object"
+      },
+      "MusicSearchResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "mediaList": {
+                "items": {
+                  "$ref": "#/components/schemas/MusicSearchResult"
+                },
+                "type": "array"
+              },
+              "totalPages": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "mediaList",
+              "totalPages"
+            ],
+            "type": "object"
+          },
+          "mediaType": {
+            "enum": [
+              "music"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "success"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "data",
+          "mediaType"
+        ],
+        "type": "object"
+      },
+      "MusicSearchResult": {
+        "properties": {
+          "albumName": {
+            "type": "string"
+          },
+          "albumType": {
+            "type": "string"
+          },
+          "artists": {
+            "description": "Artist names joined with commas.",
+            "type": "string"
+          },
+          "mediaId": {
+            "description": "Spotify track id.",
+            "type": "string"
+          },
+          "mediaType": {
+            "enum": [
+              "music"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "poster": {
+            "description": "Set only when Spotify has a 640px album image.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mediaId",
+          "artists",
           "mediaType"
         ],
         "type": "object"
@@ -305,6 +597,27 @@
         },
         "required": [
           "_id"
+        ],
+        "type": "object"
+      },
+      "PublicUserListResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/PublicUser"
+            },
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "success"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "data"
         ],
         "type": "object"
       },
@@ -492,6 +805,70 @@
           "data"
         ],
         "type": "object"
+      },
+      "SearchRequest": {
+        "properties": {
+          "keyWord": {
+            "type": "string"
+          },
+          "page": {
+            "description": "1-based page number. Defaults to the first page.",
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "keyWord"
+        ],
+        "type": "object"
+      },
+      "StatusResponse": {
+        "properties": {
+          "status": {
+            "enum": [
+              "success"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "type": "object"
+      },
+      "UserProfileResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "user": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AccountUser"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PublicUser"
+                  }
+                ],
+                "description": "An `AccountUser` when the caller views their own profile, otherwise a `PublicUser`."
+              }
+            },
+            "required": [
+              "user"
+            ],
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "success"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "data"
+        ],
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -541,6 +918,247 @@
         "summary": "Health check",
         "tags": [
           "Health"
+        ]
+      }
+    },
+    "/api/account/complete-profile": {
+      "put": {
+        "description": "One-time step for accounts created through Google, Facebook, or Apple sign-in, which start without a userName. Optionally sets a password so the user can also log in with email.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "userName": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "userName"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountUserResponse"
+                }
+              }
+            },
+            "description": "The completed account (`isProfileComplete` is true)."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Profile is already complete\"` or `\"This username is already being used\"`."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Finish a social sign-up by choosing a userName",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/account/me": {
+      "get": {
+        "description": "Works for accounts that have no userName yet (social sign-ups that haven't completed their profile).",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountUserResponse"
+                }
+              }
+            },
+            "description": "The caller's account."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Get the logged-in user's account",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/account/picture": {
+      "put": {
+        "description": "Uploads to Cloudinary and stores the URL on the account, replacing any previous picture.",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "picture": {
+                    "description": "A JPEG, PNG, or WebP image, at most 5 MB.",
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "picture"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountUserResponse"
+                }
+              }
+            },
+            "description": "The account with its new `picture` URL."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "No file, a disallowed type (`\"Only JPEG, PNG, and WebP images are allowed\"`), a file over 5 MB (`\"File too large\"`), or an image Cloudinary rejects."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          },
+          "502": {
+            "$ref": "#/components/responses/BadGateway"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Upload a new profile picture",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/account/resend-verification": {
+      "post": {
+        "description": "Issues a new link; any earlier link stops working.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            },
+            "description": "Email sent."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"This email is already verified\"`."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          },
+          "502": {
+            "$ref": "#/components/responses/BadGateway"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Resend the email verification link",
+        "tags": [
+          "Users"
         ]
       }
     },
@@ -614,6 +1232,148 @@
         "summary": "Change the logged-in user's password",
         "tags": [
           "Auth"
+        ]
+      }
+    },
+    "/api/account/update": {
+      "put": {
+        "description": "The user always comes from the token; a userName in the body is ignored. Omitted fields are left unchanged.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phoneNumber": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountUserResponse"
+                }
+              }
+            },
+            "description": "The updated account."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Update the logged-in user's name and phone number",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/account/{userName}": {
+      "get": {
+        "description": "Returns the full `AccountUser` when `userName` is the caller's own, otherwise only the `PublicUser` fields.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                }
+              }
+            },
+            "description": "The user's profile."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Get a user's profile",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/allUsers": {
+      "get": {
+        "description": "Returns all users in one response, with no paging.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicUserListResponse"
+                }
+              }
+            },
+            "description": "Every user."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "List every user",
+        "tags": [
+          "Users"
         ]
       }
     },
@@ -1019,6 +1779,140 @@
         ]
       }
     },
+    "/api/friends/follow": {
+      "post": {
+        "description": "The follower always comes from the token.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "userToFollow": {
+                    "description": "userName of the user to follow.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "userToFollow"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            },
+            "description": "Now following."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"You cannot follow yourself\"` or `\"You already follow this user\"`."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Follow a user",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/friends/unfollow": {
+      "post": {
+        "description": "The follower always comes from the token.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "userToUnfollow": {
+                    "description": "userName of the user to unfollow.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "userToUnfollow"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            },
+            "description": "No longer following."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"You cannot unfollow yourself\"` or `\"You do not currently follow this user\"`."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Unfollow a user",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
     "/api/login": {
       "post": {
         "requestBody": {
@@ -1078,6 +1972,402 @@
         "summary": "Log in with email and password",
         "tags": [
           "Auth"
+        ]
+      }
+    },
+    "/api/media/add": {
+      "post": {
+        "description": "Stores the media, or returns the existing item when one with the same `mediaId` and `mediaType` is already stored.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "media": {
+                    "description": "Fields of the `Media` schema, without `_id`.",
+                    "properties": {
+                      "description": {
+                        "type": "string"
+                      },
+                      "mediaId": {
+                        "type": "string"
+                      },
+                      "mediaType": {
+                        "enum": [
+                          "MOVIE",
+                          "BOOK",
+                          "PODCAST",
+                          "TV",
+                          "MUSIC",
+                          "THEATRE"
+                        ],
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "picture": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "media"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaResponse"
+                }
+              }
+            },
+            "description": "The media was already stored; returns the existing item."
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaResponse"
+                }
+              }
+            },
+            "description": "Media created."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Add a media item",
+        "tags": [
+          "Media"
+        ]
+      }
+    },
+    "/api/media/book/info/{googleBookId}": {
+      "get": {
+        "description": "Public. Returns the stored book, or fetches it from Google Books and stores it on first view.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "googleBookId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaResponse"
+                }
+              }
+            },
+            "description": "The book was already stored."
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaResponse"
+                }
+              }
+            },
+            "description": "Fetched from Google Books and stored."
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Media not found\"`: Google Books returned no volume."
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Unable to fetch media details from Google Books\"`. Also returned for ids Google Books doesn't know, since it answers those with an error."
+          }
+        },
+        "security": [
+          {},
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Get book details",
+        "tags": [
+          "Media"
+        ]
+      }
+    },
+    "/api/media/movie/info/{tmdbId}": {
+      "get": {
+        "description": "Public. Returns the stored movie, or fetches it from TMDB and stores it on first view.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tmdbId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaResponse"
+                }
+              }
+            },
+            "description": "The movie was already stored."
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaResponse"
+                }
+              }
+            },
+            "description": "Fetched from TMDB and stored."
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Media not found\"`: TMDB returned no movie."
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Unable to fetch media details from TMDB\"`. Also returned for ids TMDB doesn't know, since TMDB answers those with an error."
+          }
+        },
+        "security": [
+          {},
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Get movie details",
+        "tags": [
+          "Media"
+        ]
+      }
+    },
+    "/api/media/music/info/{spotifyId}": {
+      "get": {
+        "description": "Public. Returns the stored track, or fetches it from Spotify and stores it on first view.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "spotifyId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaResponse"
+                }
+              }
+            },
+            "description": "The track was already stored."
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaResponse"
+                }
+              }
+            },
+            "description": "Fetched from Spotify and stored."
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Media not found\"`: Spotify returned no track."
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Unable to fetch media details from Spotify\"`. Also returned for ids Spotify doesn't know, since Spotify answers those with an error."
+          }
+        },
+        "security": [
+          {},
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Get song details",
+        "tags": [
+          "Media"
+        ]
+      }
+    },
+    "/api/media/tv/info/{tmdbId}": {
+      "get": {
+        "description": "Public. Returns the stored show, or fetches it from TMDB and stores it on first view.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tmdbId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaResponse"
+                }
+              }
+            },
+            "description": "The show was already stored."
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaResponse"
+                }
+              }
+            },
+            "description": "Fetched from TMDB and stored."
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Media not found\"`: TMDB returned no show."
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Unable to fetch media details from TMDB\"`. Also returned for ids TMDB doesn't know, since TMDB answers those with an error."
+          }
+        },
+        "security": [
+          {},
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Get TV show details",
+        "tags": [
+          "Media"
         ]
       }
     },
@@ -1421,6 +2711,421 @@
         ]
       }
     },
+    "/api/search/all": {
+      "post": {
+        "description": "First page of each catalog. A catalog that fails comes back as an empty list instead of failing the whole request.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "keyWord": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "keyWord"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "fullSearchList": {
+                          "properties": {
+                            "book": {
+                              "items": {
+                                "$ref": "#/components/schemas/BookSearchResult"
+                              },
+                              "type": "array"
+                            },
+                            "movie": {
+                              "items": {
+                                "$ref": "#/components/schemas/MovieTvSearchResult"
+                              },
+                              "type": "array"
+                            },
+                            "music": {
+                              "items": {
+                                "$ref": "#/components/schemas/MusicSearchResult"
+                              },
+                              "type": "array"
+                            },
+                            "tv": {
+                              "items": {
+                                "$ref": "#/components/schemas/MovieTvSearchResult"
+                              },
+                              "type": "array"
+                            }
+                          },
+                          "required": [
+                            "movie",
+                            "tv",
+                            "music",
+                            "book"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "fullSearchList"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Results grouped by catalog."
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {},
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Search movies, TV, music, and books at once",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/search/book": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookSearchResponse"
+                }
+              }
+            },
+            "description": "One page of results (20 per page)."
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Unable to search books\"`."
+          }
+        },
+        "security": [
+          {},
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Search books on Google Books",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/search/movie": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovieTvSearchResponse"
+                }
+              }
+            },
+            "description": "One page of results."
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Unable to search movies\"`."
+          }
+        },
+        "security": [
+          {},
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Search movies on TMDB",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/search/music": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MusicSearchResponse"
+                }
+              }
+            },
+            "description": "One page of results (20 per page)."
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Unable to search music\"`."
+          }
+        },
+        "security": [
+          {},
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Search songs on Spotify",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/search/tv": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovieTvSearchResponse"
+                }
+              }
+            },
+            "description": "One page of results."
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Unable to search TV shows\"`."
+          }
+        },
+        "security": [
+          {},
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Search TV shows on TMDB",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/search/user": {
+      "post": {
+        "description": "Case-insensitive. Returns every match with no paging; `page` is ignored. Results come back under `mediaList`, like the media searches.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "keyWord": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "keyWord"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "mediaList": {
+                          "items": {
+                            "$ref": "#/components/schemas/PublicUser"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "mediaList"
+                      ],
+                      "type": "object"
+                    },
+                    "mediaType": {
+                      "enum": [
+                        "user"
+                      ],
+                      "type": "string"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data",
+                    "mediaType"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Matching users."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Search users by userName or first name",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
     "/api/verify-email": {
       "post": {
         "description": "Consumes the one-time token from the verification email link.",
@@ -1475,6 +3180,150 @@
           "Auth"
         ]
       }
+    },
+    "/api/{userName}/followers": {
+      "get": {
+        "description": "Users who no longer exist are left out.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicUserListResponse"
+                }
+              }
+            },
+            "description": "The users following `userName`."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "List someone's followers",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/{userName}/following": {
+      "get": {
+        "description": "Users who no longer exist are left out.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicUserListResponse"
+                }
+              }
+            },
+            "description": "The users `userName` follows."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "List the users someone follows",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/{userName}/friendsList": {
+      "get": {
+        "description": "Users who no longer exist are left out.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FriendsListResponse"
+                }
+              }
+            },
+            "description": "Both lists."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "List someone's followers and following together",
+        "tags": [
+          "Users"
+        ]
+      }
     }
   },
   "servers": [
@@ -1492,6 +3341,17 @@
     },
     {
       "name": "Ratings"
+    },
+    {
+      "description": "Accounts, profiles, and following",
+      "name": "Users"
+    },
+    {
+      "description": "Movie, TV, music, and book details",
+      "name": "Media"
+    },
+    {
+      "name": "Search"
     }
   ]
 }

@@ -53,6 +53,14 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
+    BadGateway:
+      description: >-
+        An external service (TMDB, Spotify, Google Books, SendGrid, or
+        Cloudinary) failed. `msg` names the service.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
 
   schemas:
     ErrorResponse:
@@ -154,10 +162,11 @@ components:
             user:
               $ref: "#/components/schemas/AccountUser"
 
-    # Source: repository/mediaModel.js
+    # Source: repository/mediaModel.js. Only `name` is required by the model;
+    # POST /api/media/add can store media without a mediaType.
     Media:
       type: object
-      required: [_id, name, mediaType]
+      required: [_id, name]
       properties:
         _id:
           $ref: "#/components/schemas/ObjectId"
@@ -331,3 +340,220 @@ components:
               description: Newest first.
               items:
                 $ref: "#/components/schemas/RatingListItem"
+
+    # A success response with no data (follow, unfollow, resend-verification).
+    StatusResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [success]
+
+    # Source: services/userService.js (getAccountDetails).
+    UserProfileResponse:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: object
+          required: [user]
+          properties:
+            user:
+              description: >-
+                An `AccountUser` when the caller views their own profile,
+                otherwise a `PublicUser`.
+              anyOf:
+                - $ref: "#/components/schemas/AccountUser"
+                - $ref: "#/components/schemas/PublicUser"
+
+    # Source: services/userService.js (getAllUsers, getAllFollowing,
+    # getAllFollowers). `data` is the array itself, not a named payload.
+    PublicUserListResponse:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicUser"
+
+    # Source: services/userService.js (getAllFriends).
+    FriendsListResponse:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: object
+          required: [followersList, followingList]
+          properties:
+            followersList:
+              type: array
+              items:
+                $ref: "#/components/schemas/PublicUser"
+            followingList:
+              type: array
+              items:
+                $ref: "#/components/schemas/PublicUser"
+
+    # Source: services/mediaService.js
+    MediaResponse:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: object
+          required: [media]
+          properties:
+            media:
+              $ref: "#/components/schemas/Media"
+
+    # Source: services/searchService.js (buildMovieTvResult).
+    MovieTvSearchResult:
+      type: object
+      required: [mediaId, poster, mediaType]
+      properties:
+        mediaId:
+          type: integer
+          description: TMDB id.
+        name:
+          type: string
+        description:
+          type: string
+        poster:
+          type: string
+          description: Poster URL, or an empty string when TMDB has none.
+        mediaType:
+          type: string
+          enum: [movie, tv]
+
+    # Source: services/searchService.js (buildMusicResult).
+    MusicSearchResult:
+      type: object
+      required: [mediaId, artists, mediaType]
+      properties:
+        mediaId:
+          type: string
+          description: Spotify track id.
+        name:
+          type: string
+        albumType:
+          type: string
+        albumName:
+          type: string
+        poster:
+          type: string
+          description: Set only when Spotify has a 640px album image.
+        artists:
+          type: string
+          description: Artist names joined with commas.
+        mediaType:
+          type: string
+          enum: [music]
+
+    # Source: services/searchService.js (buildBookResult).
+    BookSearchResult:
+      type: object
+      required: [mediaId, mediaType]
+      properties:
+        mediaId:
+          type: string
+          description: Google Books volume id.
+        name:
+          type: string
+        author:
+          type: string
+          description: Author names joined with commas.
+        description:
+          type: string
+        poster:
+          type: string
+        mediaType:
+          type: string
+          enum: [book]
+
+    MovieTvSearchResponse:
+      type: object
+      required: [status, data, mediaType]
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: object
+          required: [mediaList, totalPages]
+          properties:
+            mediaList:
+              type: array
+              items:
+                $ref: "#/components/schemas/MovieTvSearchResult"
+            totalPages:
+              type: integer
+        mediaType:
+          type: string
+          enum: [movie, tv]
+
+    MusicSearchResponse:
+      type: object
+      required: [status, data, mediaType]
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: object
+          required: [mediaList, totalPages]
+          properties:
+            mediaList:
+              type: array
+              items:
+                $ref: "#/components/schemas/MusicSearchResult"
+            totalPages:
+              type: integer
+        mediaType:
+          type: string
+          enum: [music]
+
+    BookSearchResponse:
+      type: object
+      required: [status, data, mediaType]
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: object
+          required: [mediaList, totalPages]
+          properties:
+            mediaList:
+              type: array
+              items:
+                $ref: "#/components/schemas/BookSearchResult"
+            totalPages:
+              type: integer
+        mediaType:
+          type: string
+          enum: [book]
+
+    SearchRequest:
+      type: object
+      required: [keyWord]
+      properties:
+        keyWord:
+          type: string
+        page:
+          type: integer
+          minimum: 1
+          description: 1-based page number. Defaults to the first page.
