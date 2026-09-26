@@ -96,7 +96,8 @@ judgment call the story doesn't cover, show the plan to the user briefly before 
   auth, error handling).
 - Write or update tests alongside the code — every acceptance criterion should be
   covered by a test where practical.
-- Stay in scope. Note unrelated problems you find as follow-ups; don't fix them here.
+- Stay in scope. Don't fix unrelated problems here; file them as issues (see *Git & PR
+  workflow* in `AGENTS.md`).
 - If the story turns out to be wrong or impossible as written, stop and explain
   rather than inventing a different feature.
 
