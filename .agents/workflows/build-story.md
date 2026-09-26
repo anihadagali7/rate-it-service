@@ -103,8 +103,8 @@ judgment call the story doesn't cover, show the plan to the user briefly before 
 ### 5. Verify
 
 - Run the full test suite: `npm test` (service) or `npm run test:ci` (ui). All tests must pass.
-- **ui:** also run `npm run build` — CI builds the app and checks Prettier formatting on
-  changed `src/` files.
+- **ui:** also run `npm run typecheck` and `npm run build`. CI type-checks, builds the
+  app, and checks Prettier formatting on changed `src/` files.
 - **service:** if the local server is running against the **dev** database, exercise
   new endpoints with `curl`. Never touch prod.
 - **ui:** run the app and check the feature in a browser at mobile (375px) and desktop
