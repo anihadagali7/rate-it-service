@@ -10,6 +10,7 @@ accurate: if you change a convention described here, update this file in the sam
 ## Commands
 
 ```bash
+nvm use                                     # Node 24, from .nvmrc
 npm install
 npm start                                   # nodemon server.js on :8080
 npm test                                    # full Jest suite (in-memory Mongo)
@@ -22,7 +23,7 @@ same command on every PR.
 
 ## Stack
 
-- Node + Express 4, Mongoose 6 on MongoDB
+- Node 24 + Express 4, Mongoose 6 on MongoDB
 - Deployed on Heroku (`Procfile`: `web: node server.js`)
 - External APIs: TMDB (movies/TV), Spotify (music), Google Books, Cloudinary (images),
   SendGrid (email), Slack (internal notifications), Google/Facebook/Apple sign-in
@@ -141,5 +142,4 @@ Keep this table updated when you add or change routes.
 
 ## Known issues / tech debt
 
-- `package.json` `engines` pins Node `16.15.0` (end-of-life), which Heroku uses in prod,
-  while CI runs Node 20. Don't change it as a side effect of another story.
+- None tracked here yet. Add items as they come up.

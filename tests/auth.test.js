@@ -157,6 +157,42 @@ describe("Auth flow", () => {
       expect(response.body.data.user.password).toBeUndefined();
     });
 
+    describe("with a password hashed by bcrypt 5.0.1", () => {
+      // Generated with bcrypt@5.0.1 (the version before the Node 24 upgrade)
+      // for LEGACY_PASSWORD. Existing users' stored hashes look like this and
+      // must keep verifying after bcrypt upgrades.
+      const LEGACY_PASSWORD = "legacy-Passw0rd!";
+      const LEGACY_HASH =
+        "$2b$10$pV3SWEdQJFg/Ky9iBIFI..aiBYSWrOIThFnXuUJwdBhlQqmtr081.";
+
+      beforeEach(async () => {
+        await UsersModel.findOneAndUpdate(
+          { email: validUser.email },
+          { password: LEGACY_HASH }
+        );
+      });
+
+      it("logs in with the original password", async () => {
+        const response = await request(app).post("/api/login").send({
+          email: validUser.email,
+          password: LEGACY_PASSWORD,
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body.accessToken).toEqual(expect.any(String));
+      });
+
+      it("rejects a wrong password", async () => {
+        const response = await request(app).post("/api/login").send({
+          email: validUser.email,
+          password: validUser.password,
+        });
+
+        expect(response.status).toBe(401);
+        expect(response.body.errors.msg).toBe("Email or password is invalid");
+      });
+    });
+
     it("rejects invalid login payloads", async () => {
       const response = await request(app).post("/api/login").send({
         email: "not-an-email",
