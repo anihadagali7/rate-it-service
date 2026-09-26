@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeReadFile": [
+      {
+        "command": "bash .cursor/hooks/block-env-read.sh",
+        "timeout": 5
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "bash .cursor/hooks/guard-shell.sh",
+        "failClosed": true,
+        "timeout": 10
+      }
+    ]
+  }
+}

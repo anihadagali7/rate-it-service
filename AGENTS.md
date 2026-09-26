@@ -121,8 +121,12 @@ Keep this table updated when you add or change routes.
 
 ## Git & PR workflow
 
-- Never commit or push directly to `master`. Branch as `feature/<slug>`, `fix/<slug>`,
-  or `chore/<slug>`.
+- Never commit or push directly to `master`. Branch as `feature/<issue>-<slug>`,
+  `fix/<issue>-<slug>`, or `chore/<issue>-<slug>` (e.g. `feature/14-top-rated-endpoint`);
+  drop `<issue>-` only when there is no issue.
+- Guardrails: `.claude/settings.json` (Claude Code) and `.cursor/hooks.json` (Cursor)
+  block reading `.env` files, commits/pushes on `master`, force pushes, and `gh pr merge`.
+  The Cursor hook scripts in `.cursor/hooks/` are identical in both repos — keep them in sync.
 - One story per branch and PR. Keep PRs focused; don't refactor unrelated code.
 - PR description: summary, `Closes #<issue>`, how it was tested, and any env vars,
   migrations, or UI follow-ups.
