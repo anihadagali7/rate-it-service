@@ -33,11 +33,8 @@ the response shapes below.
   via `utils/httpErrors.js`. Flag responses that break this shape.
 - Routes stay thin (route → service → repository). Services write to `response` directly.
 - A changed path, param, or response shape must be backward compatible or come with the
-  matching UI change (`rate-it-ui/src/client/*Client.js`).
-- Every new or changed route needs an `@openapi` block that matches what the code
-  actually returns (all status codes, including errors and 429), a route test that calls
-  `expect(response).toSatisfyApiSpec()`, and a regenerated, committed `openapi.json`.
-  Flag hand edits to `openapi.json` and new entries in `openapi/undocumented-routes.json`.
+  matching UI change (`rate-it-ui/src/client/*Client.js`). New/changed routes must update
+  the API map in `AGENTS.md`.
 
 ## Tests and config
 - New or changed endpoints need both a route test (Supertest) and a service test,
