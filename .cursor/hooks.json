@@ -3,13 +3,13 @@
   "hooks": {
     "beforeReadFile": [
       {
-        "command": "bash .cursor/hooks/block-env-read.sh",
+        "command": "bash .agents/hooks/block-env-read.sh",
         "timeout": 5
       }
     ],
     "beforeShellExecution": [
       {
-        "command": "bash .cursor/hooks/guard-shell.sh",
+        "command": "bash .agents/hooks/guard-shell.sh",
         "timeout": 10
       }
     ]
