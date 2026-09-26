@@ -18,7 +18,7 @@ Protected routes require a valid JWT in the `Authorization` header. The authenti
 
 ## Prerequisites
 
-- Node.js (see `engines` in `package.json`; currently `16.15.0`)
+- Node.js 24 (see `engines` in `package.json`; `nvm use` picks it up from `.nvmrc`)
 - MongoDB database (local or hosted, e.g. MongoDB Atlas)
 - API keys for external services (see Environment variables below)
 
@@ -148,6 +148,9 @@ The app includes a `Procfile` that starts the server with:
 ```text
 web: node server.js
 ```
+
+Heroku uses the Node version from `engines` in `package.json` (currently `24.x`). Node 24
+needs the `heroku-24` stack; check it with `heroku stack -a <app>`.
 
 ### First-time setup
 

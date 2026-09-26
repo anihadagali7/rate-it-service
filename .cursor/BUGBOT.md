@@ -24,8 +24,9 @@ the response shapes below.
   external calls must catch and respond: `sendError` (500), `sendBadGateway` (502) for
   upstream failures, `isDuplicateKeyError` → `sendConflict` (409). Flag unguarded awaits.
 - Slack notifications are fire-and-forget; a Slack failure must never fail the request.
-- Prod runs **Node 16.15.0**. Flag APIs that don't exist there: global `fetch`,
-  `structuredClone`, `Array.prototype.findLast`/`findLastIndex`, `AbortSignal.timeout`.
+- Prod runs **Node 24** (`engines` in `package.json`, `.nvmrc`). Flag new dependencies
+  whose `engines` exclude Node 24, or that need a native build step (prefer packages that
+  ship prebuilt binaries).
 
 ## API contract
 - Success: `{ status: "success", data: { <namedPayload> } }`. Error: `{ errors: { msg } }`
