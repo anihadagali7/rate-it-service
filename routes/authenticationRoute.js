@@ -77,6 +77,8 @@ const verifyEmailValidators = [
  *                 status:
  *                   type: string
  *                   enum: [UP]
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
  */
 router.get("/", async (request, response) => {
   response.status(200).json({ status: "UP" });
@@ -131,6 +133,8 @@ router.get("/", async (request, response) => {
  *               $ref: "#/components/schemas/ErrorResponse"
  *       429:
  *         $ref: "#/components/responses/RateLimited"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
  */
 router.post(
   "/create-user",
@@ -195,6 +199,8 @@ router.post(
  *               $ref: "#/components/schemas/ErrorResponse"
  *       429:
  *         $ref: "#/components/responses/RateLimited"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
  */
 router.post(
   "/login",
@@ -264,6 +270,8 @@ router.post(
  *               $ref: "#/components/schemas/ErrorResponse"
  *       429:
  *         $ref: "#/components/responses/RateLimited"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
  */
 router.post(
   "/auth/google",
@@ -331,6 +339,8 @@ router.post(
  *               $ref: "#/components/schemas/ErrorResponse"
  *       429:
  *         $ref: "#/components/responses/RateLimited"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
  */
 router.post(
   "/auth/facebook",
@@ -414,6 +424,8 @@ router.post(
  *               $ref: "#/components/schemas/ErrorResponse"
  *       429:
  *         $ref: "#/components/responses/RateLimited"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
  */
 router.post(
   "/auth/apple",
@@ -465,6 +477,8 @@ router.post(
  *               $ref: "#/components/schemas/ErrorResponse"
  *       429:
  *         $ref: "#/components/responses/RateLimited"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
  */
 router.post(
   "/verify-email",
@@ -522,6 +536,8 @@ router.post(
  *         $ref: "#/components/responses/NotFound"
  *       429:
  *         $ref: "#/components/responses/RateLimited"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
  */
 router.post(
   "/account/resetPassword",
