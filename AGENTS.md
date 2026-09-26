@@ -124,10 +124,14 @@ it by hand.
 
 ## Cross-repo work
 
-The UI is at `../rate-it-ui`. Its API calls live in `../rate-it-ui/src/client/*Client.js`.
+The UI is at `../rate-it-ui`. Its API calls live in `../rate-it-ui/src/client/*Client.ts`,
+and the contract types they return live in `../rate-it-ui/src/types/api.ts`.
 
 - Before changing an endpoint's path, params, or response shape, grep the UI for its
   usages and update both sides (or keep the change backward compatible).
+- A contract change (path, request field, or response payload) also means updating
+  `../rate-it-ui/src/types/api.ts` and the matching client method's return type. Call
+  this out as a UI follow-up in the PR.
 - Ship backend changes first; the UI story depends on the deployed API.
 
 ### API map
