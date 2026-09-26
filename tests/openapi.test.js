@@ -5,7 +5,11 @@ const SwaggerParser = require("@apidevtools/swagger-parser");
 const app = require("../app");
 const spec = require("../openapi.json");
 const { buildSpec } = require("../scripts/generate-openapi");
-const { listRoutes, listSpecRoutes } = require("./helpers/listRoutes");
+const {
+  loadApp,
+  listRoutes,
+  listSpecRoutes,
+} = require("./helpers/listRoutes");
 
 // Routes that are still being documented. Remove entries as their @openapi
 // blocks land; the test fails if an entry is stale.
@@ -33,7 +37,7 @@ describe("OpenAPI spec", () => {
   });
 
   describe("route coverage", () => {
-    const appRoutes = listRoutes(app).filter(
+    const appRoutes = listRoutes(loadApp()).filter(
       (route) => !DEV_ONLY.includes(route)
     );
     const specRoutes = listSpecRoutes(spec);
