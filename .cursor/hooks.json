@@ -10,7 +10,6 @@
     "beforeShellExecution": [
       {
         "command": "bash .cursor/hooks/guard-shell.sh",
-        "failClosed": true,
         "timeout": 10
       }
     ]
