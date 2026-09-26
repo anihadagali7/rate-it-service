@@ -1,25 +1,41 @@
 #!/bin/bash
-# Cursor beforeShellExecution hook enforcing the Git & PR rules in AGENTS.md:
-# no commits or pushes on master/main, no force pushes, no merging PRs, and no
-# reading .env files through the shell. Mirrors the deny list in
-# .claude/settings.json. Shared by rate-it-ui and rate-it-service; keep both
-# copies in sync.
+# Enforces the Git & PR rules in AGENTS.md for shell commands: no commits or
+# pushes on master/main, no force pushes, no merging PRs, and no reading .env
+# files through the shell. Used by both tools:
+#   - Cursor: beforeShellExecution hook (.cursor/hooks.json)
+#   - Claude Code: PreToolUse hook on Bash (.claude/settings.json)
+# Shared by rate-it-ui and rate-it-service; keep both copies in sync.
 #
-# Registered without failClosed: if this script is missing (e.g. on a branch
-# created before it existed) or errors, commands are allowed. Branch protection
-# on GitHub is the server-side backstop for master.
+# Fails open: if this script is missing (e.g. on a branch created before it
+# existed) or errors, commands are allowed. GitHub branch protection on master
+# (required CI checks, enforced for admins) is the server-side backstop.
 
 input=$(cat)
-cmd=$(printf '%s' "$input" | jq -r '.command // empty')
+
+# Claude Code sends { hook_event_name: "PreToolUse", tool_input: { command }, cwd };
+# Cursor sends { command, cwd }.
+is_claude=false
+[ "$(printf '%s' "$input" | jq -r '.hook_event_name // empty')" = "PreToolUse" ] && is_claude=true
+cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // .command // empty')
 cwd=$(printf '%s' "$input" | jq -r '.cwd // empty')
 [ -n "$cwd" ] || cwd=$PWD
 
 deny() {
-  jq -n --arg msg "$1" '{
-    permission: "deny",
-    user_message: ("Blocked by project hook: " + $msg),
-    agent_message: ($msg + " See the Git & PR workflow and data-safety rules in AGENTS.md.")
-  }'
+  if $is_claude; then
+    jq -n --arg msg "$1" '{
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: "deny",
+        permissionDecisionReason: ("Blocked by project hook: " + $msg + " See the Git & PR workflow and data-safety rules in AGENTS.md.")
+      }
+    }'
+  else
+    jq -n --arg msg "$1" '{
+      permission: "deny",
+      user_message: ("Blocked by project hook: " + $msg),
+      agent_message: ($msg + " See the Git & PR workflow and data-safety rules in AGENTS.md.")
+    }'
+  fi
   exit 0
 }
 
@@ -66,4 +82,5 @@ while IFS= read -r seg; do
   fi
 done <<< "$segments"
 
-echo '{ "permission": "allow" }'
+# Claude Code: print nothing so the normal permission flow still applies.
+$is_claude || echo '{ "permission": "allow" }'
