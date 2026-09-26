@@ -111,6 +111,7 @@ describe("mediaRoute", () => {
         .post("/api/media/add")
         .send({ media: mediaPayload });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
       expect(response.body.errors.msg).toBe("Token not found");
     });
@@ -121,6 +122,7 @@ describe("mediaRoute", () => {
         .set("Authorization", "invalid.token.value")
         .send({ media: mediaPayload });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(403);
       expect(response.body.errors.msg).toBe("Invalid token");
     });
@@ -131,12 +133,27 @@ describe("mediaRoute", () => {
         .set("Authorization", accessToken)
         .send({ media: mediaPayload });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.status).toBe("success");
       expect(response.body.data.media).toMatchObject(mediaPayload);
 
       const storedMedia = await MediaModel.findOne({ mediaId: "route-add-1" });
       expect(storedMedia).toBeTruthy();
+    });
+
+    it("returns 200 with the stored media when it already exists", async () => {
+      await MediaModel.create(mediaPayload);
+
+      const response = await request(app)
+        .post("/api/media/add")
+        .set("Authorization", accessToken)
+        .send({ media: mediaPayload });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(200);
+      expect(response.body.data.media.mediaId).toBe("route-add-1");
+      expect(await MediaModel.countDocuments()).toBe(1);
     });
   });
 
@@ -152,6 +169,7 @@ describe("mediaRoute", () => {
         "/api/media/movie/info/route-movie-1"
       );
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.media.name).toBe("Cached Route Movie");
     });
@@ -161,6 +179,7 @@ describe("mediaRoute", () => {
         .get("/api/media/movie/info/route-movie-1")
         .set("Authorization", "invalid.token.value");
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(403);
       expect(response.body.errors.msg).toBe("Invalid token");
     });
@@ -176,6 +195,7 @@ describe("mediaRoute", () => {
         .get("/api/media/movie/info/route-movie-1")
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.media.name).toBe("Cached Route Movie");
       expect(tmdbClient.getDetailsById).not.toHaveBeenCalled();
@@ -189,6 +209,7 @@ describe("mediaRoute", () => {
         .get("/api/media/movie/info/route-movie-1")
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.data.media).toMatchObject({
         name: "Route Movie",
@@ -207,6 +228,7 @@ describe("mediaRoute", () => {
         .get("/api/media/tv/info/route-tv-1")
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.data.media).toMatchObject({
         name: "Route Show",
@@ -224,6 +246,7 @@ describe("mediaRoute", () => {
         "/api/media/music/info/route-track-1"
       );
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.data.media.name).toBe("Route Track");
     });
@@ -235,6 +258,7 @@ describe("mediaRoute", () => {
         .get("/api/media/music/info/route-track-1")
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.data.media).toMatchObject({
         name: "Route Track",
@@ -253,6 +277,7 @@ describe("mediaRoute", () => {
         "/api/media/book/info/route-book-1"
       );
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.data.media.name).toBe("Route Book");
     });
@@ -264,6 +289,7 @@ describe("mediaRoute", () => {
         .get("/api/media/book/info/route-book-1")
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.data.media).toMatchObject({
         name: "Route Book",
@@ -272,5 +298,79 @@ describe("mediaRoute", () => {
         genre: "Sci-Fi",
       });
     });
+  });
+
+  describe("catalog failures", () => {
+    const cases = [
+      {
+        name: "movie",
+        path: "/api/media/movie/info/missing-id",
+        mockEmpty: () => {
+          tmdbClient.getDetailsById.mockResolvedValue({});
+          tmdbClient.getCreditsById.mockResolvedValue(movieCredits);
+        },
+        mockFailure: () =>
+          tmdbClient.getDetailsById.mockRejectedValue(new Error("TMDB down")),
+        badGatewayMsg: "Unable to fetch media details from TMDB",
+      },
+      {
+        name: "tv",
+        path: "/api/media/tv/info/missing-id",
+        mockEmpty: () => {
+          tmdbClient.getDetailsById.mockResolvedValue({});
+          tmdbClient.getCreditsById.mockResolvedValue(movieCredits);
+        },
+        mockFailure: () =>
+          tmdbClient.getDetailsById.mockRejectedValue(new Error("TMDB down")),
+        badGatewayMsg: "Unable to fetch media details from TMDB",
+      },
+      {
+        name: "music",
+        path: "/api/media/music/info/missing-id",
+        mockEmpty: () =>
+          spotifyClient.searchTrackBySpotifyId.mockResolvedValue({}),
+        mockFailure: () =>
+          spotifyClient.searchTrackBySpotifyId.mockRejectedValue(
+            new Error("Spotify down")
+          ),
+        badGatewayMsg: "Unable to fetch media details from Spotify",
+      },
+      {
+        name: "book",
+        path: "/api/media/book/info/missing-id",
+        mockEmpty: () => googleClient.searchForBooksById.mockResolvedValue({}),
+        mockFailure: () =>
+          googleClient.searchForBooksById.mockRejectedValue(
+            new Error("Google Books down")
+          ),
+        badGatewayMsg: "Unable to fetch media details from Google Books",
+      },
+    ];
+
+    it.each(cases)(
+      "returns 404 when the $name catalog has no item",
+      async ({ path, mockEmpty }) => {
+        mockEmpty();
+
+        const response = await request(app).get(path);
+
+        expect(response).toSatisfyApiSpec();
+        expect(response.status).toBe(404);
+        expect(response.body.errors.msg).toBe("Media not found");
+      }
+    );
+
+    it.each(cases)(
+      "returns 502 when the $name catalog request fails",
+      async ({ path, mockFailure, badGatewayMsg }) => {
+        mockFailure();
+
+        const response = await request(app).get(path);
+
+        expect(response).toSatisfyApiSpec();
+        expect(response.status).toBe(502);
+        expect(response.body.errors.msg).toBe(badGatewayMsg);
+      }
+    );
   });
 });

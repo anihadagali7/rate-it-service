@@ -27,6 +27,9 @@ const definition = {
     { name: "Health" },
     { name: "Auth", description: "Signup, login, social sign-in, email verification, password" },
     { name: "Ratings" },
+    { name: "Users", description: "Accounts, profiles, and following" },
+    { name: "Media", description: "Movie, TV, music, and book details" },
+    { name: "Search" },
   ],
 };
 

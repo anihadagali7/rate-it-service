@@ -113,6 +113,7 @@ describe("searchRoute", () => {
         .post("/api/search/movie")
         .send({ keyWord: "matrix", page: 1 });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.mediaList).toEqual([
         expect.objectContaining({
@@ -128,6 +129,7 @@ describe("searchRoute", () => {
         .set("Authorization", "invalid.token.value")
         .send({ keyWord: "matrix", page: 1 });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(403);
       expect(response.body.errors.msg).toBe("Invalid token");
     });
@@ -140,6 +142,7 @@ describe("searchRoute", () => {
         .set("Authorization", accessToken)
         .send({ keyWord: "matrix", page: 1 });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.mediaType).toBe("movie");
       expect(response.body.data.mediaList).toEqual([
@@ -161,6 +164,7 @@ describe("searchRoute", () => {
         .set("Authorization", accessToken)
         .send({ keyWord: "office", page: 1 });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.mediaType).toBe("tv");
       expect(response.body.data.mediaList[0]).toMatchObject({
@@ -179,6 +183,7 @@ describe("searchRoute", () => {
         .set("Authorization", accessToken)
         .send({ keyWord: "beatles", page: 1 });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.mediaType).toBe("music");
       expect(response.body.data.mediaList[0]).toMatchObject({
@@ -195,6 +200,7 @@ describe("searchRoute", () => {
         .post("/api/search/user")
         .send({ keyWord: "matched" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
       expect(response.body.errors.msg).toBe("Token not found");
     });
@@ -211,6 +217,7 @@ describe("searchRoute", () => {
         .set("Authorization", accessToken)
         .send({ keyWord: "matched" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.mediaType).toBe("user");
       expect(response.body.data.mediaList).toEqual(
@@ -236,6 +243,7 @@ describe("searchRoute", () => {
         .set("Authorization", accessToken)
         .send({ keyWord: "dune", page: 1 });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.mediaType).toBe("book");
       expect(response.body.data.mediaList[0]).toMatchObject({
@@ -257,6 +265,7 @@ describe("searchRoute", () => {
         .set("Authorization", accessToken)
         .send({ keyWord: "route" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.fullSearchList.movie[0]).toMatchObject({
         name: "Route Movie",
@@ -270,6 +279,65 @@ describe("searchRoute", () => {
       expect(response.body.data.fullSearchList.book[0]).toMatchObject({
         name: "Route Book",
       });
+    });
+
+    it("returns an empty list for a catalog that fails", async () => {
+      tmdbClient.searchMovie.mockRejectedValue(new Error("TMDB down"));
+      tmdbClient.searchTvShow.mockResolvedValue(tvSearchResult);
+      spotifyClient.searchByTrackArtist.mockResolvedValue(musicSearchResult);
+      googleClient.searchForBooks.mockResolvedValue(bookSearchResult);
+
+      const response = await request(app)
+        .post("/api/search/all")
+        .send({ keyWord: "route" });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(200);
+      expect(response.body.data.fullSearchList.movie).toEqual([]);
+      expect(response.body.data.fullSearchList.tv).toHaveLength(1);
+    });
+  });
+
+  describe("catalog failures", () => {
+    it.each([
+      {
+        path: "/api/search/movie",
+        mockFailure: () =>
+          tmdbClient.searchMovie.mockRejectedValue(new Error("TMDB down")),
+        msg: "Unable to search movies",
+      },
+      {
+        path: "/api/search/tv",
+        mockFailure: () =>
+          tmdbClient.searchTvShow.mockRejectedValue(new Error("TMDB down")),
+        msg: "Unable to search TV shows",
+      },
+      {
+        path: "/api/search/music",
+        mockFailure: () =>
+          spotifyClient.searchByTrackArtist.mockRejectedValue(
+            new Error("Spotify down")
+          ),
+        msg: "Unable to search music",
+      },
+      {
+        path: "/api/search/book",
+        mockFailure: () =>
+          googleClient.searchForBooks.mockRejectedValue(
+            new Error("Google Books down")
+          ),
+        msg: "Unable to search books",
+      },
+    ])("returns 502 from $path when the catalog fails", async (testCase) => {
+      testCase.mockFailure();
+
+      const response = await request(app)
+        .post(testCase.path)
+        .send({ keyWord: "route", page: 1 });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(502);
+      expect(response.body.errors.msg).toBe(testCase.msg);
     });
   });
 });

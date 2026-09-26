@@ -49,6 +49,7 @@ describe("userRoute", () => {
         `/api/account/${user.userName}`
       );
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
       expect(response.body.errors.msg).toBe("Token not found");
     });
@@ -58,6 +59,7 @@ describe("userRoute", () => {
         .get(`/api/account/${user.userName}`)
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.user).toMatchObject({
         userName: user.userName,
@@ -73,6 +75,7 @@ describe("userRoute", () => {
         .get(`/api/account/${targetUser.userName}`)
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.user).toMatchObject({
         userName: targetUser.userName,
@@ -85,6 +88,41 @@ describe("userRoute", () => {
       expect(response.body.data.user.isAdmin).toBeUndefined();
       expect(response.body.data.user.password).toBeUndefined();
     });
+
+    it("returns 403 when the token is invalid", async () => {
+      const response = await request(app)
+        .get(`/api/account/${user.userName}`)
+        .set("Authorization", "invalid.token.value");
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(403);
+      expect(response.body.errors.msg).toBe("Invalid token");
+    });
+
+    it("returns 404 for an unknown user", async () => {
+      const response = await request(app)
+        .get("/api/account/nobody")
+        .set("Authorization", accessToken);
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(404);
+      expect(response.body.errors.msg).toBe("User not found");
+    });
+  });
+
+  describe("unknown users in follow lists", () => {
+    it.each(["following", "followers", "friendsList"])(
+      "returns 404 from /api/:userName/%s for an unknown user",
+      async (list) => {
+        const response = await request(app)
+          .get(`/api/nobody/${list}`)
+          .set("Authorization", accessToken);
+
+        expect(response).toSatisfyApiSpec();
+        expect(response.status).toBe(404);
+        expect(response.body.errors.msg).toBe("User not found");
+      }
+    );
   });
 
   describe("GET /api/allUsers", () => {
@@ -93,9 +131,18 @@ describe("userRoute", () => {
         .get("/api/allUsers")
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data).toHaveLength(2);
       expect(response.body.data.every((result) => !result.password)).toBe(true);
+    });
+
+    it("returns 401 when no token is provided", async () => {
+      const response = await request(app).get("/api/allUsers");
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(401);
+      expect(response.body.errors.msg).toBe("Token not found");
     });
   });
 
@@ -106,6 +153,7 @@ describe("userRoute", () => {
         .set("Authorization", accessToken)
         .send({ userToFollow: targetUser.userName });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.status).toBe("success");
 
@@ -131,6 +179,7 @@ describe("userRoute", () => {
           userToFollow: targetUser.userName,
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
 
       const updatedUser = await UserModel.findOne({ userName: user.userName });
@@ -139,6 +188,42 @@ describe("userRoute", () => {
       });
       expect(updatedUser.following).toContain(targetUser.userName);
       expect(updatedSpoofed.following).not.toContain(targetUser.userName);
+    });
+
+    it("returns 400 when following yourself", async () => {
+      const response = await request(app)
+        .post("/api/friends/follow")
+        .set("Authorization", accessToken)
+        .send({ userToFollow: user.userName });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(400);
+      expect(response.body.errors.msg).toBe("You cannot follow yourself");
+    });
+
+    it("returns 400 when already following the user", async () => {
+      user.following = [targetUser.userName];
+      await user.save();
+
+      const response = await request(app)
+        .post("/api/friends/follow")
+        .set("Authorization", accessToken)
+        .send({ userToFollow: targetUser.userName });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(400);
+      expect(response.body.errors.msg).toBe("You already follow this user");
+    });
+
+    it("returns 404 when the user to follow doesn't exist", async () => {
+      const response = await request(app)
+        .post("/api/friends/follow")
+        .set("Authorization", accessToken)
+        .send({ userToFollow: "nobody" });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(404);
+      expect(response.body.errors.msg).toBe("User not found");
     });
   });
 
@@ -156,6 +241,7 @@ describe("userRoute", () => {
         .set("Authorization", accessToken)
         .send({ userToUnfollow: targetUser.userName });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
 
       const updatedUser = await UserModel.findOne({ userName: user.userName });
@@ -164,6 +250,35 @@ describe("userRoute", () => {
       });
       expect(updatedUser.following).not.toContain(targetUser.userName);
       expect(updatedTarget.followers).not.toContain(user.userName);
+    });
+
+    it("returns 400 when unfollowing yourself", async () => {
+      const response = await request(app)
+        .post("/api/friends/unfollow")
+        .set("Authorization", accessToken)
+        .send({ userToUnfollow: user.userName });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(400);
+      expect(response.body.errors.msg).toBe("You cannot unfollow yourself");
+    });
+
+    it("returns 400 when not following the user", async () => {
+      const other = await createTestUser({
+        email: "other@example.com",
+        userName: "otheruser",
+      });
+
+      const response = await request(app)
+        .post("/api/friends/unfollow")
+        .set("Authorization", accessToken)
+        .send({ userToUnfollow: other.userName });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(400);
+      expect(response.body.errors.msg).toBe(
+        "You do not currently follow this user"
+      );
     });
   });
 
@@ -176,6 +291,7 @@ describe("userRoute", () => {
         .get(`/api/${user.userName}/following`)
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data).toEqual(
         expect.arrayContaining([
@@ -194,6 +310,7 @@ describe("userRoute", () => {
         .get(`/api/${targetUser.userName}/followers`)
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data).toEqual(
         expect.arrayContaining([
@@ -217,6 +334,7 @@ describe("userRoute", () => {
         .get(`/api/${user.userName}/friendsList`)
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.followingList).toEqual(
         expect.arrayContaining([
@@ -242,6 +360,7 @@ describe("userRoute", () => {
           phoneNumber: "8888888888",
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.user).toMatchObject({
         userName: user.userName,
@@ -264,6 +383,7 @@ describe("userRoute", () => {
           email: targetUser.email,
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.user.userName).toBe(user.userName);
 
@@ -278,6 +398,7 @@ describe("userRoute", () => {
         .get("/api/account/me")
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.user.userName).toBe(user.userName);
       expect(response.body.data.user.email).toBe(user.email);
@@ -301,6 +422,7 @@ describe("userRoute", () => {
         .get("/api/account/me")
         .set("Authorization", socialAccessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.user.userName).toBeUndefined();
       expect(response.body.data.user.isProfileComplete).toBe(false);
@@ -331,6 +453,7 @@ describe("userRoute", () => {
         .set("Authorization", socialAccessToken)
         .send({ userName: "newsocialuser" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.user.userName).toBe("newsocialuser");
       expect(response.body.data.user.isProfileComplete).toBe(true);
@@ -356,6 +479,7 @@ describe("userRoute", () => {
         .set("Authorization", socialAccessToken)
         .send({ userName: "newsocialuser" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
 
       const loginAttempt = await request(app).post("/api/login").send({
@@ -371,6 +495,7 @@ describe("userRoute", () => {
         .set("Authorization", socialAccessToken)
         .send({ userName: user.userName });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(400);
       expect(response.body.errors.msg).toBe(
         "This username is already being used"
@@ -388,6 +513,7 @@ describe("userRoute", () => {
         .set("Authorization", socialAccessToken)
         .send({ userName: "anotherusername" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(400);
       expect(response.body.errors.msg).toBe("Profile is already complete");
     });
@@ -398,6 +524,7 @@ describe("userRoute", () => {
         .set("Authorization", socialAccessToken)
         .send({ userName: "newsocialuser" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
 
       const updated = await UserModel.findById(socialUser._id);
