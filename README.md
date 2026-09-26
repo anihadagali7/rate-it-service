@@ -107,6 +107,20 @@ Expected response:
 { "status": "UP" }
 ```
 
+### Testing password reset locally
+
+`POST /api/forgot-password` emails a one-time reset link through SendGrid. Outside
+production, the server also prints the link to its console, so you can test the flow
+without working email:
+
+```text
+[dev] Password reset link for you@example.com: http://localhost:3000/reset-password?token=...
+```
+
+Open that link with the UI running on port 3000. It's only printed for an **active**
+account that exists in the database you're connected to (dev). Auth routes share a
+rate limit of 20 requests per 15 minutes per IP, and restarting the server resets it.
+
 ## Running tests
 
 Tests use **Jest**, **Supertest**, and an in-memory MongoDB instance. External APIs (TMDB, Spotify, Google, Slack) are mocked in test files.

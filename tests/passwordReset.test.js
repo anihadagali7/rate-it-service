@@ -1,3 +1,7 @@
+// Several requests per test hit the auth rate limiter; raise the ceiling so it
+// doesn't trip (authRateLimiter.test.js covers limiting). Set before the app loads.
+process.env.AUTH_RATE_LIMIT_MAX = "1000";
+
 jest.mock("../client/slackClient", () => ({
   postMessage: jest.fn().mockResolvedValue(undefined),
 }));
@@ -36,6 +40,7 @@ describe("Password reset", () => {
         .post("/api/forgot-password")
         .send({ email: "not-an-email" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(400);
     });
 
@@ -46,6 +51,7 @@ describe("Password reset", () => {
         .post("/api/forgot-password")
         .send({ email: "known@example.com" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.msg).toEqual(expect.any(String));
       expect(emailClient.sendPasswordResetEmail).toHaveBeenCalledTimes(1);
@@ -74,6 +80,7 @@ describe("Password reset", () => {
         .post("/api/forgot-password")
         .send({ email: "nobody-here@example.com" });
 
+      expect(unknownResponse).toSatisfyApiSpec();
       expect(unknownResponse.status).toBe(200);
       expect(unknownResponse.body).toEqual(knownResponse.body);
       expect(emailClient.sendPasswordResetEmail).toHaveBeenCalledTimes(1);
@@ -98,6 +105,7 @@ describe("Password reset", () => {
         .post("/api/forgot-password")
         .send({ email: "inactive@example.com" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(emailClient.sendPasswordResetEmail).not.toHaveBeenCalled();
 
@@ -108,12 +116,68 @@ describe("Password reset", () => {
     });
   });
 
+  describe("dev-only reset link log", () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+
+    beforeEach(() => {
+      jest.spyOn(console, "log").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      process.env.NODE_ENV = originalNodeEnv;
+      console.log.mockRestore();
+    });
+
+    const resetLogLines = () =>
+      console.log.mock.calls
+        .map((args) => args.join(" "))
+        .filter((line) => line.includes("/reset-password?token="));
+
+    it("logs a working reset link outside production", async () => {
+      const user = await createTestUser({ email: "devlog@example.com" });
+
+      await request(app)
+        .post("/api/forgot-password")
+        .send({ email: "devlog@example.com" });
+
+      const [line] = resetLogLines();
+      expect(line).toContain("devlog@example.com");
+      const token = new URL(line.split(": ").pop()).searchParams.get("token");
+      const stored = await UsersModel.findById(user._id).select(
+        "+passwordResetTokenHash"
+      );
+      expect(hashToken(token)).toBe(stored.passwordResetTokenHash);
+    });
+
+    it("never logs the link in production", async () => {
+      await createTestUser({ email: "prodlog@example.com" });
+      process.env.NODE_ENV = "production";
+
+      const response = await request(app)
+        .post("/api/forgot-password")
+        .send({ email: "prodlog@example.com" });
+
+      expect(response.status).toBe(200);
+      expect(emailClient.sendPasswordResetEmail).toHaveBeenCalledTimes(1);
+      expect(resetLogLines()).toEqual([]);
+    });
+
+    it("logs nothing for an unknown email", async () => {
+      await request(app)
+        .post("/api/forgot-password")
+        .send({ email: "nobody@example.com" });
+
+      expect(resetLogLines()).toEqual([]);
+    });
+  });
+
   describe("POST /api/reset-password", () => {
     it("rejects a missing token", async () => {
       const response = await request(app)
         .post("/api/reset-password")
         .send({ newPassword: "NewPassword1!" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(400);
     });
 
@@ -122,6 +186,7 @@ describe("Password reset", () => {
         .post("/api/reset-password")
         .send({ token: "some-token", newPassword: "short" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(400);
     });
 
@@ -130,6 +195,7 @@ describe("Password reset", () => {
         .post("/api/reset-password")
         .send({ token: "not-a-real-token", newPassword: "NewPassword1!" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(400);
       expect(response.body.errors.msg).toBe(
         "This password reset link is invalid or has expired"
@@ -147,6 +213,7 @@ describe("Password reset", () => {
         .post("/api/reset-password")
         .send({ token: "expired-raw-token", newPassword: "NewPassword1!" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(400);
 
       const stillOld = await UsersModel.findById(user._id).select(
@@ -168,6 +235,7 @@ describe("Password reset", () => {
         .post("/api/reset-password")
         .send({ token: "valid-raw-token", newPassword: "NewPassword1!" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.accessToken).toEqual(expect.any(String));
       expect(response.body.data.user.email).toBe("resetme@example.com");
@@ -192,6 +260,7 @@ describe("Password reset", () => {
         email: "resetme@example.com",
         password: "NewPassword1!",
       });
+      expect(loginResponse).toSatisfyApiSpec();
       expect(loginResponse.status).toBe(200);
     });
 
@@ -205,11 +274,13 @@ describe("Password reset", () => {
       const first = await request(app)
         .post("/api/reset-password")
         .send({ token: "one-time-token", newPassword: "NewPassword1!" });
+      expect(first).toSatisfyApiSpec();
       expect(first.status).toBe(200);
 
       const second = await request(app)
         .post("/api/reset-password")
         .send({ token: "one-time-token", newPassword: "AnotherPass1!" });
+      expect(second).toSatisfyApiSpec();
       expect(second.status).toBe(400);
     });
 
@@ -227,6 +298,7 @@ describe("Password reset", () => {
         .post("/api/reset-password")
         .send({ token: "deactivated-token", newPassword: "NewPassword1!" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(400);
 
       const stillOld = await UsersModel.findById(user._id).select(

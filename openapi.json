@@ -947,6 +947,78 @@
         ]
       }
     },
+    "/api/forgot-password": {
+      "post": {
+        "description": "Public. If an active account has this email, issues a one-time reset link (valid for 1 hour) and emails it. The response is identical whether or not the email is registered, so it can't be used to find out which emails have accounts. Outside production, the reset URL is also logged to the server console for local testing.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "format": "email",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "msg": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "msg"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Always the same generic message: \"If an account with that email exists, we've sent a link to reset the password.\""
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "summary": "Request a password reset email",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/api/login": {
       "post": {
         "requestBody": {
@@ -1285,6 +1357,67 @@
         "summary": "List a user's ratings",
         "tags": [
           "Ratings"
+        ]
+      }
+    },
+    "/api/reset-password": {
+      "post": {
+        "description": "Public. Consumes the one-time token from the reset email, sets the new password, and logs the user in, since they have no session at this point. Different from `/api/account/resetPassword`, which changes the password of a logged-in user and needs the current password.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "newPassword": {
+                    "minLength": 8,
+                    "type": "string"
+                  },
+                  "token": {
+                    "description": "The `token` query parameter from the reset link.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "token",
+                  "newPassword"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSuccess"
+                }
+              }
+            },
+            "description": "Password reset; the user is logged in."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed, or `\"This password reset link is invalid or has expired\"` (unknown, expired, already used, or the account is inactive)."
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "summary": "Set a new password with a reset token",
+        "tags": [
+          "Auth"
         ]
       }
     },

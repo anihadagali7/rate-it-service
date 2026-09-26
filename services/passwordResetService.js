@@ -38,9 +38,17 @@ const requestPasswordReset = async (email, response) => {
       // below must go out identically whether this succeeds or not, both to
       // avoid leaking account existence and because a delivery failure here
       // isn't actionable by the requester anyway.
+      const resetUrl = buildResetUrl(rawToken);
       emailClient
-        .sendPasswordResetEmail(user.email, buildResetUrl(rawToken))
+        .sendPasswordResetEmail(user.email, resetUrl)
         .catch(() => {});
+
+      // Local testing aid: the raw token only ever leaves the server in the
+      // email, so without working email there's no way to click through the
+      // flow. Never in production — the URL is a live credential.
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`[dev] Password reset link for ${user.email}: ${resetUrl}`);
+      }
     } else {
       // A real write round trip of comparable cost to `user.save()` above,
       // so response timing doesn't give away whether the email is
