@@ -1,6 +1,7 @@
 # Workflow: build a story
 
-Implement one GitHub Issue end to end and open a pull request for review.
+Implement one GitHub Issue end to end, open a pull request, and get it green and
+review-ready.
 
 > This file is shared by Claude Code (`/build-story`) and Cursor (`/build-story`). An
 > identical copy lives in both `rate-it-ui` and `rate-it-service` — keep them in sync.
@@ -18,6 +19,14 @@ A bare number means the repo you're currently in.
 Do the work in the repo that owns the issue. If you're in the other repo, work in the
 sibling path.
 
+## Story labels
+
+`ready` → `in-progress` → `in-review` → closed when the PR merges (`Closes #<n>`).
+
+- `ready`: refined and approved; free to pick up.
+- `in-progress`: someone (agent or person) is building it. Don't start it.
+- `in-review`: a PR is open. Running `/build-story` again on it resumes at step 7.
+
 ## Steps
 
 ### 1. Read the story
@@ -26,7 +35,15 @@ sibling path.
 gh issue view <n> -R anihadagali7/<repo> --comments
 ```
 
-Stop and tell the user (don't start coding) if:
+- Labeled `in-review`: find its PR with
+  `gh issue view <n> -R anihadagali7/<repo> --json closedByPullRequestsReferences -q '.closedByPullRequestsReferences[].number'`.
+  If that PR is open, check out its branch (`gh pr checkout <pr> -R anihadagali7/<repo>`)
+  and go straight to step 7.
+- Labeled `in-progress`: stop — someone else is on it. Tell the user.
+- Not labeled `ready`: stop and ask the user whether it's approved to build (or suggest
+  `/story` to refine it).
+
+Also stop and tell the user (don't start coding) if:
 - the issue has no acceptance criteria, or is too vague to test → suggest `/story` to refine it;
 - it's size **L** with no split → suggest splitting it;
 - a dependency listed under *Dependencies* is still open. Check with
@@ -36,12 +53,17 @@ Stop and tell the user (don't start coding) if:
 Read `AGENTS.md` in the owning repo (and the other repo's, if the story touches the API
 contract).
 
-### 2. Set up a branch
+### 2. Set up a branch and claim the story
 
 - The working tree must be clean (`git status`). If it isn't, stop and ask — never
   stash, reset, or discard someone else's changes.
 - Start from the latest `master`: `git fetch origin && git switch -c <branch> origin/master`.
 - Branch name: `feature/<n>-<short-slug>` (or `fix/` for bugs, `chore/` for tech debt).
+- Claim it:
+  `gh issue edit <n> -R anihadagali7/<repo> --remove-label ready --add-label in-progress`
+
+If you stop at any later point without opening a PR, put it back: remove `in-progress`,
+add `ready`, and leave an issue comment saying what blocked you.
 
 ### 3. Plan
 
@@ -62,6 +84,10 @@ judgment call the story doesn't cover, show the plan to the user briefly before 
 ### 5. Verify
 
 - Run the full test suite: `npm test` (service) or `npm run test:ci` (ui). All tests must pass.
+- **ui:** also run `npm run build` — CI builds the app and checks Prettier formatting on
+  changed `src/` files.
+- **service:** CI also runs the tests on Node 16.15.0 (prod). Don't use APIs newer than
+  Node 16 (e.g. global `fetch`, `structuredClone`, `Array.prototype.findLast`).
 - **service:** if the local server is running against the **dev** database, exercise
   new endpoints with `curl`. Never touch prod.
 - **ui:** run the app and check the feature in a browser at mobile (375px) and desktop
@@ -77,19 +103,44 @@ git add <files>
 git commit -m "<Imperative summary> (#<n>)"
 git push -u origin <branch>
 gh pr create -R anihadagali7/<repo> --base master --title "<title>" --body-file <file>
+gh issue edit <n> -R anihadagali7/<repo> --remove-label in-progress --add-label in-review
 ```
 
 Fill in the PR body using `.github/pull_request_template.md`. It must include
 `Closes #<n>` and the acceptance criteria as a checklist, each ticked only if it's done
 and verified.
 
-Don't merge the PR — the user reviews and merges.
+### 7. Get the PR green and review-ready
 
-### 7. Report
+**CI.** Wait for checks: `gh pr checks <pr> -R anihadagali7/<repo> --watch`.
+If a check fails, read the failing log (`gh run view <run-id> -R anihadagali7/<repo> --log-failed`),
+fix the cause, commit, push, and watch again. After 3 failed fix attempts, stop and
+report what's failing and what you tried.
+
+**Review comments.** Once CI is green, collect review feedback — automated reviewers
+such as Bugbot can take a few minutes to post, so re-check after CI finishes:
+
+```bash
+gh pr view <pr> -R anihadagali7/<repo> --comments
+gh api repos/anihadagali7/<repo>/pulls/<pr>/comments --jq '.[] | {id, path, line, user: .user.login, body}'
+```
+
+For each unaddressed comment:
+- valid and in scope → fix it, then reply briefly with what changed;
+- out of scope → reply suggesting a follow-up story; don't fix it here;
+- you disagree → reply with your reasoning and leave it for the user to decide.
+
+Push fixes as new commits (never force-push) and return to **CI**. Do at most 2
+review rounds per run; if comments keep coming, stop and report.
+
+Don't merge the PR and don't resolve human reviewers' threads — the user reviews and merges.
+
+### 8. Report
 
 Give the user:
-- the PR URL;
+- the PR URL and its CI status;
 - the acceptance-criteria checklist with status;
+- review comments you addressed, and any left open (with why);
 - anything not done, any deviations from the story, and why;
 - deploy notes: new env vars, migrations/scripts to run, backend dependencies;
 - suggested follow-up stories, if any.
