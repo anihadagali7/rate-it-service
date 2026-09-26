@@ -140,6 +140,26 @@ npm test -- --testPathPattern="wishlist(Service|Route)"
 | Search | `/api/search` |
 | Playlists | `/api/playlist` |
 | Wishlists | `/api/wishlist` |
+| Likes | `/api/likes` |
+| Comments | `/api/comments` |
+
+### OpenAPI spec and interactive docs
+
+The API contract is in [`openapi.json`](openapi.json), generated from `@openapi` comments on
+each route plus [`openapi/components.yaml`](openapi/components.yaml):
+
+```bash
+npm run openapi         # regenerate openapi.json after changing a route's annotation
+npm run openapi:check   # fail if openapi.json is out of date (CI runs this)
+```
+
+When the server runs outside production, it serves Swagger UI at
+[`http://localhost:8080/api/docs`](http://localhost:8080/api/docs) and the raw spec at
+`/api/openapi.json`. To call protected endpoints, click **Authorize** and paste the
+`accessToken` from `/api/login` as is, without a `Bearer ` prefix. Neither route exists in
+production.
+
+Auth and ratings are documented so far; the other areas are being added.
 
 ## Deploying to Heroku
 

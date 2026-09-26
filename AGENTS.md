@@ -16,6 +16,7 @@ npm start                                   # nodemon server.js on :8080
 npm test                                    # full Jest suite (in-memory Mongo)
 npm test -- --testPathPattern="rating"      # one area
 curl http://localhost:8080/api              # health check → { "status": "UP" }
+npm run openapi                             # regenerate openapi.json from @openapi blocks
 ```
 
 Always run `npm test` before opening a PR. CI (`.github/workflows/ci.yml`) runs the
@@ -73,6 +74,28 @@ failures). Handle Mongo duplicate keys with `isDuplicateKeyError` → 409.
 
 Slack notifications are fire-and-forget; never let a Slack failure fail the request.
 
+## OpenAPI spec
+
+The API contract lives in `openapi.json` (OpenAPI 3.0.3). It's **generated**: never edit
+it by hand.
+
+- Each route has an `@openapi` JSDoc block directly above its `router.<method>(...)` call
+  in `routes/*.js`. Shared schemas and reusable responses (`ValidationError`,
+  `TokenNotFound`, `InvalidToken`, `NotFound`, `RateLimited`) are in
+  `openapi/components.yaml`. Add a tag to `scripts/generate-openapi.js` for a new area.
+- **Adding or changing an endpoint:** update its `@openapi` block. Document every status
+  the code can return, including errors and 429 when a rate limiter is attached. Call
+  `expect(response).toSatisfyApiSpec()` in its route tests, then run `npm run openapi`
+  and commit `openapi.json`.
+- CI fails if `openapi.json` is out of date, if a route is missing from the spec (see
+  `tests/openapi.test.js`), or if a tested response doesn't match its schema.
+- `openapi/undocumented-routes.json` lists routes that aren't documented yet. Only
+  shrink it; never add to it.
+- Browse the docs locally at `http://localhost:8080/api/docs` (not served in production).
+  Use **Authorize** with a raw JWT, without a `Bearer ` prefix.
+- Document what the code does. If the behavior looks wrong, record it as a follow-up bug
+  rather than documenting what it should do.
+
 ## Tests
 
 - Jest + Supertest + `mongodb-memory-server`. Tests live in `tests/*.test.js`.
@@ -85,6 +108,9 @@ Slack notifications are fire-and-forget; never let a Slack failure fail the requ
   HTTP-level with Supertest) and a service test (`<area>Service.test.js`). Cover the
   happy path, auth failures (401/403), not-found, and validation errors.
 - New indexes → extend `tests/modelIndexes.test.js`.
+- Route tests for documented endpoints check each response with
+  `expect(response).toSatisfyApiSpec()` (`tests/helpers/openapiMatcher.js`, loaded for
+  every test).
 
 ## Environments & data safety
 

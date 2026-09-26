@@ -53,6 +53,7 @@ describe("Auth flow", () => {
     it("returns service health status", async () => {
       const response = await request(app).get("/api");
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ status: "UP" });
     });
@@ -150,6 +151,7 @@ describe("Auth flow", () => {
         password: validUser.password,
       });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.status).toBe("success");
       expect(response.body.accessToken).toEqual(expect.any(String));
@@ -178,6 +180,7 @@ describe("Auth flow", () => {
           password: LEGACY_PASSWORD,
         });
 
+        expect(response).toSatisfyApiSpec();
         expect(response.status).toBe(200);
         expect(response.body.accessToken).toEqual(expect.any(String));
       });
@@ -188,6 +191,7 @@ describe("Auth flow", () => {
           password: validUser.password,
         });
 
+        expect(response).toSatisfyApiSpec();
         expect(response.status).toBe(401);
         expect(response.body.errors.msg).toBe("Email or password is invalid");
       });
@@ -199,6 +203,7 @@ describe("Auth flow", () => {
         password: "",
       });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(400);
       expect(response.body.errors.msg).toEqual(expect.any(String));
     });
@@ -209,6 +214,7 @@ describe("Auth flow", () => {
         password: "WrongPassword1!",
       });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
       expect(response.body.errors.msg).toBe("Email or password is invalid");
     });
@@ -219,6 +225,7 @@ describe("Auth flow", () => {
         password: validUser.password,
       });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
       expect(response.body.errors.msg).toBe("Email or password is invalid");
     });
@@ -235,6 +242,7 @@ describe("Auth flow", () => {
         password: validUser.password,
       });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
       expect(response.body.errors.msg).toBe("Email or password is invalid");
     });
@@ -250,6 +258,7 @@ describe("Auth flow", () => {
         password: validUser.password,
       });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
       expect(response.body.errors.msg).toBe("Email or password is invalid");
     });
@@ -269,6 +278,7 @@ describe("Auth flow", () => {
         newPassword: "NewPassword1!",
       });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
       expect(response.body.errors.msg).toBe("Token not found");
     });
@@ -282,6 +292,7 @@ describe("Auth flow", () => {
           newPassword: "NewPassword1!",
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(403);
       expect(response.body.errors.msg).toBe("Invalid token");
     });
@@ -300,6 +311,7 @@ describe("Auth flow", () => {
           newPassword: "NewPassword1!",
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(403);
       expect(response.body.errors.msg).toBe("Invalid token");
     });
@@ -313,6 +325,7 @@ describe("Auth flow", () => {
           newPassword: "NewPassword1!",
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(400);
       expect(response.body.errors.msg).toBe("Current password is not valid");
     });
@@ -326,6 +339,7 @@ describe("Auth flow", () => {
           newPassword: "short",
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(400);
       expect(response.body.errors.msg).toBe(
         "New password must be at least 8 characters"
@@ -341,6 +355,7 @@ describe("Auth flow", () => {
           newPassword: "NewPassword1!",
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.status).toBe("success");
       expect(response.body.data.user.password).toBeUndefined();
@@ -349,12 +364,14 @@ describe("Auth flow", () => {
         email: validUser.email,
         password: validUser.password,
       });
+      expect(loginWithOldPassword).toSatisfyApiSpec();
       expect(loginWithOldPassword.status).toBe(401);
 
       const loginWithNewPassword = await request(app).post("/api/login").send({
         email: validUser.email,
         password: "NewPassword1!",
       });
+      expect(loginWithNewPassword).toSatisfyApiSpec();
       expect(loginWithNewPassword.status).toBe(200);
     });
 
@@ -374,18 +391,21 @@ describe("Auth flow", () => {
           newPassword: "HackedPass1!",
         });
 
+      expect(attackerResponse).toSatisfyApiSpec();
       expect(attackerResponse.status).toBe(200);
 
       const attackerLogin = await request(app).post("/api/login").send({
         email: validUser.email,
         password: "HackedPass1!",
       });
+      expect(attackerLogin).toSatisfyApiSpec();
       expect(attackerLogin.status).toBe(200);
 
       const victimLogin = await request(app).post("/api/login").send({
         email: "victim@example.com",
         password: "VictimPass1!",
       });
+      expect(victimLogin).toSatisfyApiSpec();
       expect(victimLogin.status).toBe(200);
       expect(victimSignup.body.data.user.userName).toBe("victimuser");
     });

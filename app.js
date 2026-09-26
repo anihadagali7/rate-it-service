@@ -57,6 +57,12 @@ app.use(
 );
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Swagger UI at /api/docs and the raw spec at /api/openapi.json — dev only.
+if (process.env.NODE_ENV !== "production") {
+  app.use("/api", require("./routes/docsRoute"));
+}
+
 app.use("/api", authenticationRoute);
 app.use("/api/ratings", ratingRoute);
 app.use("/api/media", mediaRoute);
