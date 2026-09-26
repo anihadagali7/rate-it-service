@@ -1,0 +1,325 @@
+# Shared OpenAPI components. swagger-jsdoc merges this file with the
+# `@openapi` blocks in routes/*.js — run `npm run openapi` after editing.
+components:
+  securitySchemes:
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >-
+        The JWT returned by signup/login, sent as the raw header value — no
+        `Bearer ` prefix.
+
+  responses:
+    ValidationError:
+      description: The request body failed validation. `msg` describes the first problem.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    TokenNotFound:
+      description: No `Authorization` header was sent (`"Token not found"`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    InvalidToken:
+      description: >-
+        The token is invalid or expired, or its user is inactive
+        (`"Invalid token"`). The UI logs the user out on this response.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: The requested user or media doesn't exist.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    RateLimited:
+      description: >-
+        Too many requests from this IP (`"Too many requests. Please try again
+        later."`). `RateLimit-*` headers describe the window.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [errors]
+      properties:
+        errors:
+          type: object
+          required: [msg]
+          properties:
+            msg:
+              type: string
+              example: User not found
+
+    ObjectId:
+      type: string
+      pattern: "^[a-f0-9]{24}$"
+      example: 63019b905ccf53564ffb0c84
+
+    # Source: utils/userSerializer.js (PUBLIC_USER_FIELDS). Safe to show any user.
+    PublicUser:
+      type: object
+      required: [_id]
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        userName:
+          type: string
+          description: Missing until a social sign-up completes their profile.
+        firstName:
+          type: string
+        lastName:
+          type: string
+        picture:
+          type: string
+          description: Profile picture URL.
+        followers:
+          type: array
+          description: userNames of followers.
+          items:
+            type: string
+        following:
+          type: array
+          description: userNames this user follows.
+          items:
+            type: string
+
+    # Source: utils/userSerializer.js (ACCOUNT_USER_FIELDS + isProfileComplete).
+    # Only ever returned for the authenticated user's own account.
+    AccountUser:
+      allOf:
+        - $ref: "#/components/schemas/PublicUser"
+        - type: object
+          required: [isProfileComplete]
+          properties:
+            email:
+              type: string
+              format: email
+            phoneNumber:
+              type: string
+            isActive:
+              type: boolean
+            isAdmin:
+              type: boolean
+            isEmailVerified:
+              type: boolean
+            isProfileComplete:
+              type: boolean
+              description: False until the user has a userName.
+
+    AuthSuccess:
+      type: object
+      required: [status, accessToken, data]
+      properties:
+        status:
+          type: string
+          enum: [success]
+        accessToken:
+          type: string
+          description: JWT to send as the `Authorization` header.
+        data:
+          type: object
+          required: [user]
+          properties:
+            user:
+              $ref: "#/components/schemas/AccountUser"
+
+    AccountUserResponse:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: object
+          required: [user]
+          properties:
+            user:
+              $ref: "#/components/schemas/AccountUser"
+
+    # Source: repository/mediaModel.js
+    Media:
+      type: object
+      required: [_id, name, mediaType]
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        name:
+          type: string
+        mediaType:
+          type: string
+          enum: [MOVIE, BOOK, PODCAST, TV, MUSIC, THEATRE]
+        mediaId:
+          type: string
+          description: ID in the source catalog (TMDB, Spotify, Google Books).
+        picture:
+          type: string
+        description:
+          type: string
+        tagLine:
+          type: string
+        genre:
+          type: string
+        album:
+          type: string
+        dateReleased:
+          type: string
+          format: date-time
+        artist:
+          type: array
+          items:
+            type: string
+        author:
+          type: array
+          items:
+            type: string
+        producer:
+          type: array
+          items:
+            type: string
+        director:
+          type: array
+          items:
+            type: string
+        host:
+          type: array
+          items:
+            type: string
+        cast:
+          type: array
+          items:
+            type: string
+        __v:
+          type: integer
+
+    # Source: repository/ratingModel.js (as stored).
+    Rating:
+      type: object
+      required: [_id, media, ratedBy, rating]
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        media:
+          $ref: "#/components/schemas/ObjectId"
+        ratedBy:
+          $ref: "#/components/schemas/ObjectId"
+        rating:
+          type: string
+          description: The score. Stored as a string.
+          example: "8"
+        comments:
+          type: string
+          description: The review text.
+        isActive:
+          type: boolean
+        dateCreated:
+          type: string
+          format: date-time
+        dateUpdated:
+          type: string
+          format: date-time
+        __v:
+          type: integer
+
+    # Source: services/ratingService.js (prepareRatingsList).
+    RatingComment:
+      type: object
+      required: [_id, text, commentedBy, likeCount, likedByCurrentUser]
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        text:
+          type: string
+        dateCreated:
+          type: string
+          format: date-time
+        commentedBy:
+          nullable: true
+          description: Null if the commenter no longer exists.
+          allOf:
+            - $ref: "#/components/schemas/PublicUser"
+        likeCount:
+          type: integer
+        likedByCurrentUser:
+          type: boolean
+          description: Always false for anonymous requests.
+
+    # Source: services/ratingService.js (prepareRatingsList). A stored rating
+    # with media, author, likes and comments filled in.
+    RatingListItem:
+      type: object
+      required:
+        - _id
+        - rating
+        - media
+        - ratedBy
+        - likeCount
+        - likedByCurrentUser
+        - commentList
+        - commentCount
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        rating:
+          type: string
+          example: "8"
+        comments:
+          type: string
+        isActive:
+          type: boolean
+        dateCreated:
+          type: string
+          format: date-time
+        dateUpdated:
+          type: string
+          format: date-time
+        __v:
+          type: integer
+        media:
+          nullable: true
+          description: Null if the media no longer exists.
+          allOf:
+            - $ref: "#/components/schemas/Media"
+        ratedBy:
+          nullable: true
+          description: Null if the author no longer exists.
+          allOf:
+            - $ref: "#/components/schemas/PublicUser"
+        likeCount:
+          type: integer
+        likedByCurrentUser:
+          type: boolean
+          description: Always false for anonymous requests.
+        commentList:
+          type: array
+          description: Oldest first.
+          items:
+            $ref: "#/components/schemas/RatingComment"
+        commentCount:
+          type: integer
+
+    RatingsListResponse:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: object
+          required: [ratingsList]
+          properties:
+            ratingsList:
+              type: array
+              description: Newest first.
+              items:
+                $ref: "#/components/schemas/RatingListItem"

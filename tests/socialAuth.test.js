@@ -62,6 +62,7 @@ describe("Social auth flow", () => {
         .post("/api/auth/google")
         .send({ code: "auth-code" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.accessToken).toEqual(expect.any(String));
       expect(response.body.data.user.userName).toBeUndefined();
@@ -89,6 +90,7 @@ describe("Social auth flow", () => {
         .post("/api/auth/google")
         .send({ code: "auth-code" });
 
+      expect(second).toSatisfyApiSpec();
       expect(second.status).toBe(200);
       expect(second.body.data.user._id).toBe(first.body.data.user._id);
 
@@ -115,6 +117,7 @@ describe("Social auth flow", () => {
         .post("/api/auth/google")
         .send({ code: "auth-code" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.user._id).toBe(existing._id.toString());
       expect(response.body.data.user.isProfileComplete).toBe(true);
@@ -127,6 +130,7 @@ describe("Social auth flow", () => {
       const loginWithOldPassword = await request(app)
         .post("/api/login")
         .send({ email: "linkme@example.com", password: "Password1!" });
+      expect(loginWithOldPassword).toSatisfyApiSpec();
       expect(loginWithOldPassword.status).toBe(200);
     });
 
@@ -147,6 +151,7 @@ describe("Social auth flow", () => {
         .post("/api/auth/google")
         .send({ code: "auth-code" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(409);
 
       const untouched = await UsersModel.findById(existing._id);
@@ -167,6 +172,7 @@ describe("Social auth flow", () => {
         .post("/api/auth/google")
         .send({ code: "bad-code" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
       expect(response.body.errors.msg).toBe("Google authentication failed");
     });
@@ -174,6 +180,7 @@ describe("Social auth flow", () => {
     it("rejects a request with no code", async () => {
       const response = await request(app).post("/api/auth/google").send({});
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(400);
     });
   });
@@ -192,6 +199,7 @@ describe("Social auth flow", () => {
         .post("/api/auth/facebook")
         .send({ accessToken: "fb-access-token" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.data.user.isProfileComplete).toBe(false);
     });
@@ -213,6 +221,7 @@ describe("Social auth flow", () => {
         .post("/api/auth/facebook")
         .send({ accessToken: "fb-access-token" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.user._id).toBe(existing._id.toString());
     });
@@ -226,6 +235,7 @@ describe("Social auth flow", () => {
         .post("/api/auth/facebook")
         .send({ accessToken: "bad-token" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
       expect(response.body.errors.msg).toBe("Facebook authentication failed");
     });
@@ -246,6 +256,7 @@ describe("Social auth flow", () => {
           user: { name: { firstName: "Ali", lastName: "Pine" } },
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.data.user.firstName).toBe("Ali");
       expect(response.body.data.user.lastName).toBe("Pine");
@@ -272,6 +283,7 @@ describe("Social auth flow", () => {
           user: { name: { firstName: "Forged", lastName: "Rename" } },
         });
 
+      expect(secondResponse).toSatisfyApiSpec();
       expect(secondResponse.status).toBe(200);
       expect(secondResponse.body.data.user.firstName).toBe("Original");
     });
@@ -285,6 +297,7 @@ describe("Social auth flow", () => {
         .post("/api/auth/apple")
         .send({ identityToken: "bad-token" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
       expect(response.body.errors.msg).toBe("Apple authentication failed");
     });
