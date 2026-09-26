@@ -1,0 +1,1364 @@
+{
+  "components": {
+    "responses": {
+      "InvalidToken": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        },
+        "description": "The token is invalid or expired, or its user is inactive (`\"Invalid token\"`). The UI logs the user out on this response."
+      },
+      "NotFound": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        },
+        "description": "The requested user or media doesn't exist."
+      },
+      "RateLimited": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        },
+        "description": "Too many requests from this IP (`\"Too many requests. Please try again later.\"`). `RateLimit-*` headers describe the window."
+      },
+      "ServerError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        },
+        "description": "An unexpected error (`\"Something went wrong. Please try again.\"`). Details are logged on the server, never returned."
+      },
+      "TokenNotFound": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        },
+        "description": "No `Authorization` header was sent (`\"Token not found\"`)."
+      },
+      "ValidationError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        },
+        "description": "The request body failed validation. `msg` describes the first problem."
+      }
+    },
+    "schemas": {
+      "AccountUser": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PublicUser"
+          },
+          {
+            "properties": {
+              "email": {
+                "format": "email",
+                "type": "string"
+              },
+              "isActive": {
+                "type": "boolean"
+              },
+              "isAdmin": {
+                "type": "boolean"
+              },
+              "isEmailVerified": {
+                "type": "boolean"
+              },
+              "isProfileComplete": {
+                "description": "False until the user has a userName.",
+                "type": "boolean"
+              },
+              "phoneNumber": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "isProfileComplete"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "AccountUserResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "user": {
+                "$ref": "#/components/schemas/AccountUser"
+              }
+            },
+            "required": [
+              "user"
+            ],
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "success"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "data"
+        ],
+        "type": "object"
+      },
+      "AuthSuccess": {
+        "properties": {
+          "accessToken": {
+            "description": "JWT to send as the `Authorization` header.",
+            "type": "string"
+          },
+          "data": {
+            "properties": {
+              "user": {
+                "$ref": "#/components/schemas/AccountUser"
+              }
+            },
+            "required": [
+              "user"
+            ],
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "success"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "accessToken",
+          "data"
+        ],
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "errors": {
+            "properties": {
+              "msg": {
+                "example": "User not found",
+                "type": "string"
+              }
+            },
+            "required": [
+              "msg"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "errors"
+        ],
+        "type": "object"
+      },
+      "Media": {
+        "properties": {
+          "__v": {
+            "type": "integer"
+          },
+          "_id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "album": {
+            "type": "string"
+          },
+          "artist": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "author": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "cast": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "dateReleased": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "director": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "genre": {
+            "type": "string"
+          },
+          "host": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "mediaId": {
+            "description": "ID in the source catalog (TMDB, Spotify, Google Books).",
+            "type": "string"
+          },
+          "mediaType": {
+            "enum": [
+              "MOVIE",
+              "BOOK",
+              "PODCAST",
+              "TV",
+              "MUSIC",
+              "THEATRE"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "picture": {
+            "type": "string"
+          },
+          "producer": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "tagLine": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_id",
+          "name",
+          "mediaType"
+        ],
+        "type": "object"
+      },
+      "ObjectId": {
+        "example": "63019b905ccf53564ffb0c84",
+        "pattern": "^[a-f0-9]{24}$",
+        "type": "string"
+      },
+      "PublicUser": {
+        "properties": {
+          "_id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "followers": {
+            "description": "userNames of followers.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "following": {
+            "description": "userNames this user follows.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "picture": {
+            "description": "Profile picture URL.",
+            "type": "string"
+          },
+          "userName": {
+            "description": "Missing until a social sign-up completes their profile.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "_id"
+        ],
+        "type": "object"
+      },
+      "Rating": {
+        "properties": {
+          "__v": {
+            "type": "integer"
+          },
+          "_id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "comments": {
+            "description": "The review text.",
+            "type": "string"
+          },
+          "dateCreated": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "dateUpdated": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "media": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "ratedBy": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "rating": {
+            "description": "The score. Stored as a string.",
+            "example": "8",
+            "type": "string"
+          }
+        },
+        "required": [
+          "_id",
+          "media",
+          "ratedBy",
+          "rating"
+        ],
+        "type": "object"
+      },
+      "RatingComment": {
+        "properties": {
+          "_id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "commentedBy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicUser"
+              }
+            ],
+            "description": "Null if the commenter no longer exists.",
+            "nullable": true
+          },
+          "dateCreated": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "likeCount": {
+            "type": "integer"
+          },
+          "likedByCurrentUser": {
+            "description": "Always false for anonymous requests.",
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_id",
+          "text",
+          "commentedBy",
+          "likeCount",
+          "likedByCurrentUser"
+        ],
+        "type": "object"
+      },
+      "RatingListItem": {
+        "properties": {
+          "__v": {
+            "type": "integer"
+          },
+          "_id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "commentCount": {
+            "type": "integer"
+          },
+          "commentList": {
+            "description": "Oldest first.",
+            "items": {
+              "$ref": "#/components/schemas/RatingComment"
+            },
+            "type": "array"
+          },
+          "comments": {
+            "type": "string"
+          },
+          "dateCreated": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "dateUpdated": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "likeCount": {
+            "type": "integer"
+          },
+          "likedByCurrentUser": {
+            "description": "Always false for anonymous requests.",
+            "type": "boolean"
+          },
+          "media": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Media"
+              }
+            ],
+            "description": "Null if the media no longer exists.",
+            "nullable": true
+          },
+          "ratedBy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicUser"
+              }
+            ],
+            "description": "Null if the author no longer exists.",
+            "nullable": true
+          },
+          "rating": {
+            "example": "8",
+            "type": "string"
+          }
+        },
+        "required": [
+          "_id",
+          "rating",
+          "media",
+          "ratedBy",
+          "likeCount",
+          "likedByCurrentUser",
+          "commentList",
+          "commentCount"
+        ],
+        "type": "object"
+      },
+      "RatingsListResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "ratingsList": {
+                "description": "Newest first.",
+                "items": {
+                  "$ref": "#/components/schemas/RatingListItem"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "ratingsList"
+            ],
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "success"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "data"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "tokenAuth": {
+        "description": "The JWT returned by signup/login, sent as the raw header value — no `Bearer ` prefix.",
+        "in": "header",
+        "name": "Authorization",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "API for Rate It, a social app for rating movies, TV, music, and books. Success responses are `{ status: \"success\", data: { ... } }`; errors are `{ errors: { msg } }`.",
+    "title": "Rate It API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/api": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "status": {
+                      "enum": [
+                        "UP"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "The service is running."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "summary": "Health check",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/account/resetPassword": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "currentPassword": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "minLength": 8,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "currentPassword",
+                  "newPassword"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountUserResponse"
+                }
+              }
+            },
+            "description": "Password changed."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed, or `\"Current password is not valid\"`."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Change the logged-in user's password",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/apple": {
+      "post": {
+        "description": "Logs in the user linked to this Apple account. If there isn't one, links an existing account with the same verified email, or creates a new account. New accounts have no userName yet (`isProfileComplete: false`) until they complete their profile.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "identityToken": {
+                    "description": "Identity token (JWT) from Sign in with Apple.",
+                    "type": "string"
+                  },
+                  "user": {
+                    "description": "Apple sends the user's name only on the first authorization. Used only when creating a new account.",
+                    "properties": {
+                      "name": {
+                        "properties": {
+                          "firstName": {
+                            "type": "string"
+                          },
+                          "lastName": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "identityToken"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSuccess"
+                }
+              }
+            },
+            "description": "Logged in to an existing or newly linked account."
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSuccess"
+                }
+              }
+            },
+            "description": "A new account was created."
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Apple rejected the credential (`\"Apple authentication failed\"`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "An account with this email exists, but Apple hasn't verified the email, so it can't be linked safely."
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "summary": "Sign in with Apple",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/facebook": {
+      "post": {
+        "description": "Logs in the user linked to this Facebook account. If there isn't one, links an existing account with the same verified email, or creates a new account. New accounts have no userName yet (`isProfileComplete: false`) until they complete their profile.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "accessToken": {
+                    "description": "Access token from the Facebook Login SDK.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "accessToken"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSuccess"
+                }
+              }
+            },
+            "description": "Logged in to an existing or newly linked account."
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSuccess"
+                }
+              }
+            },
+            "description": "A new account was created."
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Facebook rejected the credential (`\"Facebook authentication failed\"`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "An account with this email exists, but Facebook hasn't verified the email, so it can't be linked safely."
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "summary": "Sign in with Facebook",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/google": {
+      "post": {
+        "description": "Logs in the user linked to this Google account. If there isn't one, links an existing account with the same verified email, or creates a new account. New accounts have no userName yet (`isProfileComplete: false`) until they complete their profile.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "code": {
+                    "description": "Authorization code from Google's OAuth popup.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSuccess"
+                }
+              }
+            },
+            "description": "Logged in to an existing or newly linked account."
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSuccess"
+                }
+              }
+            },
+            "description": "A new account was created."
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Google rejected the credential (`\"Google authentication failed\"`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "An account with this email exists, but Google hasn't verified the email, so it can't be linked safely."
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "summary": "Sign in with Google",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/create-user": {
+      "post": {
+        "description": "Creates an active account, sends a verification email (without waiting for it), and returns a token so the user is logged in right away.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "format": "email",
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "minLength": 8,
+                    "type": "string"
+                  },
+                  "phoneNumber": {
+                    "type": "string"
+                  },
+                  "userName": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "firstName",
+                  "lastName",
+                  "email",
+                  "password",
+                  "userName"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSuccess"
+                }
+              }
+            },
+            "description": "Account created."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed, or the email or username is already taken (`\"This email is already being used\"`, `\"This username is already being used\"`)."
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "summary": "Sign up with email and password",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/login": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "format": "email",
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSuccess"
+                }
+              }
+            },
+            "description": "Logged in."
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Email or password is invalid\"` — the same message for an unknown email, a wrong password, an inactive account, or a social-only account with no password."
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "summary": "Log in with email and password",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/ratings": {
+      "post": {
+        "description": "Creates the logged-in user's rating for a media item (one per user per media). The rater always comes from the token; a userName in the body is ignored.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "comments": {
+                    "description": "Review text.",
+                    "type": "string"
+                  },
+                  "mediaId": {
+                    "description": "The media's catalog `mediaId` (not its `_id`).",
+                    "type": "string"
+                  },
+                  "rating": {
+                    "description": "The score. Stored as a string.",
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "mediaId",
+                  "rating"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "newRating": {
+                          "$ref": "#/components/schemas/Rating"
+                        }
+                      },
+                      "required": [
+                        "newRating"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Rating created."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"You have already rated this media\"`."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Rate a media item",
+        "tags": [
+          "Ratings"
+        ]
+      }
+    },
+    "/api/ratings/explore": {
+      "get": {
+        "description": "Public. Anonymous callers get every rating. With a valid token, ratings by the caller and by people they follow are left out, and `likedByCurrentUser` is filled in.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RatingsListResponse"
+                }
+              }
+            },
+            "description": "Ratings, newest first."
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {},
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Discover ratings",
+        "tags": [
+          "Ratings"
+        ]
+      }
+    },
+    "/api/ratings/following": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RatingsListResponse"
+                }
+              }
+            },
+            "description": "Ratings, newest first."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Feed of ratings from people the user follows",
+        "tags": [
+          "Ratings"
+        ]
+      }
+    },
+    "/api/ratings/media/{mediaId}": {
+      "get": {
+        "description": "Public. With a valid token, `likedByCurrentUser` is filled in for the caller.",
+        "parameters": [
+          {
+            "description": "The media's catalog `mediaId` (not its `_id`).",
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RatingsListResponse"
+                }
+              }
+            },
+            "description": "Ratings, newest first."
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {},
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "List ratings for a media item",
+        "tags": [
+          "Ratings"
+        ]
+      }
+    },
+    "/api/ratings/user/{userName}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RatingsListResponse"
+                }
+              }
+            },
+            "description": "Ratings, newest first."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "List a user's ratings",
+        "tags": [
+          "Ratings"
+        ]
+      }
+    },
+    "/api/verify-email": {
+      "post": {
+        "description": "Consumes the one-time token from the verification email link.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "token"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountUserResponse"
+                }
+              }
+            },
+            "description": "Email verified."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Missing token, or `\"This verification link is invalid or has expired\"`."
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "summary": "Verify an email address",
+        "tags": [
+          "Auth"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health"
+    },
+    {
+      "description": "Signup, login, social sign-in, email verification, password",
+      "name": "Auth"
+    },
+    {
+      "name": "Ratings"
+    }
+  ]
+}

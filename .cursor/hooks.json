@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeReadFile": [
+      {
+        "command": "bash .agents/hooks/block-env-read.sh",
+        "timeout": 5
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "bash .agents/hooks/guard-shell.sh",
+        "timeout": 10
+      }
+    ]
+  }
+}

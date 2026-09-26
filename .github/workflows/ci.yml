@@ -7,6 +7,7 @@ on:
 
 jobs:
   test:
+    # Keep the job name stable: branch protection requires a check named "test".
     name: test
     runs-on: ubuntu-latest
     steps:
@@ -14,11 +15,16 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # Same major version Heroku uses (package.json engines).
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Check openapi.json is up to date
+        # On failure: run `npm run openapi` locally and commit openapi.json.
+        run: npm run openapi:check
 
       - name: Run tests
         run: npm test

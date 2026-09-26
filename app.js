@@ -1,6 +1,5 @@
 /* Imports */
 const express = require("express");
-const bodyParser = require("body-parser");
 require("dotenv").config();
 const cors = require("cors");
 
@@ -14,6 +13,7 @@ const wishlistRoute = require("./routes/wishlistRoute");
 const playlistRoute = require("./routes/playlistRoute");
 const likeRoute = require("./routes/likeRoute");
 const commentRoute = require("./routes/commentRoute");
+const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
@@ -56,7 +56,21 @@ app.use(
   })
 );
 app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
+// Express 5 leaves request.body undefined when nothing was parsed (no body, or a
+// non-JSON content type). Routes destructure it, so keep Express 4's `{}`.
+app.use((request, response, next) => {
+  if (request.body === undefined) {
+    request.body = {};
+  }
+  next();
+});
+
+// Swagger UI at /api/docs and the raw spec at /api/openapi.json — dev only.
+if (process.env.NODE_ENV !== "production") {
+  app.use("/api", require("./routes/docsRoute"));
+}
+
 app.use("/api", authenticationRoute);
 app.use("/api/ratings", ratingRoute);
 app.use("/api/media", mediaRoute);
@@ -66,5 +80,8 @@ app.use("/api/wishlist", wishlistRoute);
 app.use("/api/playlist", playlistRoute);
 app.use("/api/likes", likeRoute);
 app.use("/api/comments", commentRoute);
+
+// Must be registered last.
+app.use(errorHandler);
 
 module.exports = app;

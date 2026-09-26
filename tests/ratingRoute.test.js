@@ -11,6 +11,8 @@ const {
   createTestUser,
   createTestMedia,
   createTestRating,
+  createTestLike,
+  createTestComment,
 } = require("./helpers/seed");
 
 describe("ratingRoute", () => {
@@ -59,6 +61,7 @@ describe("ratingRoute", () => {
         comments: "Route rating",
       });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
       expect(response.body.errors.msg).toBe("Token not found");
     });
@@ -73,6 +76,7 @@ describe("ratingRoute", () => {
           comments: "Route rating",
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.status).toBe("success");
       expect(response.body.data.newRating).toMatchObject({
@@ -97,6 +101,7 @@ describe("ratingRoute", () => {
           userName: otherUser.userName,
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
 
       const storedRating = await RatingModel.findOne({
@@ -113,6 +118,7 @@ describe("ratingRoute", () => {
         `/api/ratings/user/${user.userName}`
       );
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
     });
 
@@ -123,6 +129,7 @@ describe("ratingRoute", () => {
         .get(`/api/ratings/user/${user.userName}`)
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.ratingsList).toEqual(
         expect.arrayContaining([
@@ -143,6 +150,7 @@ describe("ratingRoute", () => {
         `/api/ratings/media/${media.mediaId}`
       );
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.ratingsList).toEqual(
         expect.arrayContaining([
@@ -156,6 +164,7 @@ describe("ratingRoute", () => {
         .get(`/api/ratings/media/${media.mediaId}`)
         .set("Authorization", "invalid.token.value");
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(403);
       expect(response.body.errors.msg).toBe("Invalid token");
     });
@@ -167,6 +176,7 @@ describe("ratingRoute", () => {
         .get(`/api/ratings/media/${media.mediaId}`)
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.ratingsList).toEqual(
         expect.arrayContaining([
@@ -180,11 +190,46 @@ describe("ratingRoute", () => {
   });
 
   describe("GET /api/ratings/explore", () => {
+    it("includes likes and comments in the documented shape", async () => {
+      const rating = await createTestRating(otherUser, media, {
+        comments: "Commented rating",
+      });
+      await createTestLike(user, rating);
+      await createTestComment(followedUser, rating, { text: "Agreed!" });
+
+      const response = await request(app)
+        .get("/api/ratings/explore")
+        .set("Authorization", accessToken);
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(200);
+      const [item] = response.body.data.ratingsList;
+      expect(item).toEqual(
+        expect.objectContaining({
+          likeCount: 1,
+          likedByCurrentUser: true,
+          commentCount: 1,
+          media: expect.objectContaining({ mediaId: media.mediaId }),
+          ratedBy: expect.objectContaining({ userName: otherUser.userName }),
+        })
+      );
+      expect(item.commentList[0]).toEqual(
+        expect.objectContaining({
+          text: "Agreed!",
+          likeCount: 0,
+          commentedBy: expect.objectContaining({
+            userName: followedUser.userName,
+          }),
+        })
+      );
+    });
+
     it("returns ratings without authentication", async () => {
       await createTestRating(user, media, { comments: "Explore rating" });
 
       const response = await request(app).get("/api/ratings/explore");
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.ratingsList).toEqual(
         expect.arrayContaining([
@@ -218,6 +263,7 @@ describe("ratingRoute", () => {
         .get("/api/ratings/explore")
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       const ratingsList = response.body.data.ratingsList;
       expect(ratingsList).toHaveLength(1);
@@ -232,6 +278,7 @@ describe("ratingRoute", () => {
 
       const response = await request(app).get("/api/ratings/explore");
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       const ratedBy = response.body.data.ratingsList[0].ratedBy;
       expect(ratedBy).toMatchObject({
@@ -250,6 +297,7 @@ describe("ratingRoute", () => {
     it("requires authentication", async () => {
       const response = await request(app).get("/api/ratings/following");
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
     });
 
@@ -266,6 +314,7 @@ describe("ratingRoute", () => {
         .get("/api/ratings/following")
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       const ratingsList = response.body.data.ratingsList;
       expect(ratingsList).toHaveLength(1);

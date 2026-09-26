@@ -18,7 +18,7 @@ Protected routes require a valid JWT in the `Authorization` header. The authenti
 
 ## Prerequisites
 
-- Node.js (see `engines` in `package.json`; currently `16.15.0`)
+- Node.js 24 (see `engines` in `package.json`; `nvm use` picks it up from `.nvmrc`)
 - MongoDB database (local or hosted, e.g. MongoDB Atlas)
 - API keys for external services (see Environment variables below)
 
@@ -140,6 +140,26 @@ npm test -- --testPathPattern="wishlist(Service|Route)"
 | Search | `/api/search` |
 | Playlists | `/api/playlist` |
 | Wishlists | `/api/wishlist` |
+| Likes | `/api/likes` |
+| Comments | `/api/comments` |
+
+### OpenAPI spec and interactive docs
+
+The API contract is in [`openapi.json`](openapi.json), generated from `@openapi` comments on
+each route plus [`openapi/components.yaml`](openapi/components.yaml):
+
+```bash
+npm run openapi         # regenerate openapi.json after changing a route's annotation
+npm run openapi:check   # fail if openapi.json is out of date (CI runs this)
+```
+
+When the server runs outside production, it serves Swagger UI at
+[`http://localhost:8080/api/docs`](http://localhost:8080/api/docs) and the raw spec at
+`/api/openapi.json`. To call protected endpoints, click **Authorize** and paste the
+`accessToken` from `/api/login` as is, without a `Bearer ` prefix. Neither route exists in
+production.
+
+Auth and ratings are documented so far; the other areas are being added.
 
 ## Deploying to Heroku
 
@@ -148,6 +168,9 @@ The app includes a `Procfile` that starts the server with:
 ```text
 web: node server.js
 ```
+
+Heroku uses the Node version from `engines` in `package.json` (currently `24.x`). Node 24
+needs the `heroku-24` stack; check it with `heroku stack -a <app>`.
 
 ### First-time setup
 

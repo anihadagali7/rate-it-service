@@ -43,6 +43,7 @@ describe("Email verification", () => {
         .post("/api/create-user")
         .send(validUser);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.data.user.isEmailVerified).toBe(false);
       expect(emailClient.sendVerificationEmail).toHaveBeenCalledTimes(1);
@@ -69,6 +70,7 @@ describe("Email verification", () => {
         .post("/api/create-user")
         .send(validUser);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.data.user.email).toBe(validUser.email);
     });
@@ -78,6 +80,7 @@ describe("Email verification", () => {
     it("rejects a missing token", async () => {
       const response = await request(app).post("/api/verify-email").send({});
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(400);
     });
 
@@ -86,6 +89,7 @@ describe("Email verification", () => {
         .post("/api/verify-email")
         .send({ token: "not-a-real-token" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(400);
       expect(response.body.errors.msg).toBe(
         "This verification link is invalid or has expired"
@@ -107,6 +111,7 @@ describe("Email verification", () => {
         .post("/api/verify-email")
         .send({ token: "expired-raw-token" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(400);
 
       const stillUnverified = await UsersModel.findById(user._id);
@@ -128,6 +133,7 @@ describe("Email verification", () => {
         .post("/api/verify-email")
         .send({ token: "valid-raw-token" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.user.isEmailVerified).toBe(true);
 
@@ -153,11 +159,13 @@ describe("Email verification", () => {
       const first = await request(app)
         .post("/api/verify-email")
         .send({ token: "one-time-token" });
+      expect(first).toSatisfyApiSpec();
       expect(first.status).toBe(200);
 
       const second = await request(app)
         .post("/api/verify-email")
         .send({ token: "one-time-token" });
+      expect(second).toSatisfyApiSpec();
       expect(second.status).toBe(400);
     });
   });
@@ -235,6 +243,7 @@ describe("Email verification", () => {
       const staleAttempt = await request(app)
         .post("/api/verify-email")
         .send({ token: "stale-token" });
+      expect(staleAttempt).toSatisfyApiSpec();
       expect(staleAttempt.status).toBe(400);
     });
   });
