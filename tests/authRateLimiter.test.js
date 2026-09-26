@@ -123,6 +123,7 @@ describe("auth route rate limiting", () => {
       .set("Authorization", accessToken)
       .set("X-Forwarded-For", "10.1.0.5");
 
+    expect(blockedResponse).toSatisfyApiSpec();
     expect(blockedResponse.status).toBe(429);
   });
 });

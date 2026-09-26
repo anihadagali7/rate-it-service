@@ -63,6 +63,7 @@ describe("public route rate limiting", () => {
       .get("/api/media/movie/info/limit-movie-2")
       .set("X-Forwarded-For", "10.0.0.2");
 
+    expect(blockedResponse).toSatisfyApiSpec();
     expect(blockedResponse.status).toBe(429);
     expect(blockedResponse.body.errors.msg).toBe(
       "Too many requests. Please try again later."

@@ -49,6 +49,7 @@ describe("PUT /api/account/picture", () => {
         contentType: "image/png",
       });
 
+    expect(response).toSatisfyApiSpec();
     expect(response.status).toBe(401);
   });
 
@@ -57,6 +58,7 @@ describe("PUT /api/account/picture", () => {
       .put("/api/account/picture")
       .set("Authorization", accessToken);
 
+    expect(response).toSatisfyApiSpec();
     expect(response.status).toBe(400);
     expect(response.body.errors.msg).toBe("No image file was provided");
     expect(cloudinaryClient.uploadProfilePicture).not.toHaveBeenCalled();
@@ -71,6 +73,7 @@ describe("PUT /api/account/picture", () => {
         contentType: "text/plain",
       });
 
+    expect(response).toSatisfyApiSpec();
     expect(response.status).toBe(400);
     expect(cloudinaryClient.uploadProfilePicture).not.toHaveBeenCalled();
   });
@@ -86,6 +89,7 @@ describe("PUT /api/account/picture", () => {
         contentType: "image/png",
       });
 
+    expect(response).toSatisfyApiSpec();
     expect(response.status).toBe(400);
     expect(cloudinaryClient.uploadProfilePicture).not.toHaveBeenCalled();
   });
@@ -103,6 +107,7 @@ describe("PUT /api/account/picture", () => {
         contentType: "image/png",
       });
 
+    expect(response).toSatisfyApiSpec();
     expect(response.status).toBe(200);
     expect(response.body.data.user.picture).toBe(
       "https://res.cloudinary.com/rateit/image/upload/v1/avatar.png"
@@ -131,6 +136,7 @@ describe("PUT /api/account/picture", () => {
         contentType: "image/png",
       });
 
+    expect(response).toSatisfyApiSpec();
     expect(response.status).toBe(502);
     expect(response.body.errors.msg).toEqual(expect.any(String));
 
@@ -153,6 +159,7 @@ describe("PUT /api/account/picture", () => {
         contentType: "image/png",
       });
 
+    expect(response).toSatisfyApiSpec();
     expect(response.status).toBe(400);
     expect(response.body.errors.msg).toEqual(expect.any(String));
   });
@@ -173,6 +180,7 @@ describe("PUT /api/account/picture", () => {
         contentType: "image/png",
       });
 
+    expect(response).toSatisfyApiSpec();
     expect(response.status).toBe(500);
     expect(response.body.errors.msg).toEqual(expect.any(String));
 

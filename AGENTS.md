@@ -92,10 +92,11 @@ it by hand.
 
 - Each route has an `@openapi` JSDoc block directly above its `router.<method>(...)` call
   in `routes/*.js`. Shared schemas and reusable responses (`ValidationError`,
-  `TokenNotFound`, `InvalidToken`, `NotFound`, `RateLimited`) are in
+  `TokenNotFound`, `InvalidToken`, `NotFound`, `RateLimited`, `BadGateway`) are in
   `openapi/components.yaml`. Add a tag to `scripts/generate-openapi.js` for a new area.
 - **Adding or changing an endpoint:** update its `@openapi` block. Document every status
-  the code can return, including errors, 429 when a rate limiter is attached, and
+  the code can return, including errors, 429 when a rate limiter is attached, 502
+  (`BadGateway`) when it calls an external API, and
   `500: $ref: "#/components/responses/ServerError"` on every operation. Call
   `expect(response).toSatisfyApiSpec()` in its route tests, then run `npm run openapi`
   and commit `openapi.json`.
