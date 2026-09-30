@@ -107,7 +107,10 @@ judgment call the story doesn't cover, show the plan to the user briefly before 
 - **ui:** also run `npm run typecheck` and `npm run build`. CI type-checks, builds the
   app, and checks Prettier formatting on changed `src/` files.
 - **service:** if the local server is running against the **dev** database, exercise
-  new endpoints with `curl`. Never touch prod.
+  new endpoints with `curl`. Never touch prod. Before calling any endpoint (with `curl`,
+  or through the UI in a browser), run `curl -s localhost:8080/api` and check it reports
+  `"environment":"dev"`. If it reports anything else, stop and tell the user; don't
+  call other endpoints.
 - **ui:** run the app and check the feature in a browser at mobile (375px) and desktop
   widths, including logged-out and error states where relevant. Check the console for
   errors. Take screenshots for the PR if your tools support it.

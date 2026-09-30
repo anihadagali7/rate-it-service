@@ -9,6 +9,7 @@ const passwordResetService = require("../services/passwordResetService");
 const authToken = require("../middleware/authenticateToken");
 const authRateLimiter = require("../middleware/authRateLimiter");
 const { sendError } = require("../utils/httpErrors");
+const { getAppEnvironment } = require("../utils/appEnvironment");
 
 require("dotenv").config();
 
@@ -77,6 +78,10 @@ const resetPasswordWithTokenValidators = [
  *   get:
  *     tags: [Health]
  *     summary: Health check
+ *     description: >-
+ *       Reports that the service is up and which environment it's configured
+ *       for, so you can confirm a local server uses the dev database before
+ *       calling other endpoints.
  *     responses:
  *       200:
  *         description: The service is running.
@@ -84,16 +89,24 @@ const resetPasswordWithTokenValidators = [
  *           application/json:
  *             schema:
  *               type: object
- *               required: [status]
+ *               required: [status, environment]
  *               properties:
  *                 status:
  *                   type: string
  *                   enum: [UP]
+ *                 environment:
+ *                   type: string
+ *                   enum: [dev, prod, test, unknown]
+ *                   description: >-
+ *                     The `APP_ENV` config var when it's `dev`, `prod` or
+ *                     `test`; `unknown` when it's unset or anything else.
  *       500:
  *         $ref: "#/components/responses/ServerError"
  */
 router.get("/", async (request, response) => {
-  response.status(200).json({ status: "UP" });
+  response
+    .status(200)
+    .json({ status: "UP", environment: getAppEnvironment() });
 });
 
 /**

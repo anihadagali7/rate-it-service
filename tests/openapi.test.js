@@ -58,7 +58,9 @@ describe("OpenAPI spec", () => {
     });
 
     it("passes a documented response", () => {
-      expect(fakeResponse(200, { status: "UP" })).toSatisfyApiSpec();
+      expect(
+        fakeResponse(200, { status: "UP", environment: "test" })
+      ).toSatisfyApiSpec();
     });
 
     it("fails a body that doesn't match the schema", () => {
