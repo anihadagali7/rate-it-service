@@ -30,6 +30,10 @@ const definition = {
     { name: "Users", description: "Accounts, profiles, and following" },
     { name: "Media", description: "Movie, TV, music, and book details" },
     { name: "Search" },
+    { name: "Playlists" },
+    { name: "Wishlist" },
+    { name: "Likes", description: "Likes on ratings" },
+    { name: "Comments", description: "Comments on ratings, and likes on comments" },
   ],
 };
 

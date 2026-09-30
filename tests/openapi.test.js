@@ -11,10 +11,6 @@ const {
   listSpecRoutes,
 } = require("./helpers/listRoutes");
 
-// Routes that are still being documented. Remove entries as their @openapi
-// blocks land; the test fails if an entry is stale.
-const UNDOCUMENTED = require("../openapi/undocumented-routes.json");
-
 // Dev tooling, not part of the API.
 const DEV_ONLY = ["GET /api/openapi.json"];
 
@@ -42,10 +38,8 @@ describe("OpenAPI spec", () => {
     );
     const specRoutes = listSpecRoutes(spec);
 
-    it("documents every route (or lists it in openapi/undocumented-routes.json)", () => {
-      const missing = appRoutes.filter(
-        (route) => !specRoutes.includes(route) && !UNDOCUMENTED.includes(route)
-      );
+    it("documents every route", () => {
+      const missing = appRoutes.filter((route) => !specRoutes.includes(route));
       // Add an @openapi block above each of these routes.
       expect(missing).toEqual([]);
     });
@@ -53,14 +47,6 @@ describe("OpenAPI spec", () => {
     it("only documents routes that exist", () => {
       const extra = specRoutes.filter((route) => !appRoutes.includes(route));
       expect(extra).toEqual([]);
-    });
-
-    it("has no stale entries in openapi/undocumented-routes.json", () => {
-      const stale = UNDOCUMENTED.filter(
-        (route) => specRoutes.includes(route) || !appRoutes.includes(route)
-      );
-      // Remove these from openapi/undocumented-routes.json.
-      expect(stale).toEqual([]);
     });
   });
 

@@ -10,6 +10,8 @@ const {
   createTestPlaylist,
 } = require("./helpers/seed");
 
+const MISSING_ID = "0123456789abcdef01234567";
+
 describe("playlistRoute", () => {
   let user;
   let otherUser;
@@ -46,6 +48,7 @@ describe("playlistRoute", () => {
         .post("/api/playlist/create")
         .send({ playlistName: "Route Playlist" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
       expect(response.body.errors.msg).toBe("Token not found");
     });
@@ -56,6 +59,7 @@ describe("playlistRoute", () => {
         .set("Authorization", accessToken)
         .send({ playlistName: "Route Playlist" });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.status).toBe("success");
       expect(response.body.data.newPlaylist.name).toBe("Route Playlist");
@@ -75,6 +79,7 @@ describe("playlistRoute", () => {
           userName: otherUser.userName,
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
 
       const storedPlaylist = await PlaylistModel.findOne({
@@ -100,6 +105,7 @@ describe("playlistRoute", () => {
           mediaId: media._id,
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(403);
       expect(response.body.errors.msg).toBe("You do not own this playlist");
     });
@@ -116,6 +122,7 @@ describe("playlistRoute", () => {
           mediaId: media._id,
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.status).toBe("success");
 
@@ -124,6 +131,52 @@ describe("playlistRoute", () => {
         media: media._id,
       });
       expect(playlistMedia).toBeTruthy();
+    });
+
+    it("returns 409 when the media is already in the playlist", async () => {
+      const media = await createTestMedia();
+      const playlist = await createTestPlaylist(user);
+      await PlaylistMediaModel.create({
+        playlist: playlist._id,
+        media: media._id,
+      });
+
+      const response = await request(app)
+        .post("/api/playlist/addMedia")
+        .set("Authorization", accessToken)
+        .send({ playlistId: playlist._id, mediaId: media._id });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(409);
+      expect(response.body.errors.msg).toBe(
+        "This media is already in the playlist"
+      );
+    });
+
+    it("returns 404 when the media doesn't exist", async () => {
+      const playlist = await createTestPlaylist(user);
+
+      const response = await request(app)
+        .post("/api/playlist/addMedia")
+        .set("Authorization", accessToken)
+        .send({ playlistId: playlist._id, mediaId: MISSING_ID });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(404);
+      expect(response.body.errors.msg).toBe("Media not found");
+    });
+
+    it("returns 404 when the playlist doesn't exist", async () => {
+      const media = await createTestMedia();
+
+      const response = await request(app)
+        .post("/api/playlist/addMedia")
+        .set("Authorization", accessToken)
+        .send({ playlistId: MISSING_ID, mediaId: media._id });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(404);
+      expect(response.body.errors.msg).toBe("Playlist not found");
     });
   });
 
@@ -142,11 +195,96 @@ describe("playlistRoute", () => {
           mediaId: media._id,
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.status).toBe("success");
 
       const links = await PlaylistMediaModel.find({ media: media._id });
       expect(links).toHaveLength(2);
+    });
+
+    it("removes media from the listed playlists", async () => {
+      const media = await createTestMedia();
+      const playlist = await createTestPlaylist(user);
+      await PlaylistMediaModel.create({
+        playlist: playlist._id,
+        media: media._id,
+      });
+
+      const response = await request(app)
+        .post("/api/playlist/addMediaToMultiplePlaylists")
+        .set("Authorization", accessToken)
+        .send({
+          playlistsToAdd: [],
+          playlistsToRemove: [playlist._id],
+          mediaId: media._id,
+        });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(200);
+      expect(await PlaylistMediaModel.find({ media: media._id })).toHaveLength(
+        0
+      );
+    });
+
+    it("returns 403 when a playlist belongs to another user", async () => {
+      const media = await createTestMedia();
+      const otherPlaylist = await createTestPlaylist(otherUser);
+
+      const response = await request(app)
+        .post("/api/playlist/addMediaToMultiplePlaylists")
+        .set("Authorization", accessToken)
+        .send({ playlistsToAdd: [otherPlaylist._id], mediaId: media._id });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(403);
+      expect(response.body.errors.msg).toBe("You do not own this playlist");
+    });
+
+    it("returns 404 when a playlist doesn't exist", async () => {
+      const media = await createTestMedia();
+
+      const response = await request(app)
+        .post("/api/playlist/addMediaToMultiplePlaylists")
+        .set("Authorization", accessToken)
+        .send({ playlistsToRemove: [MISSING_ID], mediaId: media._id });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(404);
+      expect(response.body.errors.msg).toBe("Playlist not found");
+    });
+
+    it("returns 404 when the media doesn't exist", async () => {
+      const playlist = await createTestPlaylist(user);
+
+      const response = await request(app)
+        .post("/api/playlist/addMediaToMultiplePlaylists")
+        .set("Authorization", accessToken)
+        .send({ playlistsToAdd: [playlist._id], mediaId: MISSING_ID });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(404);
+      expect(response.body.errors.msg).toBe("Media not found");
+    });
+
+    it("returns 409 when the media is already in a playlist", async () => {
+      const media = await createTestMedia();
+      const playlist = await createTestPlaylist(user);
+      await PlaylistMediaModel.create({
+        playlist: playlist._id,
+        media: media._id,
+      });
+
+      const response = await request(app)
+        .post("/api/playlist/addMediaToMultiplePlaylists")
+        .set("Authorization", accessToken)
+        .send({ playlistsToAdd: [playlist._id], mediaId: media._id });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(409);
+      expect(response.body.errors.msg).toBe(
+        "This media is already in the playlist"
+      );
     });
   });
 
@@ -156,6 +294,7 @@ describe("playlistRoute", () => {
         `/api/playlist/user/${user.userName}`
       );
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
     });
 
@@ -166,12 +305,32 @@ describe("playlistRoute", () => {
         .get(`/api/playlist/user/${user.userName}`)
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.playlistList).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ name: "User Playlist" }),
         ])
       );
+    });
+
+    it("returns 404 when the user doesn't exist", async () => {
+      const response = await request(app)
+        .get("/api/playlist/user/nobody")
+        .set("Authorization", accessToken);
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(404);
+      expect(response.body.errors.msg).toBe("User not found");
+    });
+  });
+
+  describe("GET /api/playlist/createPoster", () => {
+    it("requires authentication", async () => {
+      const response = await request(app).get("/api/playlist/createPoster");
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(401);
     });
   });
 
@@ -189,12 +348,40 @@ describe("playlistRoute", () => {
         .query({ mediaId: media._id.toString() })
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.selectedPlaylists).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ name: "Has Media" }),
         ])
       );
+    });
+
+    it("returns an empty list with a message when the media is in no playlist", async () => {
+      const media = await createTestMedia();
+
+      const response = await request(app)
+        .get("/api/playlist/getPlaylistsWithThisMedia")
+        .query({ mediaId: media._id.toString() })
+        .set("Authorization", accessToken);
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        status: "That media has not been added to any playlists",
+        data: [],
+      });
+    });
+
+    it("returns 404 when the media doesn't exist", async () => {
+      const response = await request(app)
+        .get("/api/playlist/getPlaylistsWithThisMedia")
+        .query({ mediaId: MISSING_ID })
+        .set("Authorization", accessToken);
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(404);
+      expect(response.body.errors.msg).toBe("Media not found");
     });
   });
 
@@ -211,6 +398,7 @@ describe("playlistRoute", () => {
         .get(`/api/playlist/${playlist._id}`)
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.mediaByPlaylist.mediaList).toEqual(
         expect.arrayContaining([
@@ -220,6 +408,23 @@ describe("playlistRoute", () => {
           }),
         ])
       );
+    });
+
+    it("returns 404 when the playlist doesn't exist", async () => {
+      const response = await request(app)
+        .get(`/api/playlist/${MISSING_ID}`)
+        .set("Authorization", accessToken);
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(404);
+      expect(response.body.errors.msg).toBe("Playlist not found");
+    });
+
+    it("requires authentication", async () => {
+      const response = await request(app).get(`/api/playlist/${MISSING_ID}`);
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(401);
     });
   });
 });

@@ -147,6 +147,9 @@ npm test -- --testPathPattern="wishlist(Service|Route)"
 
 ## API overview
 
+Every endpoint is documented in [`openapi.json`](openapi.json); browse it locally at
+[`http://localhost:8080/api/docs`](http://localhost:8080/api/docs). The areas are:
+
 | Area | Base path |
 |------|-----------|
 | Auth | `/api` |
@@ -175,7 +178,8 @@ When the server runs outside production, it serves Swagger UI at
 `accessToken` from `/api/login` as is, without a `Bearer ` prefix. Neither route exists in
 production.
 
-Auth and ratings are documented so far; the other areas are being added.
+Every route must be documented: `tests/openapi.test.js` fails CI when a route has no
+`@openapi` block.
 
 ## Deploying to Heroku
 

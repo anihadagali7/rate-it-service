@@ -162,11 +162,10 @@ components:
             user:
               $ref: "#/components/schemas/AccountUser"
 
-    # Source: repository/mediaModel.js. Only `name` is required by the model;
-    # POST /api/media/add can store media without a mediaType.
+    # Source: repository/mediaModel.js
     Media:
       type: object
-      required: [_id, name]
+      required: [_id, name, mediaType]
       properties:
         _id:
           $ref: "#/components/schemas/ObjectId"
@@ -557,3 +556,220 @@ components:
           type: integer
           minimum: 1
           description: 1-based page number. Defaults to the first page.
+
+    # Source: repository/playlistModel.js (as stored).
+    Playlist:
+      type: object
+      required: [_id, name, addedBy]
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        name:
+          type: string
+        addedBy:
+          $ref: "#/components/schemas/ObjectId"
+        posters:
+          type: array
+          description: Picture URLs of the media in the playlist.
+          items:
+            type: string
+        isActive:
+          type: boolean
+        dateCreated:
+          type: string
+          format: date-time
+        __v:
+          type: integer
+
+    # Source: services/playlistService.js (createNewPlaylist). Same as Playlist,
+    # but `addedBy` is the creator's whole user document.
+    CreatedPlaylist:
+      type: object
+      required: [_id, name, addedBy]
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        name:
+          type: string
+        addedBy:
+          description: >-
+            The creator's full user document, including account fields such as
+            `email` and `phoneNumber` (password and token hashes are never
+            included). Other playlist responses return an id or a `PublicUser`.
+          allOf:
+            - $ref: "#/components/schemas/PublicUser"
+        posters:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+        dateCreated:
+          type: string
+          format: date-time
+        __v:
+          type: integer
+
+    # Source: services/playlistService.js (preparePlaylistList).
+    PlaylistListItem:
+      type: object
+      required: [_id, name, addedBy]
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        name:
+          type: string
+        addedBy:
+          nullable: true
+          description: Null if the owner no longer exists.
+          allOf:
+            - $ref: "#/components/schemas/PublicUser"
+        posters:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+        dateCreated:
+          type: string
+          format: date-time
+        __v:
+          type: integer
+
+    # Source: repository/playlist_mediaModel.js. Links one media item to one playlist.
+    PlaylistMedia:
+      type: object
+      required: [_id, playlist, media]
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        playlist:
+          $ref: "#/components/schemas/ObjectId"
+        media:
+          $ref: "#/components/schemas/ObjectId"
+        __v:
+          type: integer
+
+    # Source: repository/wishlistModel.js (as stored).
+    Wishlist:
+      type: object
+      required: [_id, media, addedBy]
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        media:
+          $ref: "#/components/schemas/ObjectId"
+        addedBy:
+          $ref: "#/components/schemas/ObjectId"
+        isActive:
+          type: boolean
+        dateCreated:
+          type: string
+          format: date-time
+        __v:
+          type: integer
+
+    # Source: services/wishlistService.js (prepareWishlistList).
+    WishlistItem:
+      type: object
+      required: [_id, media, addedBy]
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        media:
+          nullable: true
+          description: Null if the media no longer exists.
+          allOf:
+            - $ref: "#/components/schemas/Media"
+        addedBy:
+          nullable: true
+          description: Null if the user no longer exists.
+          allOf:
+            - $ref: "#/components/schemas/PublicUser"
+        isActive:
+          type: boolean
+        dateCreated:
+          type: string
+          format: date-time
+        __v:
+          type: integer
+
+    # Source: repository/likeModel.js (as stored).
+    Like:
+      type: object
+      required: [_id, rating, likedBy]
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        rating:
+          $ref: "#/components/schemas/ObjectId"
+        likedBy:
+          $ref: "#/components/schemas/ObjectId"
+        dateCreated:
+          type: string
+          format: date-time
+        __v:
+          type: integer
+
+    # Source: repository/commentModel.js (as stored).
+    Comment:
+      type: object
+      required: [_id, rating, commentedBy, text]
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        rating:
+          $ref: "#/components/schemas/ObjectId"
+        commentedBy:
+          $ref: "#/components/schemas/ObjectId"
+        text:
+          type: string
+          description: Trimmed; never empty.
+        dateCreated:
+          type: string
+          format: date-time
+        __v:
+          type: integer
+
+    # Source: services/commentService.js (createComment). The stored comment
+    # shaped like a RatingComment, so the UI can add it to a thread directly.
+    CreatedComment:
+      type: object
+      required: [_id, rating, commentedBy, text, likeCount, likedByCurrentUser]
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        rating:
+          $ref: "#/components/schemas/ObjectId"
+        commentedBy:
+          $ref: "#/components/schemas/PublicUser"
+        text:
+          type: string
+        dateCreated:
+          type: string
+          format: date-time
+        __v:
+          type: integer
+        likeCount:
+          type: integer
+          enum: [0]
+        likedByCurrentUser:
+          type: boolean
+          enum: [false]
+
+    # Source: repository/commentLikeModel.js (as stored).
+    CommentLike:
+      type: object
+      required: [_id, comment, likedBy]
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        comment:
+          $ref: "#/components/schemas/ObjectId"
+        likedBy:
+          $ref: "#/components/schemas/ObjectId"
+        dateCreated:
+          type: string
+          format: date-time
+        __v:
+          type: integer

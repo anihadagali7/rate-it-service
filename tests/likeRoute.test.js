@@ -9,6 +9,8 @@ const {
   createTestRating,
 } = require("./helpers/seed");
 
+const MISSING_ID = "0123456789abcdef01234567";
+
 describe("likeRoute", () => {
   let user;
   let otherUser;
@@ -49,6 +51,7 @@ describe("likeRoute", () => {
         .post("/api/likes")
         .send({ ratingId: rating._id.toString() });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
       expect(response.body.errors.msg).toBe("Token not found");
     });
@@ -59,6 +62,7 @@ describe("likeRoute", () => {
         .set("Authorization", accessToken)
         .send({ ratingId: rating._id.toString() });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.status).toBe("success");
 
@@ -76,12 +80,43 @@ describe("likeRoute", () => {
           userName: otherUser.userName,
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
 
       const userLike = await LikeModel.findOne({ likedBy: user._id });
       const otherLike = await LikeModel.findOne({ likedBy: otherUser._id });
       expect(userLike).toBeTruthy();
       expect(otherLike).toBeNull();
+    });
+
+    it("returns 409 when liking the same rating twice", async () => {
+      await LikeModel.create({
+        rating: rating._id,
+        likedBy: user._id,
+        dateCreated: Date.now(),
+      });
+
+      const response = await request(app)
+        .post("/api/likes")
+        .set("Authorization", accessToken)
+        .send({ ratingId: rating._id.toString() });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(409);
+      expect(response.body.errors.msg).toBe(
+        "You have already liked this rating"
+      );
+    });
+
+    it("returns 404 when the rating doesn't exist", async () => {
+      const response = await request(app)
+        .post("/api/likes")
+        .set("Authorization", accessToken)
+        .send({ ratingId: MISSING_ID });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(404);
+      expect(response.body.errors.msg).toBe("Rating not found");
     });
   });
 
@@ -91,6 +126,7 @@ describe("likeRoute", () => {
         `/api/likes/${rating._id.toString()}`
       );
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
     });
 
@@ -105,8 +141,19 @@ describe("likeRoute", () => {
         .delete(`/api/likes/${rating._id.toString()}`)
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(await LikeModel.findOne({ likedBy: user._id })).toBeNull();
+    });
+
+    it("returns 404 when the user hasn't liked the rating", async () => {
+      const response = await request(app)
+        .delete(`/api/likes/${rating._id.toString()}`)
+        .set("Authorization", accessToken);
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(404);
+      expect(response.body.errors.msg).toBe("Like not found");
     });
   });
 });

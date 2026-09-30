@@ -100,10 +100,9 @@ it by hand.
   `500: $ref: "#/components/responses/ServerError"` on every operation. Call
   `expect(response).toSatisfyApiSpec()` in its route tests, then run `npm run openapi`
   and commit `openapi.json`.
-- CI fails if `openapi.json` is out of date, if a route is missing from the spec (see
-  `tests/openapi.test.js`), or if a tested response doesn't match its schema.
-- `openapi/undocumented-routes.json` lists routes that aren't documented yet. Only
-  shrink it; never add to it.
+- CI fails if `openapi.json` is out of date, if any route is missing from the spec (see
+  `tests/openapi.test.js`; there's no allowlist), or if a tested response doesn't match
+  its schema.
 - Browse the docs locally at `http://localhost:8080/api/docs` (not served in production).
   Use **Authorize** with a raw JWT, without a `Bearer ` prefix.
 - Document what the code does. If the behavior looks wrong, record it as a follow-up bug
@@ -147,21 +146,12 @@ and the contract types they return live in `../rate-it-ui/src/types/api.ts`.
   this out as a UI follow-up in the PR.
 - Ship backend changes first; the UI story depends on the deployed API.
 
-### API map
+### API reference
 
-| Mount | Endpoints |
-|-------|-----------|
-| `/api` (auth) | `GET /` health, `POST /create-user`, `POST /login`, `POST /auth/google`, `POST /auth/facebook`, `POST /auth/apple`, `POST /verify-email`, `POST /account/resetPassword` |
-| `/api` (users) | `GET /account/me`, `GET /account/:userName`, `GET /allUsers`, `POST /friends/follow`, `POST /friends/unfollow`, `GET /:userName/following`, `GET /:userName/followers`, `GET /:userName/friendsList`, `PUT /account/update`, `PUT /account/complete-profile`, `POST /account/resend-verification`, `PUT /account/picture` |
-| `/api/ratings` | `POST /`, `GET /user/:userName`, `GET /media/:mediaId`, `GET /explore`, `GET /following` |
-| `/api/media` | `POST /add`, `GET /movie/info/:tmdbId`, `GET /tv/info/:tmdbId`, `GET /music/info/:spotifyId`, `GET /book/info/:googleBookId` |
-| `/api/search` | `POST /movie`, `/tv`, `/music`, `/book`, `/user`, `/all` |
-| `/api/playlist` | `POST /create`, `POST /addMedia`, `POST /addMediaToMultiplePlaylists`, `GET /user/:userName`, `GET /createPoster`, `GET /getPlaylistsWithThisMedia`, `GET /:playlist` |
-| `/api/wishlist` | `POST /`, `DELETE /:mediaId`, `GET /user/:userName` |
-| `/api/likes` | `POST /`, `DELETE /:ratingId` |
-| `/api/comments` | `POST /`, `POST /:commentId/like`, `DELETE /:commentId/like`, `DELETE /:commentId` |
-
-Keep this table updated when you add or change routes.
+Every endpoint, with its auth, parameters, request body and responses, is in
+`openapi.json`; browse it at `http://localhost:8080/api/docs` while the server runs
+locally. Route files are named after their mount (`routes/playlistRoute.js` →
+`/api/playlist`), and the mounts are in `app.js`.
 
 ## Git & PR workflow
 

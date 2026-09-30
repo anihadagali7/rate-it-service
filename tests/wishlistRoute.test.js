@@ -43,6 +43,7 @@ describe("wishlistRoute", () => {
         .post("/api/wishlist")
         .send({ mediaId: media.mediaId });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
       expect(response.body.errors.msg).toBe("Token not found");
     });
@@ -53,6 +54,7 @@ describe("wishlistRoute", () => {
         .set("Authorization", accessToken)
         .send({ mediaId: media.mediaId });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
       expect(response.body.status).toBe("success");
 
@@ -70,6 +72,7 @@ describe("wishlistRoute", () => {
           userName: otherUser.userName,
         });
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(201);
 
       const userWishlist = await WishlistModel.findOne({ addedBy: user._id });
@@ -79,6 +82,37 @@ describe("wishlistRoute", () => {
       expect(userWishlist).toBeTruthy();
       expect(otherWishlist).toBeNull();
     });
+
+    it("returns 409 when the media is already on the wishlist", async () => {
+      await WishlistModel.create({
+        media: media._id,
+        addedBy: user._id,
+        isActive: true,
+        dateCreated: Date.now(),
+      });
+
+      const response = await request(app)
+        .post("/api/wishlist")
+        .set("Authorization", accessToken)
+        .send({ mediaId: media.mediaId });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(409);
+      expect(response.body.errors.msg).toBe(
+        "This media is already in your wishlist"
+      );
+    });
+
+    it("returns 404 when the media doesn't exist", async () => {
+      const response = await request(app)
+        .post("/api/wishlist")
+        .set("Authorization", accessToken)
+        .send({ mediaId: "missing-media" });
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(404);
+      expect(response.body.errors.msg).toBe("Media not found");
+    });
   });
 
   describe("GET /api/wishlist/user/:userName", () => {
@@ -87,6 +121,7 @@ describe("wishlistRoute", () => {
         `/api/wishlist/user/${user.userName}`
       );
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
     });
 
@@ -102,6 +137,7 @@ describe("wishlistRoute", () => {
         .get(`/api/wishlist/user/${user.userName}`)
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.wishlistList).toEqual(
         expect.arrayContaining([
@@ -123,8 +159,19 @@ describe("wishlistRoute", () => {
         .get(`/api/wishlist/user/${user.userName}`)
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.data.wishlistList).toEqual([]);
+    });
+
+    it("returns 404 when the user doesn't exist", async () => {
+      const response = await request(app)
+        .get("/api/wishlist/user/nobody")
+        .set("Authorization", accessToken);
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(404);
+      expect(response.body.errors.msg).toBe("User not found");
     });
   });
 
@@ -134,6 +181,7 @@ describe("wishlistRoute", () => {
         `/api/wishlist/${media.mediaId}`
       );
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(401);
       expect(response.body.errors.msg).toBe("Token not found");
     });
@@ -150,6 +198,7 @@ describe("wishlistRoute", () => {
         .delete(`/api/wishlist/${media.mediaId}`)
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
       expect(response.body.status).toBe("success");
 
@@ -162,6 +211,7 @@ describe("wishlistRoute", () => {
         .delete(`/api/wishlist/${media.mediaId}`)
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(404);
       expect(response.body.errors.msg).toBe("Wishlist item not found");
     });
@@ -178,6 +228,7 @@ describe("wishlistRoute", () => {
         .delete(`/api/wishlist/${media.mediaId}`)
         .set("Authorization", accessToken);
 
+      expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(404);
 
       const otherWishlist = await WishlistModel.findOne({
