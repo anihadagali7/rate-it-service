@@ -1226,12 +1226,23 @@
   "paths": {
     "/api": {
       "get": {
+        "description": "Reports that the service is up and which environment it's configured for, so you can confirm a local server uses the dev database before calling other endpoints.",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
                   "properties": {
+                    "environment": {
+                      "description": "The `APP_ENV` config var when it's `dev`, `prod` or `test`; `unknown` when it's unset or anything else.",
+                      "enum": [
+                        "dev",
+                        "prod",
+                        "test",
+                        "unknown"
+                      ],
+                      "type": "string"
+                    },
                     "status": {
                       "enum": [
                         "UP"
@@ -1240,7 +1251,8 @@
                     }
                   },
                   "required": [
-                    "status"
+                    "status",
+                    "environment"
                   ],
                   "type": "object"
                 }

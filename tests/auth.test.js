@@ -50,12 +50,53 @@ describe("Auth flow", () => {
   });
 
   describe("GET /api", () => {
-    it("returns service health status", async () => {
+    const originalAppEnv = process.env.APP_ENV;
+
+    afterEach(() => {
+      if (originalAppEnv === undefined) {
+        delete process.env.APP_ENV;
+      } else {
+        process.env.APP_ENV = originalAppEnv;
+      }
+    });
+
+    it("returns service health status and the test environment", async () => {
       const response = await request(app).get("/api");
 
       expect(response).toSatisfyApiSpec();
       expect(response.status).toBe(200);
-      expect(response.body).toEqual({ status: "UP" });
+      expect(response.body).toEqual({ status: "UP", environment: "test" });
+    });
+
+    it("reports the dev environment", async () => {
+      process.env.APP_ENV = "dev";
+
+      const response = await request(app).get("/api");
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ status: "UP", environment: "dev" });
+    });
+
+    it("reports unknown when APP_ENV is unset", async () => {
+      delete process.env.APP_ENV;
+
+      const response = await request(app).get("/api");
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ status: "UP", environment: "unknown" });
+    });
+
+    it("reports unknown, not the raw value, for an unrecognized APP_ENV", async () => {
+      process.env.APP_ENV = "mongodb://secret-host/rate-it-prod";
+
+      const response = await request(app).get("/api");
+
+      expect(response).toSatisfyApiSpec();
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ status: "UP", environment: "unknown" });
+      expect(JSON.stringify(response.body)).not.toContain("secret-host");
     });
   });
 

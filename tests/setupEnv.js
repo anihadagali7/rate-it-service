@@ -30,4 +30,5 @@ process.env.CLOUDINARY_API_KEY =
   process.env.CLOUDINARY_API_KEY || "test-cloudinary-api-key";
 process.env.CLOUDINARY_API_SECRET =
   process.env.CLOUDINARY_API_SECRET || "test-cloudinary-api-secret";
+process.env.APP_ENV = process.env.APP_ENV || "test";
 process.env.NODE_ENV = "test";

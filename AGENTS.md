@@ -127,7 +127,12 @@ it by hand.
 ## Environments & data safety
 
 - There are two MongoDB databases: **dev** and **prod**. Local `.env` `MONGO_DB_HOST`
-  must point at **dev**. Never connect to, read from, or write to prod.
+  must point at **dev**, and `APP_ENV` must be `dev`. Never connect to, read from, or
+  write to prod.
+- Before calling endpoints on a local server (with `curl`, or through the UI), run
+  `curl -s localhost:8080/api` and check it reports `"environment":"dev"`. If it reports
+  anything else (`prod`, `unknown`, ...), stop and tell the user. `APP_ENV` is a label
+  the user sets next to `MONGO_DB_HOST`; the health check never reveals the database.
 - Do not read or print `.env` values. Env var names are documented in `README.md`.
 - Adding an env var: update the README table, `tests/setupEnv.js`, and call it out in
   the PR description so it gets set on Heroku.

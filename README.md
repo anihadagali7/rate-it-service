@@ -28,6 +28,7 @@ Create a `.env` file in the project root (this file is gitignored):
 
 ```env
 MONGO_DB_HOST=mongodb+srv://<user>:<password>@<cluster>/<db>?retryWrites=true&w=majority
+APP_ENV=dev
 ACCESS_TOKEN_SECRET=your-jwt-secret
 JWT_EXPIRES_IN=7d
 CORS_ORIGIN=http://localhost:3000
@@ -66,6 +67,7 @@ PORT=8080
 
 | Variable | Required | Notes |
 |----------|----------|--------|
+| `APP_ENV` | Recommended | Which environment this server is: `dev`, `prod` or `test`. `GET /api` reports it as `environment` (anything else, or unset, shows `unknown`) so you can confirm a local server is on the dev database. Set `dev` locally and on the staging app (`rate-it-service`, which uses the dev database), `prod` on `rate-it-service-prod` |
 | `ACCESS_TOKEN_SECRET` | Yes | Secret used to sign and verify JWTs |
 | `JWT_EXPIRES_IN` | No | JWT lifetime (default `7d`). Examples: `1h`, `12h`, `7d` |
 | `CORS_ORIGIN` | Recommended | Comma-separated allowlist of browser origins (e.g. `https://your-app.vercel.app,http://localhost:3000`). In production with no value, browser origins are denied. Locally, defaults to `http://localhost:3000` and `http://127.0.0.1:3000` |
