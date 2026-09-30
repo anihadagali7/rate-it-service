@@ -137,13 +137,15 @@ it by hand.
 ## Cross-repo work
 
 The UI is at `../rate-it-ui`. Its API calls live in `../rate-it-ui/src/client/*Client.ts`,
-and the contract types they return live in `../rate-it-ui/src/types/api.ts`.
+and the contract types they use are generated from a copy of this repo's `openapi.json`
+(`../rate-it-ui/src/types/`).
 
 - Before changing an endpoint's path, params, or response shape, grep the UI for its
   usages and update both sides (or keep the change backward compatible).
-- A contract change (path, request field, or response payload) also means updating
-  `../rate-it-ui/src/types/api.ts` and the matching client method's return type. Call
-  this out as a UI follow-up in the PR.
+- A contract change (path, request field, or response payload) changes `openapi.json`.
+  After it merges, the UI runs `npm run api:sync` to copy the spec and regenerate its
+  types, which turns the change into type errors in its clients. See *Cross-repo work*
+  in `../rate-it-ui/AGENTS.md`. Call this out as a UI follow-up in the PR.
 - Ship backend changes first; the UI story depends on the deployed API.
 
 ### API reference
