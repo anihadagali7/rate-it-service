@@ -237,6 +237,147 @@
         ],
         "type": "object"
       },
+      "Comment": {
+        "properties": {
+          "__v": {
+            "type": "integer"
+          },
+          "_id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "commentedBy": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "dateCreated": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "rating": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "text": {
+            "description": "Trimmed; never empty.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "_id",
+          "rating",
+          "commentedBy",
+          "text"
+        ],
+        "type": "object"
+      },
+      "CommentLike": {
+        "properties": {
+          "__v": {
+            "type": "integer"
+          },
+          "_id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "comment": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "dateCreated": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "likedBy": {
+            "$ref": "#/components/schemas/ObjectId"
+          }
+        },
+        "required": [
+          "_id",
+          "comment",
+          "likedBy"
+        ],
+        "type": "object"
+      },
+      "CreatedComment": {
+        "properties": {
+          "__v": {
+            "type": "integer"
+          },
+          "_id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "commentedBy": {
+            "$ref": "#/components/schemas/PublicUser"
+          },
+          "dateCreated": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "likeCount": {
+            "enum": [
+              0
+            ],
+            "type": "integer"
+          },
+          "likedByCurrentUser": {
+            "enum": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "rating": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_id",
+          "rating",
+          "commentedBy",
+          "text",
+          "likeCount",
+          "likedByCurrentUser"
+        ],
+        "type": "object"
+      },
+      "CreatedPlaylist": {
+        "properties": {
+          "__v": {
+            "type": "integer"
+          },
+          "_id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "addedBy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicUser"
+              }
+            ],
+            "description": "The creator's full user document, including account fields such as `email` and `phoneNumber` (password and token hashes are never included). Other playlist responses return an id or a `PublicUser`."
+          },
+          "dateCreated": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "posters": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "_id",
+          "name",
+          "addedBy"
+        ],
+        "type": "object"
+      },
       "ErrorResponse": {
         "properties": {
           "errors": {
@@ -290,6 +431,32 @@
         "required": [
           "status",
           "data"
+        ],
+        "type": "object"
+      },
+      "Like": {
+        "properties": {
+          "__v": {
+            "type": "integer"
+          },
+          "_id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "dateCreated": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "likedBy": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "rating": {
+            "$ref": "#/components/schemas/ObjectId"
+          }
+        },
+        "required": [
+          "_id",
+          "rating",
+          "likedBy"
         ],
         "type": "object"
       },
@@ -377,7 +544,8 @@
         },
         "required": [
           "_id",
-          "name"
+          "name",
+          "mediaType"
         ],
         "type": "object"
       },
@@ -560,6 +728,105 @@
         "example": "63019b905ccf53564ffb0c84",
         "pattern": "^[a-f0-9]{24}$",
         "type": "string"
+      },
+      "Playlist": {
+        "properties": {
+          "__v": {
+            "type": "integer"
+          },
+          "_id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "addedBy": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "dateCreated": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "posters": {
+            "description": "Picture URLs of the media in the playlist.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "_id",
+          "name",
+          "addedBy"
+        ],
+        "type": "object"
+      },
+      "PlaylistListItem": {
+        "properties": {
+          "__v": {
+            "type": "integer"
+          },
+          "_id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "addedBy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicUser"
+              }
+            ],
+            "description": "Null if the owner no longer exists.",
+            "nullable": true
+          },
+          "dateCreated": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "posters": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "_id",
+          "name",
+          "addedBy"
+        ],
+        "type": "object"
+      },
+      "PlaylistMedia": {
+        "properties": {
+          "__v": {
+            "type": "integer"
+          },
+          "_id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "media": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "playlist": {
+            "$ref": "#/components/schemas/ObjectId"
+          }
+        },
+        "required": [
+          "_id",
+          "playlist",
+          "media"
+        ],
+        "type": "object"
       },
       "PublicUser": {
         "properties": {
@@ -867,6 +1134,76 @@
         "required": [
           "status",
           "data"
+        ],
+        "type": "object"
+      },
+      "Wishlist": {
+        "properties": {
+          "__v": {
+            "type": "integer"
+          },
+          "_id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "addedBy": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "dateCreated": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "media": {
+            "$ref": "#/components/schemas/ObjectId"
+          }
+        },
+        "required": [
+          "_id",
+          "media",
+          "addedBy"
+        ],
+        "type": "object"
+      },
+      "WishlistItem": {
+        "properties": {
+          "__v": {
+            "type": "integer"
+          },
+          "_id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "addedBy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicUser"
+              }
+            ],
+            "description": "Null if the user no longer exists.",
+            "nullable": true
+          },
+          "dateCreated": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "media": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Media"
+              }
+            ],
+            "description": "Null if the media no longer exists.",
+            "nullable": true
+          }
+        },
+        "required": [
+          "_id",
+          "media",
+          "addedBy"
         ],
         "type": "object"
       }
@@ -1631,6 +1968,356 @@
         ]
       }
     },
+    "/api/comments": {
+      "post": {
+        "description": "The author always comes from the token. A malformed `ratingId` returns 500.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ratingId": {
+                    "$ref": "#/components/schemas/ObjectId"
+                  },
+                  "text": {
+                    "description": "Trimmed before saving; must not be blank.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "ratingId",
+                  "text"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "newComment": {
+                          "$ref": "#/components/schemas/CreatedComment"
+                        }
+                      },
+                      "required": [
+                        "newComment"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "The new comment, with its author filled in."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`text` is missing or blank (`\"Comment text is required\"`)."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"User not found\"` or `\"Rating not found\"`."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Comment on a rating",
+        "tags": [
+          "Comments"
+        ]
+      }
+    },
+    "/api/comments/{commentId}": {
+      "delete": {
+        "description": "Also deletes the comment's likes. A malformed `commentId` returns 500.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "commentId",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ObjectId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "deletedComment": {
+                          "$ref": "#/components/schemas/Comment"
+                        }
+                      },
+                      "required": [
+                        "deletedComment"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "The deleted comment."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The token is invalid (`\"Invalid token\"`), or the comment is someone else's (`\"You can only delete your own comments\"`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"User not found\"` or `\"Comment not found\"`."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Delete one of the caller's comments",
+        "tags": [
+          "Comments"
+        ]
+      }
+    },
+    "/api/comments/{commentId}/like": {
+      "delete": {
+        "description": "A malformed `commentId` returns 500.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "commentId",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ObjectId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "deletedLike": {
+                          "$ref": "#/components/schemas/CommentLike"
+                        }
+                      },
+                      "required": [
+                        "deletedLike"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "The removed comment like."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"User not found\"`, `\"Comment not found\"`, or `\"Like not found\"` (the caller hasn't liked it)."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Unlike a comment",
+        "tags": [
+          "Comments"
+        ]
+      },
+      "post": {
+        "description": "A malformed `commentId` returns 500.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "commentId",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ObjectId"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "newLike": {
+                          "$ref": "#/components/schemas/CommentLike"
+                        }
+                      },
+                      "required": [
+                        "newLike"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "The new comment like."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"User not found\"` or `\"Comment not found\"`."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"You have already liked this comment\"`."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Like a comment",
+        "tags": [
+          "Comments"
+        ]
+      }
+    },
     "/api/create-user": {
       "post": {
         "description": "Creates an active account, sends a verification email (without waiting for it), and returns a token so the user is logged in right away.",
@@ -1910,6 +2597,180 @@
         "summary": "Unfollow a user",
         "tags": [
           "Users"
+        ]
+      }
+    },
+    "/api/likes": {
+      "post": {
+        "description": "The liker always comes from the token. A malformed `ratingId` returns 500.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ratingId": {
+                    "$ref": "#/components/schemas/ObjectId"
+                  }
+                },
+                "required": [
+                  "ratingId"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "newLike": {
+                          "$ref": "#/components/schemas/Like"
+                        }
+                      },
+                      "required": [
+                        "newLike"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "The new like."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"User not found\"` or `\"Rating not found\"`."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"You have already liked this rating\"`."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Like a rating",
+        "tags": [
+          "Likes"
+        ]
+      }
+    },
+    "/api/likes/{ratingId}": {
+      "delete": {
+        "description": "A malformed `ratingId` returns 500.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ratingId",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ObjectId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "deletedLike": {
+                          "$ref": "#/components/schemas/Like"
+                        }
+                      },
+                      "required": [
+                        "deletedLike"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "The removed like."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"User not found\"`, `\"Rating not found\"`, or `\"Like not found\"` (the caller hasn't liked it)."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Unlike a rating",
+        "tags": [
+          "Likes"
         ]
       }
     },
@@ -2368,6 +3229,603 @@
         "summary": "Get TV show details",
         "tags": [
           "Media"
+        ]
+      }
+    },
+    "/api/playlist/addMedia": {
+      "post": {
+        "description": "A malformed id returns 500.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "mediaId": {
+                    "$ref": "#/components/schemas/ObjectId"
+                  },
+                  "playlistId": {
+                    "$ref": "#/components/schemas/ObjectId"
+                  }
+                },
+                "required": [
+                  "playlistId",
+                  "mediaId"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "newPlaylist": {
+                          "$ref": "#/components/schemas/PlaylistMedia"
+                        }
+                      },
+                      "required": [
+                        "newPlaylist"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "The new playlist-media link. The payload is named `newPlaylist`, but it's the link, not a playlist."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The token is invalid (`\"Invalid token\"`), or the playlist belongs to someone else (`\"You do not own this playlist\"`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Media not found\"` or `\"Playlist not found\"`."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"This media is already in the playlist\"`."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Add a media item to one of the caller's playlists",
+        "tags": [
+          "Playlists"
+        ]
+      }
+    },
+    "/api/playlist/addMediaToMultiplePlaylists": {
+      "post": {
+        "description": "Playlists are processed in order (adds first, then removes) and each change is saved as it goes, so an error part-way leaves the earlier playlists changed. Removing media that isn't in a playlist succeeds. A malformed id returns 500.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "mediaId": {
+                    "$ref": "#/components/schemas/ObjectId"
+                  },
+                  "playlistsToAdd": {
+                    "description": "Ids of the caller's playlists to add the media to.",
+                    "items": {
+                      "$ref": "#/components/schemas/ObjectId"
+                    },
+                    "type": "array"
+                  },
+                  "playlistsToRemove": {
+                    "description": "Ids of the caller's playlists to remove the media from.",
+                    "items": {
+                      "$ref": "#/components/schemas/ObjectId"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "mediaId"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            },
+            "description": "All changes applied."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The token is invalid (`\"Invalid token\"`), or a playlist belongs to someone else (`\"You do not own this playlist\"`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Media not found\"` or `\"Playlist not found\"`."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The media is already in one of the playlists to add to (`\"This media is already in the playlist\"`)."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Add a media item to some playlists and remove it from others",
+        "tags": [
+          "Playlists"
+        ]
+      }
+    },
+    "/api/playlist/create": {
+      "post": {
+        "description": "The owner always comes from the token. A missing `playlistName` fails model validation and returns 500.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "playlistName": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "playlistName"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "newPlaylist": {
+                          "$ref": "#/components/schemas/CreatedPlaylist"
+                        }
+                      },
+                      "required": [
+                        "newPlaylist"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "The new, empty playlist."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "No user matches the caller's userName (`\"User not found\"`)."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Create a playlist",
+        "tags": [
+          "Playlists"
+        ]
+      }
+    },
+    "/api/playlist/createPoster": {
+      "get": {
+        "description": "Starts a backfill that rewrites `posters` on every playlist, for any logged-in user. It never sends a response, so after authentication the request hangs until the client gives up. Not used by the UI; being removed in #62.",
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Recompute every playlist's posters (leftover backfill)",
+        "tags": [
+          "Playlists"
+        ]
+      }
+    },
+    "/api/playlist/getPlaylistsWithThisMedia": {
+      "get": {
+        "description": "A malformed `mediaId` returns 500.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ObjectId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "properties": {
+                        "data": {
+                          "properties": {
+                            "selectedPlaylists": {
+                              "items": {
+                                "$ref": "#/components/schemas/Playlist"
+                              },
+                              "type": "array"
+                            }
+                          },
+                          "required": [
+                            "selectedPlaylists"
+                          ],
+                          "type": "object"
+                        },
+                        "status": {
+                          "enum": [
+                            "success"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "data"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "maxItems": 0,
+                          "type": "array"
+                        },
+                        "status": {
+                          "enum": [
+                            "That media has not been added to any playlists"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "data"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "The caller's playlists containing the media. When the media isn't in anyone's playlist, `status` is a message and `data` is an empty array instead."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"User not found\"`, or `\"Media not found\"` (also returned when `mediaId` is missing)."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "List the caller's playlists that contain a media item",
+        "tags": [
+          "Playlists"
+        ]
+      }
+    },
+    "/api/playlist/user/{userName}": {
+      "get": {
+        "description": "Any logged-in user can list anyone's playlists.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "playlistList": {
+                          "items": {
+                            "$ref": "#/components/schemas/PlaylistListItem"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "playlistList"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "The user's playlists (an empty list if they have none)."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "No user has that userName (`\"User not found\"`)."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "List a user's playlists",
+        "tags": [
+          "Playlists"
+        ]
+      }
+    },
+    "/api/playlist/{playlist}": {
+      "get": {
+        "description": "Any logged-in user can view any playlist. A malformed id returns 500.",
+        "parameters": [
+          {
+            "description": "The playlist's id.",
+            "in": "path",
+            "name": "playlist",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ObjectId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "mediaByPlaylist": {
+                          "properties": {
+                            "mediaList": {
+                              "items": {
+                                "allOf": [
+                                  {
+                                    "$ref": "#/components/schemas/Media"
+                                  }
+                                ],
+                                "description": "Null if the media no longer exists.",
+                                "nullable": true
+                              },
+                              "type": "array"
+                            },
+                            "playlist": {
+                              "$ref": "#/components/schemas/Playlist"
+                            }
+                          },
+                          "required": [
+                            "playlist",
+                            "mediaList"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "mediaByPlaylist"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "The playlist and its media."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"Playlist not found\"`."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Get a playlist and its media",
+        "tags": [
+          "Playlists"
         ]
       }
     },
@@ -3181,6 +4639,262 @@
         ]
       }
     },
+    "/api/wishlist": {
+      "post": {
+        "description": "The owner always comes from the token.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "mediaId": {
+                    "description": "The media's catalog id (`Media.mediaId`), not its `_id`. The media must already be stored.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "mediaId"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "newWishlist": {
+                          "$ref": "#/components/schemas/Wishlist"
+                        }
+                      },
+                      "required": [
+                        "newWishlist"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "The new wishlist entry."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"User not found\"` or `\"Media not found\"`."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"This media is already in your wishlist\"`."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Add a media item to the caller's wishlist",
+        "tags": [
+          "Wishlist"
+        ]
+      }
+    },
+    "/api/wishlist/user/{userName}": {
+      "get": {
+        "description": "Any logged-in user can view anyone's wishlist.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "wishlistList": {
+                          "items": {
+                            "$ref": "#/components/schemas/WishlistItem"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "wishlistList"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "The user's wishlist (an empty list if it has nothing)."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "No user has that userName (`\"User not found\"`)."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "List a user's wishlist",
+        "tags": [
+          "Wishlist"
+        ]
+      }
+    },
+    "/api/wishlist/{mediaId}": {
+      "delete": {
+        "parameters": [
+          {
+            "description": "The media's catalog id (`Media.mediaId`), not its `_id`.",
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "deletedWishlist": {
+                          "$ref": "#/components/schemas/Wishlist"
+                        }
+                      },
+                      "required": [
+                        "deletedWishlist"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "The removed wishlist entry."
+          },
+          "401": {
+            "$ref": "#/components/responses/TokenNotFound"
+          },
+          "403": {
+            "$ref": "#/components/responses/InvalidToken"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "`\"User not found\"`, `\"Media not found\"`, or `\"Wishlist item not found\"` (the media isn't on the caller's wishlist)."
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ],
+        "summary": "Remove a media item from the caller's wishlist",
+        "tags": [
+          "Wishlist"
+        ]
+      }
+    },
     "/api/{userName}/followers": {
       "get": {
         "description": "Users who no longer exist are left out.",
@@ -3352,6 +5066,20 @@
     },
     {
       "name": "Search"
+    },
+    {
+      "name": "Playlists"
+    },
+    {
+      "name": "Wishlist"
+    },
+    {
+      "description": "Likes on ratings",
+      "name": "Likes"
+    },
+    {
+      "description": "Comments on ratings, and likes on comments",
+      "name": "Comments"
     }
   ]
 }
