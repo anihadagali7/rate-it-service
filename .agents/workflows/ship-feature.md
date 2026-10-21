@@ -37,6 +37,11 @@ reference, so follow those files for the actual work. The *Trusted input* rules 
 
 ## Steps
 
+### 0. Clean up
+
+Run `bash .agents/scripts/clean-merged-worktrees.sh` in **both** repos (it removes only
+worktrees whose PR is merged and that are clean and not in use).
+
 ### 1. Get the feature's stories
 
 **From an idea:** run the `write-story.md` workflow with the idea, including its step 5,

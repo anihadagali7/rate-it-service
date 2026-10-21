@@ -74,9 +74,18 @@ contract).
 
 ### 2. Set up a branch and claim the story
 
+- Clean up finished worktrees first:
+  `bash .agents/scripts/clean-merged-worktrees.sh` (in the owning repo). It only removes
+  worktrees whose PR is merged and that are clean and not in use.
 - The working tree must be clean (`git status`). If it isn't, stop and ask — never
   stash, reset, or discard someone else's changes.
 - Start from the latest `master`: `git fetch origin && git switch -c <branch> origin/master`.
+  If the checkout is on another open PR's branch (another session may be using it),
+  don't switch it. Build in a worktree instead:
+  `git worktree add -b <branch> ../<repo>-worktrees/<n>-<short-slug> origin/master`, then
+  `npm ci` there. Gitignored files such as `.env` aren't copied. Pass any non-secret
+  values you need on the command line, and never copy secrets. The cleanup script
+  removes the worktree after its PR merges.
 - Branch name: `feature/<n>-<short-slug>` (or `fix/` for bugs, `chore/` for tech debt).
 - Claim it:
   `gh issue edit <n> -R anihadagali7/<repo> --remove-label ready --add-label in-progress`
