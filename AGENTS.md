@@ -42,7 +42,7 @@ Requests flow **route → service → repository**:
 | `middleware/` | `authenticateToken`, `optionalAuthenticateToken`, `publicRateLimiter`, `authRateLimiter`, `uploadProfilePicture`. |
 | `utils/` | `httpErrors` (error responses), `mongoErrors` (`isDuplicateKeyError`), `userSerializer` (`toPublicUser`). |
 | `configuration/` | Mongo connection (`MONGO_DB_HOST`). |
-| `scripts/` | One-off data scripts (e.g. backfills). Run manually, against dev first. |
+| `scripts/` | One-off data scripts (e.g. backfills), run manually against dev first, plus dev tooling (`devTestUser.js`, `generate-openapi.js`). |
 
 ### Response shapes (the UI depends on these)
 
@@ -133,6 +133,12 @@ it by hand.
   `curl -s localhost:8080/api` and check it reports `"environment":"dev"`. If it reports
   anything else (`prod`, `unknown`, ...), stop and tell the user. `APP_ENV` is a label
   the user sets next to `MONGO_DB_HOST`; the health check never reveals the database.
+- To call endpoints as a logged-in user, run `node scripts/devTestUser.js`. It creates
+  (or refreshes) the verified, profile-complete dev user `agent-test-user` and prints
+  `{ "userName": "...", "accessToken": "..." }`. Send the token as the raw
+  `Authorization` header. It refuses to run unless `APP_ENV` is `dev`. The account has
+  a random password nobody knows, so the token is the only way in; re-run the script
+  when it expires (`JWT_EXPIRES_IN`). Never use it against prod.
 - Do not read or print `.env` values. Env var names are documented in `README.md`.
 - Adding an env var: update the README table, `tests/setupEnv.js`, and call it out in
   the PR description so it gets set on Heroku.
