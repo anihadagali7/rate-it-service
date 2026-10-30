@@ -13,6 +13,7 @@ const wishlistRoute = require("./routes/wishlistRoute");
 const playlistRoute = require("./routes/playlistRoute");
 const likeRoute = require("./routes/likeRoute");
 const commentRoute = require("./routes/commentRoute");
+const chatbotRoute = require("./routes/chatbotRoute");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
@@ -80,6 +81,7 @@ app.use("/api/wishlist", wishlistRoute);
 app.use("/api/playlist", playlistRoute);
 app.use("/api/likes", likeRoute);
 app.use("/api/comments", commentRoute);
+app.use("/api/chatbot", chatbotRoute);
 
 // Must be registered last.
 app.use(errorHandler);
