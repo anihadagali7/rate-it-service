@@ -53,6 +53,8 @@ const publicRateLimiter = require("../middleware/publicRateLimiter");
  *                   properties:
  *                     reply:
  *                       type: string
+ *       403:
+ *        $ref: "#/components/responses/InvalidToken"
  *       429:
  *         $ref: "#/components/responses/RateLimited"
  *       500:
