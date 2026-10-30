@@ -1980,6 +1980,92 @@
         ]
       }
     },
+    "/api/chatbot": {
+      "post": {
+        "description": "Returns a fixed reply for now. Works with or without a login.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "messages": {
+                    "description": "The conversation so far oldest first.",
+                    "items": {
+                      "properties": {
+                        "content": {
+                          "description": "The message text.",
+                          "type": "string"
+                        },
+                        "role": {
+                          "description": "Who wrote the message.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "role",
+                        "content"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "messages"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "reply": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "reply"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "The chatbot's reply."
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "summary": "Send a message to the chatbot",
+        "tags": [
+          "Chatbot"
+        ]
+      }
+    },
     "/api/comments": {
       "post": {
         "description": "The author always comes from the token. A malformed `ratingId` returns 500.",

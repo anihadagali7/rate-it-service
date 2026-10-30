@@ -19,13 +19,17 @@ const definition = {
     version: "1.0.0",
     description:
       "API for Rate It, a social app for rating movies, TV, music, and books. " +
-      "Success responses are `{ status: \"success\", data: { ... } }`; errors are " +
+      'Success responses are `{ status: "success", data: { ... } }`; errors are ' +
       "`{ errors: { msg } }`.",
   },
   servers: [{ url: "/" }],
   tags: [
     { name: "Health" },
-    { name: "Auth", description: "Signup, login, social sign-in, email verification, password" },
+    {
+      name: "Auth",
+      description:
+        "Signup, login, social sign-in, email verification, password",
+    },
     { name: "Ratings" },
     { name: "Users", description: "Accounts, profiles, and following" },
     { name: "Media", description: "Movie, TV, music, and book details" },
@@ -33,7 +37,11 @@ const definition = {
     { name: "Playlists" },
     { name: "Wishlist" },
     { name: "Likes", description: "Likes on ratings" },
-    { name: "Comments", description: "Comments on ratings, and likes on comments" },
+    {
+      name: "Comments",
+      description: "Comments on ratings, and likes on comments",
+    },
+    { name: "Chatbot", description: "Chat with an AI assistant" },
   ],
 };
 
@@ -71,10 +79,12 @@ const main = () => {
   const spec = buildSpec();
 
   if (process.argv.includes("--check")) {
-    const current = fs.existsSync(OUTPUT) ? fs.readFileSync(OUTPUT, "utf8") : "";
+    const current = fs.existsSync(OUTPUT)
+      ? fs.readFileSync(OUTPUT, "utf8")
+      : "";
     if (current !== spec) {
       console.error(
-        "openapi.json is out of date. Run `npm run openapi` and commit the result."
+        "openapi.json is out of date. Run `npm run openapi` and commit the result.",
       );
       process.exit(1);
     }
