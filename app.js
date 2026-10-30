@@ -53,7 +53,7 @@ app.use(
 
       return callback(null, false);
     },
-  })
+  }),
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -80,6 +80,7 @@ app.use("/api/wishlist", wishlistRoute);
 app.use("/api/playlist", playlistRoute);
 app.use("/api/likes", likeRoute);
 app.use("/api/comments", commentRoute);
+app.use("/api/chatbot", chatbotRoute);
 
 // Must be registered last.
 app.use(errorHandler);
