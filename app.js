@@ -13,6 +13,7 @@ const wishlistRoute = require("./routes/wishlistRoute");
 const playlistRoute = require("./routes/playlistRoute");
 const likeRoute = require("./routes/likeRoute");
 const commentRoute = require("./routes/commentRoute");
+const chatbotRoute = require("./routes/chatbotRoute");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
