@@ -40,9 +40,6 @@ GOOGLE_API_KEY=your-google-books-api-key
 
 GOOGLE_OAUTH_CLIENT_ID=your-google-oauth-client-id
 GOOGLE_OAUTH_CLIENT_SECRET=your-google-oauth-client-secret
-FACEBOOK_APP_ID=your-facebook-app-id
-FACEBOOK_APP_SECRET=your-facebook-app-secret
-APPLE_CLIENT_ID=your-apple-services-id
 
 BREVO_API_KEY=your-brevo-api-key
 EMAIL_FROM=no-reply@your-domain.com
@@ -72,8 +69,6 @@ PORT=8080
 | `JWT_EXPIRES_IN` | No | JWT lifetime (default `7d`). Examples: `1h`, `12h`, `7d` |
 | `CORS_ORIGIN` | Recommended | Comma-separated allowlist of browser origins (e.g. `https://your-app.vercel.app,http://localhost:3000`). In production with no value, browser origins are denied. Locally, defaults to `http://localhost:3000` and `http://127.0.0.1:3000` |
 | `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` | For Google sign-in | OAuth client credentials from Google Cloud Console. Distinct from `GOOGLE_API_KEY` (Google Books). Used to exchange the frontend's auth code and verify the resulting ID token |
-| `FACEBOOK_APP_ID` / `FACEBOOK_APP_SECRET` | For Facebook sign-in | From a Facebook Login app. Used to validate that an access token was issued to this app before trusting it |
-| `APPLE_CLIENT_ID` | For Apple sign-in | Your Apple Services ID, used as the audience when verifying the identity token against Apple's JWKS |
 | `BREVO_API_KEY` | For emails | Brevo API key (Settings → SMTP & API → API keys) used to send verification and password-reset emails. Without it, emails aren't sent and a warning is logged. Heroku has no fixed outbound IP, so turn off Brevo's IP blocking (Settings → Security → Authorized IPs → Deactivate blocking), or Brevo will start rejecting sends. Use separate keys for dev and prod |
 | `EMAIL_FROM` | For emails | Sender address. It must be a sender or domain verified in Brevo (Senders, Domains & Dedicated IPs). Authenticate the domain (SPF/DKIM/DMARC) so mail doesn't land in spam |
 | `EMAIL_FROM_NAME` | No | Sender display name; defaults to `Rate It` |
@@ -85,31 +80,42 @@ PORT=8080
 
 ## Getting started
 
-Install dependencies:
+1. Switch to Node 24 and install dependencies:
 
-```bash
-npm install
-```
+   ```bash
+   nvm use
+   npm install
+   ```
 
-Start the API locally (uses `nodemon` for auto-reload):
+2. Create `.env` as shown above. Locally, point `MONGO_DB_HOST` at the **dev** database (never prod) and set `APP_ENV=dev`. You need at least `MONGO_DB_HOST` and `ACCESS_TOKEN_SECRET` for sign-up and login, and `TMDB_TOKEN`, `SPOTIFY_*` and `GOOGLE_API_KEY` for media search and pages.
 
-```bash
-npm start
-```
+3. Start the API (uses `nodemon` for auto-reload):
 
-The server runs at `http://localhost:8080` by default.
+   ```bash
+   npm start
+   ```
 
-Health check:
+   The server runs at `http://localhost:8080` by default.
 
-```bash
-curl http://localhost:8080/api
-```
+4. Check that it's up and on the dev database:
 
-Expected response:
+   ```bash
+   curl http://localhost:8080/api
+   ```
 
-```json
-{ "status": "UP" }
-```
+   Expected response:
+
+   ```json
+   { "status": "UP", "environment": "dev" }
+   ```
+
+To use the app in a browser, start [rate-it-ui](https://github.com/anihadagali7/rate-it-ui) on port 3000 next to it (see its README) and sign up at `http://localhost:3000/signup`. Browse the API itself at [`http://localhost:8080/api/docs`](http://localhost:8080/api/docs).
+
+You only need to run the API locally when you're changing it. For UI-only work, the UI can point at the dev Heroku API instead (`VITE_BASE_URL=https://rate-it-service.herokuapp.com`, the staging app on the dev database), which already allows `http://localhost:3000` in CORS.
+
+### Dev test user
+
+`node scripts/devTestUser.js` creates or refreshes `agent-test-user`, a verified, profile-complete account on the dev database. It prints `{ "userName": "...", "accessToken": "..." }`. To log in to the UI as that user, set both values in `localStorage` with the same key names on `http://localhost:3000` and reload. The script refuses to run unless `APP_ENV=dev`. Re-run it when the token expires.
 
 ### Testing password reset locally
 
@@ -194,6 +200,13 @@ web: node server.js
 Heroku uses the Node version from `engines` in `package.json` (currently `24.x`). Node 24
 needs the `heroku-24` stack; check it with `heroku stack -a <app>`.
 
+There are two apps in one Heroku pipeline:
+
+| App | Stage | Database | `APP_ENV` |
+|-----|-------|----------|-----------|
+| `rate-it-service` | staging | dev | `dev` |
+| `rate-it-service-prod` | production | prod | `prod` |
+
 ### First-time setup
 
 1. Install the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) and log in:
@@ -202,22 +215,13 @@ needs the `heroku-24` stack; check it with `heroku stack -a <app>`.
    heroku login
    ```
 
-2. Create the Heroku app (skip if it already exists):
+2. Create both apps and add them to a pipeline (staging and production). On the staging app, connect the GitHub repo under **Deploy** and enable **Automatic deploys** from `master`.
 
-   ```bash
-   heroku create your-rate-it-service
-   ```
-
-3. Add the Heroku git remote:
-
-   ```bash
-   heroku git:remote -a your-rate-it-service
-   ```
-
-4. Set config vars on Heroku (same values as your `.env`):
+3. Set config vars on each app (`-a <app>`), with that environment's values:
 
    ```bash
    heroku config:set MONGO_DB_HOST="your-mongodb-uri"
+   heroku config:set APP_ENV="dev"   # "prod" on rate-it-service-prod
    heroku config:set ACCESS_TOKEN_SECRET="your-jwt-secret"
    heroku config:set JWT_EXPIRES_IN="7d"
    heroku config:set CORS_ORIGIN="https://your-frontend-origin"
@@ -227,9 +231,6 @@ needs the `heroku-24` stack; check it with `heroku stack -a <app>`.
    heroku config:set GOOGLE_API_KEY="your-google-api-key"
    heroku config:set GOOGLE_OAUTH_CLIENT_ID="your-google-oauth-client-id"
    heroku config:set GOOGLE_OAUTH_CLIENT_SECRET="your-google-oauth-client-secret"
-   heroku config:set FACEBOOK_APP_ID="your-facebook-app-id"
-   heroku config:set FACEBOOK_APP_SECRET="your-facebook-app-secret"
-   heroku config:set APPLE_CLIENT_ID="your-apple-services-id"
    heroku config:set BREVO_API_KEY="your-brevo-api-key"
    heroku config:set EMAIL_FROM="no-reply@your-domain.com"
    heroku config:set FRONTEND_URL="https://your-frontend-origin"
@@ -250,37 +251,21 @@ needs the `heroku-24` stack; check it with `heroku stack -a <app>`.
 
 ### Deploy a new version
 
-1. Commit your changes on the branch you deploy from (usually `main`):
+1. Open a PR. When it merges to `master` (after CI passes), Heroku deploys it to the staging app `rate-it-service` automatically. Don't push to Heroku by hand.
+2. Check staging:
 
    ```bash
-   git add .
-   git commit -m "Describe your changes"
+   heroku logs --tail -a rate-it-service
+   curl https://<staging-app-url>/api   # {"status":"UP","environment":"dev"}
    ```
 
-2. Push to Heroku:
+3. Promote the same build to production, from the pipeline in the Heroku Dashboard or with:
 
    ```bash
-   git push heroku main
+   heroku pipelines:promote -a rate-it-service
    ```
 
-   If your default branch is `master`:
-
-   ```bash
-   git push heroku master
-   ```
-
-3. Verify the deployment:
-
-   ```bash
-   heroku open
-   heroku logs --tail
-   ```
-
-4. Confirm the API is up:
-
-   ```bash
-   curl https://your-rate-it-service.herokuapp.com/api
-   ```
+   Promote the service before any UI change that depends on it.
 
 ### Notes for Heroku
 
@@ -291,7 +276,7 @@ needs the `heroku-24` stack; check it with `heroku stack -a <app>`.
   heroku restart
   ```
 
-- If the UI points at this API, update the UI's `REACT_APP_BASE_URL` to your Heroku app URL after deployment.
+- Each UI app's `VITE_BASE_URL` config var must point at its matching API app (`rate-it-ui` → `rate-it-service`, `rate-it-ui-prod` → `rate-it-service-prod`).
 
 ## Project structure
 
@@ -305,5 +290,9 @@ rate-it-service/
 ├── services/              # Business logic
 ├── repository/            # Mongoose models
 ├── client/                # External API clients (TMDB, Spotify, Google, Slack)
+├── utils/                 # Shared helpers
+├── openapi/               # Shared OpenAPI components (components.yaml)
+├── openapi.json           # Generated API spec (npm run openapi)
+├── scripts/               # OpenAPI generator, dev test user, one-off backfills
 └── tests/                 # Jest test suites
 ```
